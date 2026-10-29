@@ -169,6 +169,7 @@ public class VisitorDetailsViewModel
     public string? ResidentUnit { get; set; }
     public string? ResidentMobile { get; set; }
     public string? DeclineReason { get; set; }
+    public bool CanCheckIn { get; set; }
 }
 
 public class DeclineVisitorViewModel

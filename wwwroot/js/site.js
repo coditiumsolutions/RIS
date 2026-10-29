@@ -74,4 +74,24 @@
       }
     });
   });
+
+  document.querySelectorAll("[data-history-back]").forEach((button) => {
+    button.addEventListener("click", () => {
+      window.history.back();
+    });
+  });
+
+  document.querySelectorAll("form").forEach((form) => {
+    form.addEventListener("submit", (event) => {
+      const trigger = event.submitter;
+      if (!(trigger instanceof HTMLElement)) {
+        return;
+      }
+
+      const message = trigger.getAttribute("data-confirm");
+      if (message && !window.confirm(message)) {
+        event.preventDefault();
+      }
+    });
+  });
 })();

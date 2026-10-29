@@ -2,7 +2,6 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.RateLimiting;
 using ResidentPortal.Models;
 using ResidentPortal.Security;
 using ResidentPortal.Services;
@@ -15,12 +14,18 @@ public class AccountController : Controller
 {
     private readonly PortalAuthentication _authentication;
     private readonly AuditLogger _audit;
+    private readonly LoginFailureRateLimiter _loginRateLimiter;
     private readonly ILogger<AccountController> _logger;
 
-    public AccountController(PortalAuthentication authentication, AuditLogger audit, ILogger<AccountController> logger)
+    public AccountController(
+        PortalAuthentication authentication,
+        AuditLogger audit,
+        LoginFailureRateLimiter loginRateLimiter,
+        ILogger<AccountController> logger)
     {
         _authentication = authentication;
         _audit = audit;
+        _loginRateLimiter = loginRateLimiter;
         _logger = logger;
     }
 
@@ -42,12 +47,18 @@ public class AccountController : Controller
     [AllowAnonymous]
     [HttpPost]
     [ValidateAntiForgeryToken]
-    [EnableRateLimiting("login")]
     public async Task<IActionResult> Index(LoginViewModel model, string? returnUrl, CancellationToken cancellationToken)
     {
         ViewData["ReturnUrl"] = returnUrl;
         if (!ModelState.IsValid)
             return View(model);
+
+        var clientIp = HttpContext.Connection.RemoteIpAddress?.ToString();
+        if (_loginRateLimiter.IsLimited("Receptionist", clientIp))
+        {
+            ModelState.AddModelError(string.Empty, "Too many login attempts. Please try again later.");
+            return View(model);
+        }
 
         var (result, receptionist, lockoutRemaining) = await _authentication.ValidateReceptionistAsync(model.Username, model.Password, cancellationToken);
 
@@ -65,6 +76,7 @@ public class AccountController : Controller
                 return View(model);
 
             case LoginResult.InvalidCredentials:
+                _loginRateLimiter.RecordFailure("Receptionist", clientIp);
                 await _audit.WriteAsync("Receptionist", null, "Login failed", cancellationToken);
                 _logger.LogWarning("Receptionist login failed.");
                 ModelState.AddModelError(string.Empty, "Invalid username or password.");

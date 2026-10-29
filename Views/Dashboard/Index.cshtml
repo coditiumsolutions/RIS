@@ -84,7 +84,7 @@
                                 {
                                     <tr>
                                         <td class="visitor-name-cell" title="@visitor.VisitorName">@visitor.VisitorName</td>
-                                        <td class="visitor-purpose-cell">@visitor.Purpose</td>
+                                        <td class="visitor-purpose-cell" title="@visitor.Purpose">@visitor.Purpose</td>
                                         <td><span class="badge @Badge(visitor.Status)">@StatusLabel(visitor.Status)</span></td>
                                         <td>@TimeZone.FormatDateTime(visitor.When, "dd MMM yyyy, HH:mm")</td>
                                     </tr>

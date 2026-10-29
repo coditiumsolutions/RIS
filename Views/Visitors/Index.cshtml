@@ -111,7 +111,7 @@
                                     @if (visitor.Status == "Pending" || visitor.Status == "Approved")
                                     {
                                         <form asp-area="" asp-controller="Visitors" asp-action="Cancel" asp-route-id="@visitor.Uid" method="post" class="d-inline">
-                                            <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Are you sure you want to cancel this visitor?')">Cancel</button>
+                                            <button type="submit" class="btn btn-sm btn-outline-danger" data-confirm="Are you sure you want to cancel this visitor?">Cancel</button>
                                         </form>
                                     }
                                 </td>

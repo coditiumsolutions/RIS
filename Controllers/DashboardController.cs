@@ -65,6 +65,11 @@ public class DashboardController : Controller
         Username = resident.Username,
         Email = resident.Email ?? "Not provided",
         Mobile = resident.Mobile ?? "Not provided",
+        UnitNo = resident.UnitNo,
+        Street = resident.Street,
+        Tower = resident.Tower,
+        Floor = resident.Floor,
+        Block = resident.Block,
         IsActive = resident.IsActive,
         CreatedAt = resident.CreatedAt
     };

@@ -2,7 +2,6 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.RateLimiting;
 using ResidentPortal.Models;
 using ResidentPortal.Security;
 using ResidentPortal.Services;
@@ -14,12 +13,18 @@ public class HomeController : Controller
 {
     private readonly PortalAuthentication _authentication;
     private readonly AuditLogger _audit;
+    private readonly LoginFailureRateLimiter _loginRateLimiter;
     private readonly ILogger<HomeController> _logger;
 
-    public HomeController(PortalAuthentication authentication, AuditLogger audit, ILogger<HomeController> logger)
+    public HomeController(
+        PortalAuthentication authentication,
+        AuditLogger audit,
+        LoginFailureRateLimiter loginRateLimiter,
+        ILogger<HomeController> logger)
     {
         _authentication = authentication;
         _audit = audit;
+        _loginRateLimiter = loginRateLimiter;
         _logger = logger;
     }
 
@@ -53,12 +58,18 @@ public class HomeController : Controller
     [AllowAnonymous]
     [HttpPost("/login")]
     [ValidateAntiForgeryToken]
-    [EnableRateLimiting("login")]
     public async Task<IActionResult> Login(LoginViewModel model, string? returnUrl, CancellationToken cancellationToken)
     {
         ViewData["ReturnUrl"] = returnUrl;
         if (!ModelState.IsValid)
             return View(model);
+
+        var clientIp = HttpContext.Connection.RemoteIpAddress?.ToString();
+        if (_loginRateLimiter.IsLimited("Resident", clientIp))
+        {
+            ModelState.AddModelError(string.Empty, "Too many login attempts. Please try again later.");
+            return View(model);
+        }
 
         var (result, resident, lockoutRemaining) = await _authentication.ValidateResidentAsync(model.Username, model.Password, cancellationToken);
 
@@ -76,6 +87,7 @@ public class HomeController : Controller
                 return View(model);
 
             case LoginResult.InvalidCredentials:
+                _loginRateLimiter.RecordFailure("Resident", clientIp);
                 await _audit.WriteAsync("Resident", null, "Login failed", cancellationToken);
                 _logger.LogWarning("Resident login failed.");
                 ModelState.AddModelError(string.Empty, "Invalid username or password.");
@@ -128,10 +140,27 @@ public class HomeController : Controller
 
     [AllowAnonymous]
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-    public IActionResult NotFound(int? statusCode)
+    public async Task<IActionResult> NotFound(int? statusCode)
     {
         Response.StatusCode = statusCode ?? 404;
+        ViewData["Title"] = "Page Not Found";
+
+        if (await SchemeSignedInAsync(AuthSchemes.Admin, PortalRoles.Admin))
+            ViewData["LayoutOverride"] = "~/Areas/AdminPortal/Views/Shared/_AdminLayout.cshtml";
+        else if (await SchemeSignedInAsync(AuthSchemes.Receptionist, PortalRoles.Receptionist))
+            ViewData["LayoutOverride"] = "~/Areas/ReceptionPortal/Views/Shared/_ReceptionLayout.cshtml";
+        else if (await SchemeSignedInAsync(AuthSchemes.Resident, PortalRoles.Resident))
+            ViewData["LayoutOverride"] = "~/Views/Shared/_ResidentLayout.cshtml";
+        else
+            ViewData["LayoutOverride"] = "~/Views/Shared/_StatusLayout.cshtml";
+
         return View();
+    }
+
+    private async Task<bool> SchemeSignedInAsync(string scheme, string role)
+    {
+        var result = await HttpContext.AuthenticateAsync(scheme);
+        return result.Succeeded && result.Principal?.IsInRole(role) == true;
     }
 
     private async Task<bool> ResidentIsSignedInAsync()
