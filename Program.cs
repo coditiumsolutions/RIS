@@ -1,9 +1,7 @@
 using System.Security.Claims;
-using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.DataProtection;
-using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using ResidentPortal.Data;
 using ResidentPortal.Security;
@@ -58,6 +56,7 @@ builder.Services.AddScoped<PasswordChangeService>();
 builder.Services.AddScoped<AppSettingsService>();
 builder.Services.AddScoped<SecurityStampService>();
 builder.Services.AddScoped<AccountLockoutService>();
+builder.Services.AddSingleton<LoginFailureRateLimiter>();
 
 builder.Services.AddAuthentication(options =>
     {
@@ -278,33 +277,6 @@ builder.Services.AddControllersWithViews(options =>
     options.Filters.Add<MustChangePasswordFilter>();
 });
 
-// QA-016: IP rate limiter on login POSTs (assumption: same 5 / 15 min window as account lockout)
-var loginPermitLimit = builder.Configuration.GetValue("Lockout:MaxFailedAttempts", 5);
-var loginWindowMinutes = builder.Configuration.GetValue("Lockout:LockoutMinutes", 15);
-builder.Services.AddRateLimiter(options =>
-{
-    options.OnRejected = async (context, token) =>
-    {
-        var path = context.HttpContext.Request.Path.Value ?? string.Empty;
-        var redirect = path.StartsWith("/adminportal", StringComparison.OrdinalIgnoreCase)
-            ? "/AdminPortal?rateLimited=true"
-            : path.StartsWith("/receptionportal", StringComparison.OrdinalIgnoreCase)
-                ? "/ReceptionPortal?rateLimited=true"
-                : "/login?rateLimited=true";
-        context.HttpContext.Response.Redirect(redirect);
-        await Task.CompletedTask;
-    };
-    options.AddPolicy("login", httpContext =>
-        RateLimitPartition.GetFixedWindowLimiter(
-            httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
-            _ => new FixedWindowRateLimiterOptions
-            {
-                PermitLimit = loginPermitLimit,
-                Window = TimeSpan.FromMinutes(loginWindowMinutes),
-                QueueLimit = 0
-            }));
-});
-
 // Configure HSTS: 1 year with includeSubDomains (QA-021)
 builder.Services.AddHsts(options =>
 {
@@ -363,7 +335,6 @@ app.Use(async (context, next) =>
 app.UseStaticFiles();
 
 app.UseRouting();
-app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
 
