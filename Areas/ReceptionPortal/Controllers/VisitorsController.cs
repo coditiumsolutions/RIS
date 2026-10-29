@@ -133,7 +133,9 @@ public class VisitorsController : Controller
             ResidentName = visitor.Resident.ResidentName,
             ResidentUnit = visitor.Resident.UnitNo,
             ResidentMobile = visitor.Resident.Mobile,
-            DeclineReason = visitor.DeclineReason
+            DeclineReason = visitor.DeclineReason,
+            CanCheckIn = visitor.Status == VisitorStatus.Approved
+                && VisitorDuration.IsWithinVisitWindow(visitor.ArrivalDate, visitor.Duration, _timeZone.Today)
         };
 
         return View(model);
@@ -141,7 +143,7 @@ public class VisitorsController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> CheckIn(int id, CancellationToken cancellationToken)
+    public async Task<IActionResult> CheckIn(int id, string? q, DateOnly? date, CancellationToken cancellationToken)
     {
         var visitor = await _db.VisitorRequests.FindAsync(new object[] { id }, cancellationToken);
         if (visitor is null)
@@ -150,14 +152,14 @@ public class VisitorsController : Controller
         if (visitor.Status != VisitorStatus.Approved)
         {
             TempData["Error"] = "Only approved visitors can be checked in.";
-            return RedirectToAction(nameof(Index));
+            return RedirectToAction(nameof(Index), new { q, date });
         }
 
         var today = _timeZone.Today;
         if (!VisitorDuration.IsWithinVisitWindow(visitor.ArrivalDate, visitor.Duration, today))
         {
             TempData["Error"] = "This visitor can only be checked in on the arrival date through the end of the visit duration.";
-            return RedirectToAction(nameof(Index));
+            return RedirectToAction(nameof(Index), new { q, date });
         }
 
         var userId = User.GetUserId();
@@ -171,12 +173,12 @@ public class VisitorsController : Controller
         await _audit.WriteAsync("Receptionist", userId, $"Checked in visitor: {visitor.VisitorName} (ID: {visitor.Uid})", cancellationToken);
 
         TempData["Success"] = $"{visitor.VisitorName} has been checked in.";
-        return RedirectToAction(nameof(Index));
+        return RedirectToAction(nameof(Index), new { q, date });
     }
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> CheckOut(int id, CancellationToken cancellationToken)
+    public async Task<IActionResult> CheckOut(int id, string? q, DateOnly? date, CancellationToken cancellationToken)
     {
         var visitor = await _db.VisitorRequests.FindAsync(new object[] { id }, cancellationToken);
         if (visitor is null)
@@ -185,7 +187,7 @@ public class VisitorsController : Controller
         if (visitor.Status != VisitorStatus.CheckedIn)
         {
             TempData["Error"] = "Only checked-in visitors can be checked out.";
-            return RedirectToAction(nameof(Index));
+            return RedirectToAction(nameof(Index), new { q, date });
         }
 
         var userId = User.GetUserId();
@@ -197,7 +199,7 @@ public class VisitorsController : Controller
         await _audit.WriteAsync("Receptionist", userId, $"Checked out visitor: {visitor.VisitorName} (ID: {visitor.Uid})", cancellationToken);
 
         TempData["Success"] = $"{visitor.VisitorName} has been checked out.";
-        return RedirectToAction(nameof(Index));
+        return RedirectToAction(nameof(Index), new { q, date });
     }
 
     [HttpGet]

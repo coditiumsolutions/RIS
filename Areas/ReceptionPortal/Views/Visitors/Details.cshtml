@@ -55,7 +55,7 @@
                     <dt>Phone</dt>
                     <dd>@Model.Phone</dd>
                     <dt>Purpose</dt>
-                    <dd class="visitor-purpose-cell">@Model.Purpose</dd>
+                    <dd>@Model.Purpose</dd>
                     <dt>Duration</dt>
                     <dd>@Model.Duration</dd>
                     <dt>Arrival Date</dt>
@@ -128,7 +128,7 @@
                     }
                 </dl>
 
-                @if (Model.Status == "Approved")
+                @if (Model.CanCheckIn)
                 {
                     <form asp-area="ReceptionPortal" asp-controller="Visitors" asp-action="CheckIn" asp-route-id="@Model.Uid" method="post" class="mt-3">
                         <button type="submit" class="btn btn-success">
