@@ -14,7 +14,7 @@ public class ComplaintsController : Controller
         return View("~/Views/Shared/ModulePlaceholder.cshtml", new ModulePlaceholderViewModel
         {
             Title = "Complaints Management",
-            Description = "Submit complaints, track their status, and review previous complaints. This module will be available in a later release.",
+            Description = "Submit complaints, track their status, and review previous complaints. This module is coming soon.",
             IconClass = "bi-headset"
         });
     }

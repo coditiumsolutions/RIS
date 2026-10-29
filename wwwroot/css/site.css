@@ -234,6 +234,55 @@ a:hover {
   line-height: 1.55;
 }
 
+.login-portal-links {
+  margin-top: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  max-width: 22rem;
+}
+
+.login-portal-links-label {
+  margin: 0 0 0.15rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.login-portal-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.7rem 0.9rem;
+  border-radius: 0.75rem;
+  text-decoration: none;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  font-weight: 600;
+  transition: background-color 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
+}
+
+.login-portal-link:hover,
+.login-portal-link:focus {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.16);
+  border-color: rgba(201, 162, 39, 0.55);
+  transform: translateY(-1px);
+}
+
+.login-portal-link:focus-visible {
+  outline: 2px solid var(--rp-accent);
+  outline-offset: 2px;
+}
+
+.login-portal-link i {
+  color: var(--rp-accent);
+  font-size: 1.05rem;
+}
+
 .login-hero-art {
   margin-top: 2rem;
   display: grid;
@@ -815,10 +864,15 @@ a:hover {
 }
 
 .app-body.sidebar-collapsed .app-sidebar-nav a,
-.app-body.sidebar-collapsed .app-sidebar-nav button.nav-link-btn {
+.app-body.sidebar-collapsed .app-sidebar-nav button.nav-link-btn,
+.app-body.sidebar-collapsed .app-sidebar-nav .nav-item-disabled {
   justify-content: center;
   padding-left: 0.65rem;
   padding-right: 0.65rem;
+}
+
+.app-body.sidebar-collapsed .app-sidebar-nav .nav-item-disabled .coming-soon-badge {
+  display: none;
 }
 
 .sidebar-backdrop {
@@ -946,6 +1000,7 @@ a:hover {
 }
 
 .shortcut-link {
+  position: relative;
   display: block;
   text-decoration: none;
   color: inherit;
@@ -967,6 +1022,19 @@ a:hover {
 .shortcut-link strong {
   display: block;
   color: var(--rp-primary);
+}
+
+.shortcut-link-disabled {
+  position: relative;
+  opacity: 0.55;
+  pointer-events: none;
+  cursor: not-allowed;
+  border-left-color: #adb5bd;
+  background: #f5f6f8;
+}
+
+.shortcut-link-disabled strong {
+  color: #6c757d;
 }
 
 .table {
@@ -1095,6 +1163,21 @@ a:hover {
   color: #8a6d12;
 }
 
+.project-card-icon.gatepass {
+  background: #eef6f4;
+  color: #2f6f62;
+}
+
+.project-card-icon.statement {
+  background: #eef2f7;
+  color: #4a5d73;
+}
+
+.project-card-icon.bills {
+  background: #f7f0ea;
+  color: #8a5a3a;
+}
+
 .project-card-title {
   margin: 0;
   font-size: 0.95rem;
@@ -1103,6 +1186,83 @@ a:hover {
   letter-spacing: -0.01em;
   line-height: 1.3;
   max-width: 11rem;
+}
+
+.project-card-disabled {
+  opacity: 0.55;
+  pointer-events: none;
+  cursor: not-allowed;
+  box-shadow: none;
+  background: #f5f6f8;
+}
+
+.project-card-disabled .project-card-title {
+  color: #6c757d;
+}
+
+.project-card-disabled .project-card-icon {
+  filter: grayscale(0.35);
+}
+
+.coming-soon-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.15rem 0.45rem;
+  border-radius: 0.35rem;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #5c636a;
+  background: #e9ecef;
+  border: 1px solid #dee2e6;
+  white-space: nowrap;
+}
+
+.project-card-disabled .coming-soon-badge,
+.shortcut-link-disabled .coming-soon-badge {
+  position: absolute;
+  top: 0.55rem;
+  right: 0.55rem;
+}
+
+.app-sidebar-nav .nav-item-disabled {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  border-radius: 0.7rem;
+  padding: 0.72rem 0.85rem;
+  font-weight: 600;
+  color: #8a93a0;
+  opacity: 0.72;
+  pointer-events: none;
+  cursor: not-allowed;
+}
+
+.app-sidebar-nav .nav-item-disabled i {
+  width: 1.15rem;
+  text-align: center;
+  font-size: 1.05rem;
+  color: #9aa3af;
+}
+
+.app-sidebar-nav .nav-item-disabled .coming-soon-badge {
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.portal-admin .app-sidebar-nav .nav-item-disabled {
+  color: rgba(215, 224, 236, 0.55);
+}
+
+.portal-admin .app-sidebar-nav .nav-item-disabled i {
+  color: rgba(201, 162, 39, 0.45);
+}
+
+.portal-admin .app-sidebar-nav .nav-item-disabled .coming-soon-badge {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.12);
+  color: rgba(215, 224, 236, 0.75);
 }
 
 .table-responsive {
@@ -1139,6 +1299,10 @@ a:hover {
     display: none;
   }
 
+  .login-portal-links {
+    max-width: none;
+  }
+
   .login-panel {
     padding: 1.6rem 1.35rem 1.8rem;
   }
@@ -1164,10 +1328,15 @@ a:hover {
   }
 
   .app-body.sidebar-collapsed .app-sidebar-nav a,
-  .app-body.sidebar-collapsed .app-sidebar-nav button.nav-link-btn {
+  .app-body.sidebar-collapsed .app-sidebar-nav button.nav-link-btn,
+  .app-body.sidebar-collapsed .app-sidebar-nav .nav-item-disabled {
     justify-content: flex-start;
     padding-left: 0.85rem;
     padding-right: 0.85rem;
+  }
+
+  .app-body.sidebar-collapsed .app-sidebar-nav .nav-item-disabled .coming-soon-badge {
+    display: inline-flex;
   }
 
   .sidebar-backdrop {

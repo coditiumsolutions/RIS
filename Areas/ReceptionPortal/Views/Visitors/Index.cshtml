@@ -124,7 +124,12 @@
                                         <form asp-area="ReceptionPortal" asp-controller="Visitors" asp-action="CheckIn" asp-route-id="@visitor.Uid" method="post" class="d-inline">
                                             <input type="hidden" name="q" value="@Model.SearchQuery" />
                                             <input type="hidden" name="date" value="@Model.DateFilter?.ToString("yyyy-MM-dd")" />
-                                            <button type="submit" class="btn btn-sm btn-success">Check In</button>
+                                            <button type="submit"
+                                                    class="btn btn-sm btn-success"
+                                                    data-confirm-title="Check in visitor?"
+                                                    data-confirm-text="@visitor.VisitorName · @visitor.NumberOfGuests guest@(visitor.NumberOfGuests == 1 ? "" : "s")"
+                                                    data-confirm-ok="Check In"
+                                                    data-confirm-cancel="Cancel">Check In</button>
                                         </form>
                                     }
                                     else if (visitor.Status == "CheckedIn")
@@ -132,7 +137,12 @@
                                         <form asp-area="ReceptionPortal" asp-controller="Visitors" asp-action="CheckOut" asp-route-id="@visitor.Uid" method="post" class="d-inline">
                                             <input type="hidden" name="q" value="@Model.SearchQuery" />
                                             <input type="hidden" name="date" value="@Model.DateFilter?.ToString("yyyy-MM-dd")" />
-                                            <button type="submit" class="btn btn-sm btn-secondary">Check Out</button>
+                                            <button type="submit"
+                                                    class="btn btn-sm btn-secondary"
+                                                    data-confirm-title="Check out visitor?"
+                                                    data-confirm-text="@visitor.VisitorName · @visitor.NumberOfGuests guest@(visitor.NumberOfGuests == 1 ? "" : "s")"
+                                                    data-confirm-ok="Check Out"
+                                                    data-confirm-cancel="Cancel">Check Out</button>
                                         </form>
                                     }
                                     <a asp-area="ReceptionPortal" asp-controller="Visitors" asp-action="Details" asp-route-id="@visitor.Uid" class="btn btn-sm btn-outline-secondary">Details</a>

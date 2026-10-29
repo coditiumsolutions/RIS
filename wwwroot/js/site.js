@@ -81,16 +81,83 @@
     });
   });
 
+  const readConfirmAttrs = (form, trigger) => {
+    const title =
+      trigger.getAttribute("data-confirm-title") ||
+      form.getAttribute("data-confirm-title") ||
+      "";
+    const text =
+      trigger.getAttribute("data-confirm-text") ||
+      trigger.getAttribute("data-confirm") ||
+      form.getAttribute("data-confirm-text") ||
+      "";
+    const confirmText =
+      trigger.getAttribute("data-confirm-ok") ||
+      form.getAttribute("data-confirm-ok") ||
+      "Confirm";
+    const cancelText =
+      trigger.getAttribute("data-confirm-cancel") ||
+      form.getAttribute("data-confirm-cancel") ||
+      "Cancel";
+    const icon =
+      trigger.getAttribute("data-confirm-icon") ||
+      form.getAttribute("data-confirm-icon") ||
+      "question";
+
+    return { title, text, confirmText, cancelText, icon };
+  };
+
+  const askConfirm = async ({ title, text, confirmText, cancelText, icon }) => {
+    if (typeof Swal !== "undefined" && typeof Swal.fire === "function") {
+      const result = await Swal.fire({
+        title: title || "Are you sure?",
+        text: text || undefined,
+        icon,
+        showCancelButton: true,
+        focusCancel: true,
+        reverseButtons: true,
+        confirmButtonText: confirmText,
+        cancelButtonText: cancelText
+      });
+      return result.isConfirmed === true;
+    }
+
+    return window.confirm([title, text].filter(Boolean).join("\n"));
+  };
+
   document.querySelectorAll("form").forEach((form) => {
-    form.addEventListener("submit", (event) => {
-      const trigger = event.submitter;
+    form.addEventListener("submit", async (event) => {
+      if (form.dataset.swalConfirmed === "1") {
+        delete form.dataset.swalConfirmed;
+        return;
+      }
+
+      const trigger = event.submitter instanceof HTMLElement
+        ? event.submitter
+        : form.querySelector("[type='submit']");
+
       if (!(trigger instanceof HTMLElement)) {
         return;
       }
 
-      const message = trigger.getAttribute("data-confirm");
-      if (message && !window.confirm(message)) {
-        event.preventDefault();
+      const attrs = readConfirmAttrs(form, trigger);
+      if (!attrs.title && !attrs.text) {
+        return;
+      }
+
+      event.preventDefault();
+      event.stopPropagation();
+
+      const confirmed = await askConfirm(attrs);
+      if (!confirmed) {
+        return;
+      }
+
+      form.dataset.swalConfirmed = "1";
+      if (typeof form.requestSubmit === "function") {
+        form.requestSubmit(trigger);
+      } else {
+        form.submit();
       }
     });
   });

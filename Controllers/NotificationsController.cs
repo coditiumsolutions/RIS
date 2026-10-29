@@ -14,7 +14,7 @@ public class NotificationsController : Controller
         return View("~/Views/Shared/ModulePlaceholder.cshtml", new ModulePlaceholderViewModel
         {
             Title = "Society Notifications",
-            Description = "View society announcements, important notices, maintenance updates, and community alerts. This module will be available in a later release.",
+            Description = "View society announcements, important notices, maintenance updates, and community alerts. This module is coming soon.",
             IconClass = "bi-bell-fill"
         });
     }

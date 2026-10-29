@@ -31,7 +31,13 @@
                     </div>
 
                     <div>
-                        <button type="submit" class="btn btn-danger">
+                        <button type="submit"
+                                class="btn btn-danger"
+                                data-confirm-title="Decline visitor?"
+                                data-confirm-text="Decline @Model.VisitorName? The resident will see the reason you provide."
+                                data-confirm-ok="Decline"
+                                data-confirm-cancel="Keep"
+                                data-confirm-icon="warning">
                             <i class="bi bi-x-circle me-1" aria-hidden="true"></i> Decline Visitor
                         </button>
                         <a asp-area="AdminPortal" asp-controller="Visitors" asp-action="Index" class="btn btn-outline-secondary ms-2">Cancel</a>
