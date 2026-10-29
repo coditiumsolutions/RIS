@@ -45,34 +45,64 @@
     </div>
 </div>
 
-<h2 class="h5 mb-3" style="color: var(--rp-primary); font-weight: 700;">Modules</h2>
-<div class="shortcut-grid mb-4">
-    <a class="shortcut-link" asp-area="AdminPortal" asp-controller="Visitors" asp-action="Index">
-        <strong><i class="bi bi-person-badge me-1" aria-hidden="true"></i> Visitor Management</strong>
-        <span class="d-block text-secondary mt-1">Review, approve, and decline visitor requests.</span>
+<h2 class="module-grid-heading">Modules</h2>
+<div class="project-card-grid mb-4">
+    <a class="project-card project-card-primary" asp-area="AdminPortal" asp-controller="Visitors" asp-action="Index">
+        <div class="project-card-icon visitors" aria-hidden="true">
+            <i class="bi bi-person-badge-fill"></i>
+        </div>
+        <div class="project-card-copy">
+            <h3 class="project-card-title">Visitor Management</h3>
+            <p class="project-card-subtitle">Approve and decline requests</p>
+        </div>
     </a>
-    <a class="shortcut-link" asp-area="AdminPortal" asp-controller="Residents" asp-action="Index">
-        <strong><i class="bi bi-houses me-1" aria-hidden="true"></i> Resident Management</strong>
-        <span class="d-block text-secondary mt-1">Create, edit, and search resident accounts.</span>
+    <a class="project-card" asp-area="AdminPortal" asp-controller="Residents" asp-action="Index">
+        <div class="project-card-icon residents" aria-hidden="true">
+            <i class="bi bi-houses-fill"></i>
+        </div>
+        <div class="project-card-copy">
+            <h3 class="project-card-title">Resident Management</h3>
+            <p class="project-card-subtitle">Create and search residents</p>
+        </div>
     </a>
-    <a class="shortcut-link" asp-area="AdminPortal" asp-controller="Users" asp-action="Index">
-        <strong><i class="bi bi-people me-1" aria-hidden="true"></i> User Management</strong>
-        <span class="d-block text-secondary mt-1">Manage receptionist accounts and portal users.</span>
+    <a class="project-card" asp-area="AdminPortal" asp-controller="Users" asp-action="Index">
+        <div class="project-card-icon users" aria-hidden="true">
+            <i class="bi bi-people-fill"></i>
+        </div>
+        <div class="project-card-copy">
+            <h3 class="project-card-title">User Management</h3>
+            <p class="project-card-subtitle">Receptionist accounts</p>
+        </div>
     </a>
-    <div class="shortcut-link shortcut-link-disabled" aria-disabled="true">
+    <div class="project-card project-card-disabled" aria-disabled="true">
         <span class="coming-soon-badge">Coming soon</span>
-        <strong><i class="bi bi-door-open me-1" aria-hidden="true"></i> Gate Pass</strong>
-        <span class="d-block text-secondary mt-1">Issue and track residential gate passes.</span>
+        <div class="project-card-icon gatepass" aria-hidden="true">
+            <i class="bi bi-door-open-fill"></i>
+        </div>
+        <div class="project-card-copy">
+            <h3 class="project-card-title">Gate Pass</h3>
+            <p class="project-card-subtitle">Issue residential gate passes</p>
+        </div>
     </div>
-    <div class="shortcut-link shortcut-link-disabled" aria-disabled="true">
+    <div class="project-card project-card-disabled" aria-disabled="true">
         <span class="coming-soon-badge">Coming soon</span>
-        <strong><i class="bi bi-file-earmark-text me-1" aria-hidden="true"></i> Account Statement</strong>
-        <span class="d-block text-secondary mt-1">Review resident account statements.</span>
+        <div class="project-card-icon statement" aria-hidden="true">
+            <i class="bi bi-file-earmark-text-fill"></i>
+        </div>
+        <div class="project-card-copy">
+            <h3 class="project-card-title">Account Statement</h3>
+            <p class="project-card-subtitle">Resident account history</p>
+        </div>
     </div>
-    <div class="shortcut-link shortcut-link-disabled" aria-disabled="true">
+    <div class="project-card project-card-disabled" aria-disabled="true">
         <span class="coming-soon-badge">Coming soon</span>
-        <strong><i class="bi bi-receipt me-1" aria-hidden="true"></i> Bill Management</strong>
-        <span class="d-block text-secondary mt-1">Manage society billing and invoices.</span>
+        <div class="project-card-icon bills" aria-hidden="true">
+            <i class="bi bi-receipt"></i>
+        </div>
+        <div class="project-card-copy">
+            <h3 class="project-card-title">Bill Management</h3>
+            <p class="project-card-subtitle">Society billing and invoices</p>
+        </div>
     </div>
 </div>
 
