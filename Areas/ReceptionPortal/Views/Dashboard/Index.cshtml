@@ -1,158 +1,134 @@
 @model ReceptionistDashboardViewModel
 @{
     ViewData["Title"] = "Dashboard";
-    string Badge(string status) => status switch
-    {
-        "CheckedIn" => "text-bg-success",
-        "CheckedOut" => "text-bg-secondary",
-        "Approved" => "text-bg-primary",
-        "Pending" => "text-bg-warning",
-        _ => "text-bg-light"
-    };
-    string StatusLabel(string status) => status switch
-    {
-        "CheckedIn" => "Checked In",
-        "CheckedOut" => "Checked Out",
-        _ => status
-    };
+    var checkInUrl = Url.Action("CheckIn", "Visitors", new { area = "ReceptionPortal" })!;
+    var checkOutUrl = Url.Action("CheckOut", "Visitors", new { area = "ReceptionPortal" })!;
+    var walkInUrl = Url.Action("WalkIn", "Visitors", new { area = "ReceptionPortal" })!;
+    var detailsUrl = Url.Action("Details", "Visitors", new { area = "ReceptionPortal" })!;
+    var searchUrl = Url.Action("Search", "Dashboard", new { area = "ReceptionPortal" })!;
+    var dayUrl = Url.Action("Day", "Dashboard", new { area = "ReceptionPortal" })!;
+    var calendarUrl = Url.Action("CalendarMonth", "Dashboard", new { area = "ReceptionPortal" })!;
+    var summaryUrl = Url.Action("Summary", "Dashboard", new { area = "ReceptionPortal" })!;
 }
 
-<div class="page-header">
-    <div>
-        <h1 class="page-heading">Welcome, @Model.ReceptionistName</h1>
-        <p class="page-subtitle">Reception desk overview for today.</p>
-    </div>
-</div>
-
-@if (TempData[ChangePasswordViewModel.SuccessMessageKey] is string passwordChanged)
-{
-    <div class="alert alert-success" role="status">@passwordChanged</div>
+@section Styles {
+    <link rel="stylesheet" href="~/css/reception-dashboard.css" asp-append-version="true" />
 }
 
-<div class="row g-3 mb-4">
-    <div class="col-md-3">
-        <section class="card portal-card stat-card">
-            <div class="card-body">
-                <div class="stat-icon" aria-hidden="true"><i class="bi bi-calendar-check"></i></div>
-                <p class="stat-label">Expected today</p>
-                <p class="stat-value">@Model.ExpectedVisitorsToday</p>
-            </div>
-        </section>
-    </div>
-    <div class="col-md-3">
-        <section class="card portal-card stat-card">
-            <div class="card-body">
-                <div class="stat-icon" aria-hidden="true"><i class="bi bi-box-arrow-in-right"></i></div>
-                <p class="stat-label">Checked in</p>
-                <p class="stat-value">@Model.CheckedInToday</p>
-            </div>
-        </section>
-    </div>
-    <div class="col-md-3">
-        <section class="card portal-card stat-card">
-            <div class="card-body">
-                <div class="stat-icon" aria-hidden="true"><i class="bi bi-box-arrow-right"></i></div>
-                <p class="stat-label">Checked out</p>
-                <p class="stat-value">@Model.CheckedOutToday</p>
-            </div>
-        </section>
-    </div>
-    <div class="col-md-3">
-        <section class="card portal-card stat-card">
-            <div class="card-body">
-                <div class="stat-icon" aria-hidden="true"><i class="bi bi-person-plus"></i></div>
-                <p class="stat-label">Walk-ins today</p>
-                <p class="stat-value">@Model.WalkInsToday</p>
-            </div>
-        </section>
-    </div>
-</div>
+<div class="rd-desk"
+     id="reception-desk"
+     data-today="@Model.TodayIso"
+     data-search-url="@searchUrl"
+     data-day-url="@dayUrl"
+     data-calendar-url="@calendarUrl"
+     data-summary-url="@summaryUrl"
+     data-checkin-url="@checkInUrl"
+     data-checkout-url="@checkOutUrl"
+     data-details-url="@detailsUrl"
+     data-walkin-url="@walkInUrl">
 
-<div class="row g-4">
-    <div class="col-12">
-        <section class="card portal-card">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h2 class="h5 mb-0">Quick Actions</h2>
-                </div>
-                <div class="d-flex gap-2 flex-wrap">
-                    <a class="btn btn-portal btn-reception" asp-area="ReceptionPortal" asp-controller="Visitors" asp-action="Index">
-                        <i class="bi bi-search me-1" aria-hidden="true"></i> Search Visitors
-                    </a>
-                    <a class="btn btn-outline-portal" asp-area="ReceptionPortal" asp-controller="Visitors" asp-action="WalkIn">
-                        <i class="bi bi-person-plus me-1" aria-hidden="true"></i> Register Walk-In
-                    </a>
-                </div>
-            </div>
-        </section>
-    </div>
-</div>
+    <form id="rd-antiforgery" class="d-none" method="post">@Html.AntiForgeryToken()</form>
 
-@if (Model.RecentActivity.Any())
-{
-    <section class="card portal-card mt-4">
-        <div class="card-body">
-            <h2 class="h5 mb-3">Recent Activity</h2>
-            <div class="table-responsive">
-                <table class="table align-middle mb-0">
-                    <thead>
-                        <tr>
-                            <th scope="col">Visitor</th>
-                            <th scope="col">Resident</th>
-                            <th scope="col">Status</th>
-                            <th scope="col">Arrival Date</th>
-                            <th scope="col">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var visitor in Model.RecentActivity)
-                        {
-                            <tr>
-                                <td class="visitor-name-cell" title="@visitor.VisitorName">
-                                    @visitor.VisitorName
-                                    @if (visitor.IsWalkIn)
-                                    {
-                                        <span class="badge text-bg-info ms-1">Walk-in</span>
-                                    }
-                                </td>
-                                <td>
-                                    @visitor.ResidentName
-                                    @if (!string.IsNullOrWhiteSpace(visitor.ResidentUnit))
-                                    {
-                                        <span class="text-secondary">(Unit @visitor.ResidentUnit)</span>
-                                    }
-                                </td>
-                                <td><span class="badge @Badge(visitor.Status)">@StatusLabel(visitor.Status)</span></td>
-                                <td>@visitor.ArrivalDate.ToString("dd MMM yyyy", CultureInfo.InvariantCulture)</td>
-                                <td>
-                                    @if (visitor.Status == "Approved" || visitor.Status == "Pending")
-                                    {
-                                        <form asp-area="ReceptionPortal" asp-controller="Visitors" asp-action="CheckIn" asp-route-id="@visitor.Uid" method="post" class="d-inline">
-                                            <button type="submit"
-                                                    class="btn btn-sm btn-success"
-                                                    data-confirm-title="Check in visitor?"
-                                                    data-confirm-text="@visitor.VisitorName · @visitor.NumberOfGuests guest@(visitor.NumberOfGuests == 1 ? "" : "s")"
-                                                    data-confirm-ok="Check In"
-                                                    data-confirm-cancel="Cancel">Check In</button>
-                                        </form>
-                                    }
-                                    else if (visitor.Status == "CheckedIn")
-                                    {
-                                        <form asp-area="ReceptionPortal" asp-controller="Visitors" asp-action="CheckOut" asp-route-id="@visitor.Uid" method="post" class="d-inline">
-                                            <button type="submit"
-                                                    class="btn btn-sm btn-secondary"
-                                                    data-confirm-title="Check out visitor?"
-                                                    data-confirm-text="@visitor.VisitorName · @visitor.NumberOfGuests guest@(visitor.NumberOfGuests == 1 ? "" : "s")"
-                                                    data-confirm-ok="Check Out"
-                                                    data-confirm-cancel="Cancel">Check Out</button>
-                                        </form>
-                                    }
-                                </td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
+    <div class="rd-sticky-top">
+        <div class="rd-welcome">
+            <div>
+                <h1 class="rd-heading">Reception Desk</h1>
+                <p class="rd-sub">Hi @Model.ReceptionistName · times in PKT</p>
+            </div>
+            <div class="rd-quick-actions">
+                <a class="rd-btn rd-btn-primary" href="@walkInUrl">
+                    <i class="bi bi-person-plus" aria-hidden="true"></i>
+                    New Walk-in
+                </a>
+                <button type="button" class="rd-btn rd-btn-secondary" data-rd-pass-code>
+                    <i class="bi bi-upc-scan" aria-hidden="true"></i>
+                    Pass code
+                </button>
             </div>
         </div>
-    </section>
+
+        @if (TempData[ChangePasswordViewModel.SuccessMessageKey] is string passwordChanged)
+        {
+            <div class="alert alert-success" role="status">@passwordChanged</div>
+        }
+        @if (TempData["Success"] is string successMsg)
+        {
+            <div class="alert alert-success" role="status">@successMsg</div>
+        }
+        @if (TempData["Error"] is string errorMsg)
+        {
+            <div class="alert alert-danger" role="alert">@errorMsg</div>
+        }
+
+        <label class="rd-search-label" for="rd-search">
+            <span class="visually-hidden">Search visitors</span>
+            <i class="bi bi-search" aria-hidden="true"></i>
+            <input type="search"
+                   id="rd-search"
+                   class="rd-search-input"
+                   placeholder="Search name, CNIC, phone, vehicle, resident, unit, or pass code"
+                   autocomplete="off"
+                   enterkeyhint="search"
+                   inputmode="search" />
+            <button type="button" class="rd-search-clear" data-rd-clear-search hidden aria-label="Clear search">
+                <i class="bi bi-x-lg" aria-hidden="true"></i>
+            </button>
+        </label>
+
+        <div class="rd-chips" role="toolbar" aria-label="Today summary filters">
+            <button type="button" class="rd-chip is-active" data-rd-filter="all" aria-pressed="true">
+                <span class="rd-chip-label">All today</span>
+                <span class="rd-chip-value" data-rd-summary="all">—</span>
+            </button>
+            <button type="button" class="rd-chip" data-rd-filter="expected" aria-pressed="false">
+                <span class="rd-chip-label">Expected</span>
+                <span class="rd-chip-value" data-rd-summary="expected">@Model.ExpectedVisitorsToday</span>
+            </button>
+            <button type="button" class="rd-chip" data-rd-filter="checkedin" aria-pressed="false">
+                <span class="rd-chip-label">Inside now</span>
+                <span class="rd-chip-value" data-rd-summary="checkedin">@Model.CheckedInToday</span>
+            </button>
+            <button type="button" class="rd-chip" data-rd-filter="checkedout" aria-pressed="false">
+                <span class="rd-chip-label">Checked out</span>
+                <span class="rd-chip-value" data-rd-summary="checkedout">@Model.CheckedOutToday</span>
+            </button>
+            <button type="button" class="rd-chip" data-rd-filter="walkins" aria-pressed="false" data-rd-walkins-chip @(Model.WalkInsToday == 0 ? "hidden" : null)>
+                <span class="rd-chip-label">Walk-ins</span>
+                <span class="rd-chip-value" data-rd-summary="walkins">@Model.WalkInsToday</span>
+            </button>
+        </div>
+    </div>
+
+    <div class="rd-layout">
+        <section class="rd-calendar-panel" aria-label="Visitor calendar">
+            <div class="rd-cal-toolbar">
+                <button type="button" class="rd-icon-btn" data-rd-cal-prev aria-label="Previous period">
+                    <i class="bi bi-chevron-left" aria-hidden="true"></i>
+                </button>
+                <div class="rd-cal-title" data-rd-cal-title>…</div>
+                <button type="button" class="rd-icon-btn" data-rd-cal-next aria-label="Next period">
+                    <i class="bi bi-chevron-right" aria-hidden="true"></i>
+                </button>
+                <button type="button" class="rd-btn rd-btn-ghost" data-rd-cal-today>Today</button>
+            </div>
+            <div class="rd-cal-weekdays" aria-hidden="true">
+                <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
+            </div>
+            <div class="rd-cal-grid" data-rd-cal-grid role="grid" aria-label="Month calendar"></div>
+            <div class="rd-cal-strip" data-rd-cal-strip hidden role="listbox" aria-label="Day strip"></div>
+        </section>
+
+        <section class="rd-list-panel" aria-label="Visitors for selected day">
+            <div class="rd-list-header">
+                <h2 class="rd-list-title" data-rd-list-title>Today</h2>
+                <span class="rd-list-meta" data-rd-list-meta></span>
+            </div>
+            <div class="rd-list-status" data-rd-list-status hidden></div>
+            <div class="rd-visitor-list" data-rd-visitor-list></div>
+        </section>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/reception-dashboard.js" asp-append-version="true"></script>
 }

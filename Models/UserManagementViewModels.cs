@@ -114,5 +114,6 @@ public class ReceptionistDashboardViewModel
     public int CheckedInToday { get; set; }
     public int CheckedOutToday { get; set; }
     public int WalkInsToday { get; set; }
+    public string TodayIso { get; set; } = string.Empty;
     public IReadOnlyList<VisitorRequestListItem> RecentActivity { get; set; } = [];
 }

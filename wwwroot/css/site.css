@@ -1387,6 +1387,33 @@ a:hover {
     padding: 1.6rem 1.35rem 1.8rem;
   }
 
+  .app-brand-copy strong {
+    font-size: 0.92rem;
+    max-width: min(52vw, 16rem);
+  }
+
+  .app-user-name {
+    display: none;
+  }
+
+  .app-content {
+    padding: 1.15rem;
+  }
+
+  .app-header-primary,
+  .app-header-secondary {
+    padding-left: 0.9rem;
+    padding-right: 0.9rem;
+  }
+
+  .app-footer {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+}
+
+/* Phones: off-canvas sidebar. Tablets (768+) keep inline collapsible nav. */
+@media (max-width: 767.98px) {
   .app-sidebar {
     position: fixed;
     inset: 0 auto 0 0;
@@ -1429,30 +1456,6 @@ a:hover {
   .app-body.sidebar-open .sidebar-backdrop {
     opacity: 1;
     pointer-events: auto;
-  }
-
-  .app-brand-copy strong {
-    font-size: 0.92rem;
-    max-width: min(52vw, 16rem);
-  }
-
-  .app-user-name {
-    display: none;
-  }
-
-  .app-content {
-    padding: 1.15rem;
-  }
-
-  .app-header-primary,
-  .app-header-secondary {
-    padding-left: 0.9rem;
-    padding-right: 0.9rem;
-  }
-
-  .app-footer {
-    padding-left: 1rem;
-    padding-right: 1rem;
   }
 }
 
