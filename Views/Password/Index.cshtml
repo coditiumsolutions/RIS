@@ -1,0 +1,61 @@
+@model ChangePasswordViewModel
+@{
+    ViewData["Title"] = "Change Password";
+}
+
+<div class="page-header">
+    <div>
+        <h1 class="page-heading">Change Password</h1>
+        <p class="page-subtitle">Choose a new password of at least 8 characters.</p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-6">
+        <section class="card portal-card">
+            <div class="card-body">
+                <form asp-area="" asp-controller="Password" asp-action="Index" method="post">
+                    <div asp-validation-summary="ModelOnly" role="alert"></div>
+                    <div class="mb-3">
+                        <label asp-for="CurrentPassword" class="form-label"></label>
+                        <div class="input-icon-group has-toggle">
+                            <i class="bi bi-lock" aria-hidden="true"></i>
+                            <input asp-for="CurrentPassword" class="form-control" autocomplete="current-password" autofocus />
+                            <button type="button" class="password-toggle" data-password-toggle="CurrentPassword" aria-label="Show password" aria-pressed="false">
+                                <i class="bi bi-eye" aria-hidden="true"></i>
+                            </button>
+                        </div>
+                        <span asp-validation-for="CurrentPassword" class="text-danger"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="NewPassword" class="form-label"></label>
+                        <div class="input-icon-group has-toggle">
+                            <i class="bi bi-shield-lock" aria-hidden="true"></i>
+                            <input asp-for="NewPassword" class="form-control" autocomplete="new-password" />
+                            <button type="button" class="password-toggle" data-password-toggle="NewPassword" aria-label="Show password" aria-pressed="false">
+                                <i class="bi bi-eye" aria-hidden="true"></i>
+                            </button>
+                        </div>
+                        <span asp-validation-for="NewPassword" class="text-danger"></span>
+                    </div>
+                    <div class="mb-4">
+                        <label asp-for="ConfirmPassword" class="form-label"></label>
+                        <div class="input-icon-group has-toggle">
+                            <i class="bi bi-shield-check" aria-hidden="true"></i>
+                            <input asp-for="ConfirmPassword" class="form-control" autocomplete="new-password" />
+                            <button type="button" class="password-toggle" data-password-toggle="ConfirmPassword" aria-label="Show password" aria-pressed="false">
+                                <i class="bi bi-eye" aria-hidden="true"></i>
+                            </button>
+                        </div>
+                        <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
+                    </div>
+                    <button type="submit" class="btn btn-portal btn-resident">Change Password</button>
+                </form>
+            </div>
+        </section>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

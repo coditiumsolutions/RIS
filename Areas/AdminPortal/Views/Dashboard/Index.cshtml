@@ -1,0 +1,90 @@
+@model AdminDashboardViewModel
+@{
+    ViewData["Title"] = "Dashboard";
+}
+
+<div class="page-header">
+    <div>
+        <h1 class="page-heading">Welcome, @Model.AdminName</h1>
+        <p class="page-subtitle">Administration overview. Counts and activity on this page are sample data.</p>
+    </div>
+    <span class="sample-pill"><i class="bi bi-info-circle" aria-hidden="true"></i> Sample data</span>
+</div>
+
+@if (TempData[ChangePasswordViewModel.SuccessMessageKey] is string passwordChanged)
+{
+    <div class="alert alert-success" role="status">@passwordChanged</div>
+}
+
+@if (HostEnvironment.IsDevelopment())
+{
+    <div class="alert alert-warning" role="status">
+        This development administrator account is for local use. Change the password before production deployment.
+    </div>
+}
+
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <section class="card portal-card stat-card">
+            <div class="card-body">
+                <div class="stat-icon" aria-hidden="true"><i class="bi bi-houses"></i></div>
+                <p class="stat-label">Registered residents</p>
+                <p class="stat-value">@Model.SampleResidentCount</p>
+            </div>
+        </section>
+    </div>
+    <div class="col-md-4">
+        <section class="card portal-card stat-card">
+            <div class="card-body">
+                <div class="stat-icon" aria-hidden="true"><i class="bi bi-person-badge"></i></div>
+                <p class="stat-label">Visitors today</p>
+                <p class="stat-value">@Model.SampleVisitorCount</p>
+            </div>
+        </section>
+    </div>
+    <div class="col-md-4">
+        <section class="card portal-card stat-card">
+            <div class="card-body">
+                <div class="stat-icon" aria-hidden="true"><i class="bi bi-people"></i></div>
+                <p class="stat-label">Portal users</p>
+                <p class="stat-value">@Model.SampleUserCount</p>
+            </div>
+        </section>
+    </div>
+</div>
+
+<h2 class="h5 mb-3" style="color: var(--rp-primary); font-weight: 700;">Modules</h2>
+<div class="shortcut-grid mb-4">
+    <a class="shortcut-link" asp-area="AdminPortal" asp-controller="Residents" asp-action="Index">
+        <strong><i class="bi bi-houses me-1" aria-hidden="true"></i> Resident Management</strong>
+        <span class="d-block text-secondary mt-1">Accounts and residence records, coming later.</span>
+    </a>
+    <a class="shortcut-link" asp-area="AdminPortal" asp-controller="Visitors" asp-action="Index">
+        <strong><i class="bi bi-person-badge me-1" aria-hidden="true"></i> Visitor Management</strong>
+        <span class="d-block text-secondary mt-1">Visitor passes and gate activity, coming later.</span>
+    </a>
+    <a class="shortcut-link" asp-area="AdminPortal" asp-controller="Users" asp-action="Index">
+        <strong><i class="bi bi-people me-1" aria-hidden="true"></i> User Management</strong>
+        <span class="d-block text-secondary mt-1">Administrator accounts, coming later.</span>
+    </a>
+</div>
+
+<section class="card portal-card">
+    <div class="card-body">
+        <h2 class="h5">Recent activity</h2>
+        <ul class="list-group list-group-flush mt-3">
+            @foreach (var item in Model.RecentActivity)
+            {
+                <li class="list-group-item px-0">
+                    <div class="d-flex justify-content-between gap-3">
+                        <div>
+                            <strong>@item.Title</strong>
+                            <div class="text-secondary">@item.Detail</div>
+                        </div>
+                        <time class="text-secondary text-nowrap">@item.When.ToString("dd MMM, HH:mm", CultureInfo.InvariantCulture)</time>
+                    </div>
+                </li>
+            }
+        </ul>
+    </div>
+</section>

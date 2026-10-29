@@ -1,0 +1,94 @@
+@model ResidentDashboardViewModel
+@{
+    ViewData["Title"] = "Dashboard";
+    string Badge(string status) => status switch
+    {
+        "Checked in" => "text-bg-success",
+        "Checked out" => "text-bg-secondary",
+        "Expected" => "text-bg-warning",
+        _ => "text-bg-light"
+    };
+}
+
+<div class="page-header">
+    <div>
+        <h1 class="page-heading">Welcome, @Model.Profile.ResidentName</h1>
+        <p class="page-subtitle">Your home at the resident portal.</p>
+    </div>
+    <span class="sample-pill"><i class="bi bi-info-circle" aria-hidden="true"></i> Visitor activity is sample data</span>
+</div>
+
+@if (TempData[ChangePasswordViewModel.SuccessMessageKey] is string passwordChanged)
+{
+    <div class="alert alert-success" role="status">@passwordChanged</div>
+}
+
+@if (HostEnvironment.IsDevelopment())
+{
+    <div class="alert alert-warning" role="status">
+        This development account is for local use. Change the password before production deployment.
+    </div>
+}
+
+<div class="row g-4">
+    <div class="col-lg-5">
+        <section class="card portal-card">
+            <div class="card-body">
+                <h2 class="h5 mb-3">Profile summary</h2>
+                <dl class="profile-list">
+                    <dt>Name</dt>
+                    <dd>@Model.Profile.ResidentName</dd>
+                    <dt>Username</dt>
+                    <dd>@Model.Profile.Username</dd>
+                    <dt>Email</dt>
+                    <dd>@Model.Profile.Email</dd>
+                    <dt>Mobile</dt>
+                    <dd>@Model.Profile.Mobile</dd>
+                    <dt>Status</dt>
+                    <dd>@(Model.Profile.IsActive ? "Active" : "Inactive")</dd>
+                    <dt>Registered</dt>
+                    <dd>@Model.Profile.CreatedAt.ToString("dd MMM yyyy", CultureInfo.InvariantCulture) UTC</dd>
+                </dl>
+                <a class="btn btn-portal btn-resident mt-3" asp-area="" asp-controller="Profile" asp-action="Index">
+                    <i class="bi bi-person-vcard me-1" aria-hidden="true"></i> Open profile
+                </a>
+            </div>
+        </section>
+    </div>
+    <div class="col-lg-7">
+        <section class="card portal-card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap">
+                    <div>
+                        <h2 class="h5 mb-1">Visitor Management</h2>
+                        <p class="text-secondary mb-0">A full visitor module will be added later. Recent activity below is sample data.</p>
+                    </div>
+                    <a class="btn btn-outline-portal" asp-area="" asp-controller="Visitors" asp-action="Index">Visitors</a>
+                </div>
+                <div class="table-responsive mt-3">
+                    <table class="table align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th scope="col">Visitor</th>
+                                <th scope="col">Purpose</th>
+                                <th scope="col">Status</th>
+                                <th scope="col">When</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var visitor in Model.RecentVisitors)
+                            {
+                                <tr>
+                                    <td>@visitor.VisitorName</td>
+                                    <td>@visitor.Purpose</td>
+                                    <td><span class="badge @Badge(visitor.Status)">@visitor.Status</span></td>
+                                    <td>@visitor.When.ToString("dd MMM yyyy, HH:mm", CultureInfo.InvariantCulture)</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+    </div>
+</div>

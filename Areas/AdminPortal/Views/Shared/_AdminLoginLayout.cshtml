@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <partial name="_HeadAssets" />
+    <title>@ViewData["Title"] - Administration Portal</title>
+</head>
+<body class="login-page admin-login-page">
+    @RenderBody()
+    <partial name="_Scripts" />
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

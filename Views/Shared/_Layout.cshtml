@@ -1,0 +1,19 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <partial name="_HeadAssets" />
+    <title>@ViewData["Title"] - Resident Portal</title>
+</head>
+<body>
+    <div class="public-shell">
+        <main class="container">
+            @RenderBody()
+        </main>
+        <footer class="app-footer">
+            &copy; 2026 Resident Portal Management System. All rights reserved.
+        </footer>
+    </div>
+    <partial name="_Scripts" />
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

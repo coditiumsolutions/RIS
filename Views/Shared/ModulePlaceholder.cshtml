@@ -1,0 +1,24 @@
+@model ModulePlaceholderViewModel
+@{
+    ViewData["Title"] = Model.Title;
+}
+
+<div class="page-header">
+    <div>
+        <h1 class="page-heading">@Model.Title</h1>
+        <p class="page-subtitle">Module placeholder</p>
+    </div>
+</div>
+
+<div class="placeholder-panel module-placeholder">
+    <div class="module-placeholder-icon" aria-hidden="true">
+        <i class="bi @Model.IconClass"></i>
+    </div>
+    <p class="text-secondary mb-3">@Model.Description</p>
+    <span class="sample-pill mb-3"><i class="bi bi-hourglass-split" aria-hidden="true"></i> Coming later</span>
+    <div>
+        <a class="btn btn-portal btn-resident" asp-area="" asp-controller="Home" asp-action="Index">
+            <i class="bi bi-arrow-left me-1" aria-hidden="true"></i> Back to home
+        </a>
+    </div>
+</div>

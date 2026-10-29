@@ -1,0 +1,147 @@
+@{
+    var controller = ViewContext.RouteData.Values["controller"]?.ToString() ?? string.Empty;
+    string Active(string name) =>
+        string.Equals(controller, name, StringComparison.OrdinalIgnoreCase) ? "active" : string.Empty;
+    var displayName = User.Identity?.Name ?? "Resident";
+    var initials = string.Concat(displayName
+        .Split(' ', StringSplitOptions.RemoveEmptyEntries)
+        .Take(2)
+        .Select(part => char.ToUpperInvariant(part[0])));
+    if (string.IsNullOrWhiteSpace(initials))
+    {
+        initials = "R";
+    }
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <partial name="_HeadAssets" />
+    <title>@ViewData["Title"] - Resident Portal</title>
+</head>
+<body class="app-body portal-resident">
+    <div class="app-frame">
+        <header class="app-header-primary">
+            <div class="app-header-primary-inner">
+                <a class="app-brand" asp-area="" asp-controller="Home" asp-action="Index">
+                    <div class="brand-mark" aria-hidden="true"><i class="bi bi-buildings"></i></div>
+                    <div class="app-brand-copy">
+                        <strong>Resident Portal Management System</strong>
+                        <span>Resident Portal</span>
+                    </div>
+                </a>
+                <div class="dropdown app-user-menu">
+                    <button class="dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Account menu">
+                        <span class="app-avatar" aria-hidden="true">@initials</span>
+                        <span class="app-user-name">@displayName</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li>
+                            <a class="dropdown-item" asp-area="" asp-controller="Profile" asp-action="Index">
+                                <i class="bi bi-person-circle" aria-hidden="true"></i> Profile
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" asp-area="" asp-controller="Password" asp-action="Index">
+                                <i class="bi bi-key" aria-hidden="true"></i> Change Password
+                            </a>
+                        </li>
+                        <li><hr class="dropdown-divider" /></li>
+                        <li>
+                            <form asp-area="" asp-controller="Home" asp-action="Logout" method="post">
+                                <button type="submit" class="dropdown-item danger">
+                                    <i class="bi bi-box-arrow-right" aria-hidden="true"></i> Logout
+                                </button>
+                            </form>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </header>
+
+        <header class="app-header-secondary">
+            <div class="app-header-secondary-inner">
+                <button type="button" class="sidebar-toggle" data-sidebar-toggle aria-label="Toggle navigation">
+                    <i class="bi bi-list" aria-hidden="true"></i>
+                </button>
+                <nav class="header-quick-nav d-none d-md-flex" aria-label="Quick links">
+                    <a asp-area="" asp-controller="Home" asp-action="Index" class="@(Active("Home") == "active" ? "active" : null)">Home</a>
+                    <a asp-area="" asp-controller="Dashboard" asp-action="Index" class="@(Active("Dashboard") == "active" ? "active" : null)">Dashboard</a>
+                    <a asp-area="" asp-controller="Visitors" asp-action="Index" class="@(Active("Visitors") == "active" ? "active" : null)">Visitors</a>
+                    <a asp-area="" asp-controller="Password" asp-action="Index" class="@(Active("Password") == "active" ? "active" : null)">Change Password</a>
+                </nav>
+                <nav aria-label="Breadcrumb" class="ms-md-auto">
+                    <ol class="app-breadcrumb">
+                        <li><a asp-area="" asp-controller="Home" asp-action="Index">Resident Portal</a></li>
+                        <li><i class="bi bi-chevron-right" aria-hidden="true"></i></li>
+                        <li class="current">@ViewData["Title"]</li>
+                    </ol>
+                </nav>
+            </div>
+        </header>
+
+        <div class="app-gold-rule" aria-hidden="true"></div>
+
+        <div class="app-shell">
+            <div class="sidebar-backdrop" data-sidebar-backdrop></div>
+            <aside class="app-sidebar" aria-label="Resident navigation">
+                <nav class="app-sidebar-nav">
+                    <a class="@Active("Home")" asp-area="" asp-controller="Home" asp-action="Index">
+                        <i class="bi bi-grid-1x2" aria-hidden="true"></i>
+                        <span class="app-sidebar-label">Home</span>
+                    </a>
+                    <a class="@Active("Dashboard")" asp-area="" asp-controller="Dashboard" asp-action="Index">
+                        <i class="bi bi-speedometer2" aria-hidden="true"></i>
+                        <span class="app-sidebar-label">Dashboard</span>
+                    </a>
+                    <a class="@Active("Profile")" asp-area="" asp-controller="Profile" asp-action="Index">
+                        <i class="bi bi-person-vcard" aria-hidden="true"></i>
+                        <span class="app-sidebar-label">My Profile</span>
+                    </a>
+                    <a class="@Active("Visitors")" asp-area="" asp-controller="Visitors" asp-action="Index">
+                        <i class="bi bi-people" aria-hidden="true"></i>
+                        <span class="app-sidebar-label">Visitor Management</span>
+                    </a>
+                    <a class="@Active("Electricity")" asp-area="" asp-controller="Electricity" asp-action="Index">
+                        <i class="bi bi-lightning-charge" aria-hidden="true"></i>
+                        <span class="app-sidebar-label">Electricity</span>
+                    </a>
+                    <a class="@Active("Utility")" asp-area="" asp-controller="Utility" asp-action="Index">
+                        <i class="bi bi-building-gear" aria-hidden="true"></i>
+                        <span class="app-sidebar-label">Utilities</span>
+                    </a>
+                    <a class="@Active("Complaints")" asp-area="" asp-controller="Complaints" asp-action="Index">
+                        <i class="bi bi-headset" aria-hidden="true"></i>
+                        <span class="app-sidebar-label">Complaints</span>
+                    </a>
+                    <a class="@Active("Notifications")" asp-area="" asp-controller="Notifications" asp-action="Index">
+                        <i class="bi bi-bell" aria-hidden="true"></i>
+                        <span class="app-sidebar-label">Notifications</span>
+                    </a>
+                    <a class="@Active("Password")" asp-area="" asp-controller="Password" asp-action="Index">
+                        <i class="bi bi-key" aria-hidden="true"></i>
+                        <span class="app-sidebar-label">Change Password</span>
+                    </a>
+                    <form asp-area="" asp-controller="Home" asp-action="Logout" method="post">
+                        <button type="submit" class="nav-link-btn">
+                            <i class="bi bi-box-arrow-right" aria-hidden="true"></i>
+                            <span class="app-sidebar-label">Logout</span>
+                        </button>
+                    </form>
+                </nav>
+            </aside>
+
+            <div class="app-content-wrap">
+                <main class="app-content">
+                    @RenderBody()
+                </main>
+                <footer class="app-footer">
+                    &copy; 2026 Resident Portal Management System. All rights reserved.
+                </footer>
+            </div>
+        </div>
+    </div>
+
+    <partial name="_Scripts" />
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>
