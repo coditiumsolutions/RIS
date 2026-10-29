@@ -16,23 +16,26 @@ public class VisitorsController : Controller
     private readonly ApplicationDbContext _db;
     private readonly AuditLogger _audit;
     private readonly AppSettingsService _settings;
+    private readonly BusinessTimeZone _timeZone;
 
-    public VisitorsController(ApplicationDbContext db, AuditLogger audit, AppSettingsService settings)
+    public VisitorsController(ApplicationDbContext db, AuditLogger audit, AppSettingsService settings, BusinessTimeZone timeZone)
     {
         _db = db;
         _audit = audit;
         _settings = settings;
+        _timeZone = timeZone;
     }
 
     [HttpGet]
     public async Task<IActionResult> Index(string? q, DateOnly? date, CancellationToken cancellationToken)
     {
-        var today = date ?? DateOnly.FromDateTime(DateTime.UtcNow);
+        var today = date ?? _timeZone.Today;
 
         var query = _db.VisitorRequests
             .Include(v => v.Resident)
             .Where(v => v.Status == VisitorStatus.Approved ||
                         v.Status == VisitorStatus.CheckedIn ||
+                        v.Status == VisitorStatus.CheckedOut ||
                         (v.ArrivalDate == today && v.Status == VisitorStatus.Pending));
 
         if (!string.IsNullOrWhiteSpace(q))
@@ -81,8 +84,12 @@ public class VisitorsController : Controller
         var checkedInCount = await _db.VisitorRequests
             .CountAsync(v => v.Status == VisitorStatus.CheckedIn, cancellationToken);
 
+        var todayStartUtc = _timeZone.ConvertToUtc(today.ToDateTime(TimeOnly.MinValue));
+        var tomorrowStartUtc = _timeZone.ConvertToUtc(today.AddDays(1).ToDateTime(TimeOnly.MinValue));
         var checkedOutTodayCount = await _db.VisitorRequests
-            .CountAsync(v => v.CheckedOutAt != null && v.CheckedOutAt.Value.Date == DateTime.UtcNow.Date, cancellationToken);
+            .CountAsync(v => v.CheckedOutAt != null &&
+                             v.CheckedOutAt.Value >= todayStartUtc &&
+                             v.CheckedOutAt.Value < tomorrowStartUtc, cancellationToken);
 
         var model = new ReceptionistVisitorListViewModel
         {
@@ -140,9 +147,16 @@ public class VisitorsController : Controller
         if (visitor is null)
             return NotFound();
 
-        if (visitor.Status != VisitorStatus.Approved && visitor.Status != VisitorStatus.Pending)
+        if (visitor.Status != VisitorStatus.Approved)
         {
-            TempData["Error"] = "Only approved or pending visitors can be checked in.";
+            TempData["Error"] = "Only approved visitors can be checked in.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        var today = _timeZone.Today;
+        if (!VisitorDuration.IsWithinVisitWindow(visitor.ArrivalDate, visitor.Duration, today))
+        {
+            TempData["Error"] = "This visitor can only be checked in on the arrival date through the end of the visit duration.";
             return RedirectToAction(nameof(Index));
         }
 
@@ -219,7 +233,14 @@ public class VisitorsController : Controller
             return View(model);
         }
 
-        var resident = await _db.Residents.FindAsync(new object[] { model.ResidentId }, cancellationToken);
+        if (!VisitorDuration.IsAllowed(model.Duration))
+        {
+            ModelState.AddModelError(nameof(model.Duration), "Please select a valid visit duration.");
+            model.AvailableResidents = await GetResidentSelectItemsAsync(cancellationToken);
+            return View(model);
+        }
+
+        var resident = await _db.Residents.FindAsync(new object[] { model.ResidentId!.Value }, cancellationToken);
         if (resident is null || !resident.IsActive)
         {
             ModelState.AddModelError(nameof(model.ResidentId), "Selected resident not found or is inactive.");
@@ -228,9 +249,9 @@ public class VisitorsController : Controller
         }
 
         var maxGuests = await _settings.GetMaxGuestsPerVisitAsync(cancellationToken);
-        if (model.NumberOfGuests > maxGuests)
+        if (!model.NumberOfGuests.HasValue || model.NumberOfGuests.Value < 1 || model.NumberOfGuests.Value > maxGuests)
         {
-            ModelState.AddModelError(nameof(model.NumberOfGuests), $"Maximum {maxGuests} guests allowed per visit.");
+            ModelState.AddModelError(nameof(model.NumberOfGuests), $"Number of guests must be between 1 and {maxGuests}.");
             model.AvailableResidents = await GetResidentSelectItemsAsync(cancellationToken);
             return View(model);
         }
@@ -240,13 +261,13 @@ public class VisitorsController : Controller
 
         var visitor = new VisitorRequest
         {
-            ResidentId = model.ResidentId,
+            ResidentId = model.ResidentId.Value,
             VisitorName = model.VisitorName.Trim(),
             Phone = model.Phone.Trim(),
             Purpose = model.Purpose.Trim(),
             Duration = model.Duration,
-            ArrivalDate = DateOnly.FromDateTime(now),
-            NumberOfGuests = model.NumberOfGuests,
+            ArrivalDate = _timeZone.Today,
+            NumberOfGuests = model.NumberOfGuests.Value,
             CNIC = model.CNIC?.Trim(),
             VehicleRegistrationNo = model.VehicleRegistrationNo?.Trim(),
             Status = VisitorStatus.CheckedIn,

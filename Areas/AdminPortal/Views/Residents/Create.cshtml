@@ -51,7 +51,8 @@
                     <div class="row g-3">
                         <div class="col-md-6">
                             <label asp-for="Mobile" class="form-label"></label>
-                            <input asp-for="Mobile" class="form-control" type="tel" />
+                            <input asp-for="Mobile" class="form-control" type="tel" placeholder="03XXXXXXXXX" />
+                            <div class="form-text">Required. Pakistani mobile format: 03XXXXXXXXX.</div>
                             <span asp-validation-for="Mobile" class="text-danger small"></span>
                         </div>
                         <div class="col-md-6">

@@ -24,7 +24,7 @@
             <dt>Status</dt>
             <dd>@(Model.IsActive ? "Active" : "Inactive")</dd>
             <dt>Registered</dt>
-            <dd>@Model.CreatedAt.ToString("dd MMM yyyy", CultureInfo.InvariantCulture) UTC</dd>
+            <dd>@TimeZone.FormatDateTime(Model.CreatedAt, "dd MMM yyyy")</dd>
         </dl>
     </div>
 </section>

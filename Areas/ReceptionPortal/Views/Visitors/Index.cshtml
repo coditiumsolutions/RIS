@@ -98,7 +98,7 @@
                         @foreach (var visitor in Model.Visitors)
                         {
                             <tr>
-                                <td>
+                                <td class="visitor-name-cell" title="@visitor.VisitorName">
                                     <a asp-area="ReceptionPortal" asp-controller="Visitors" asp-action="Details" asp-route-id="@visitor.Uid">
                                         @visitor.VisitorName
                                     </a>
@@ -119,7 +119,7 @@
                                 <td>@visitor.NumberOfGuests</td>
                                 <td><span class="badge @Badge(visitor.Status)">@StatusLabel(visitor.Status)</span></td>
                                 <td>
-                                    @if (visitor.Status == "Approved" || visitor.Status == "Pending")
+                                    @if (visitor.Status == "Approved")
                                     {
                                         <form asp-area="ReceptionPortal" asp-controller="Visitors" asp-action="CheckIn" asp-route-id="@visitor.Uid" method="post" class="d-inline">
                                             <button type="submit" class="btn btn-sm btn-success">Check In</button>

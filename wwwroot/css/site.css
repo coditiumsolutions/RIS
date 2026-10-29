@@ -1253,3 +1253,17 @@ a:hover {
     font-size: 1.45rem;
   }
 }
+
+.visitor-name-cell {
+  max-width: 14rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.visitor-purpose-cell {
+  max-width: 18rem;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  white-space: normal;
+}

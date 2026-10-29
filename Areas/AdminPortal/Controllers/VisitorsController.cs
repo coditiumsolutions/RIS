@@ -9,7 +9,7 @@ using ResidentPortal.Services;
 namespace ResidentPortal.Areas.AdminPortal.Controllers;
 
 [Area("AdminPortal")]
-[Authorize(Policy = AuthPolicies.AdminOnly)]
+[Authorize(Policy = AuthPolicies.AdminOnly, AuthenticationSchemes = AuthSchemes.Admin)]
 [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
 public class VisitorsController : Controller
 {
@@ -67,7 +67,7 @@ public class VisitorsController : Controller
             })
             .ToListAsync(cancellationToken);
 
-        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        var today = HttpContext.RequestServices.GetRequiredService<BusinessTimeZone>().Today;
         var totalCount = await _db.VisitorRequests.CountAsync(cancellationToken);
         var pendingCount = await _db.VisitorRequests.CountAsync(v => v.Status == VisitorStatus.Pending, cancellationToken);
         var approvedTodayCount = await _db.VisitorRequests.CountAsync(v => v.ArrivalDate == today && v.Status == VisitorStatus.Approved, cancellationToken);
