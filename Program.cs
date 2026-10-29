@@ -21,11 +21,13 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
         sql.CommandTimeout(30);
     }));
 
+builder.Services.AddMemoryCache();
 builder.Services.AddSingleton<PasswordService>();
 builder.Services.AddScoped<PortalAuthentication>();
 builder.Services.AddScoped<AuditLogger>();
 builder.Services.AddScoped<DevelopmentAccountSeeder>();
 builder.Services.AddScoped<PasswordChangeService>();
+builder.Services.AddScoped<AppSettingsService>();
 
 builder.Services.AddAuthentication()
     .AddCookie(AuthSchemes.Resident, options =>
@@ -79,6 +81,33 @@ builder.Services.AddAuthentication()
             context.Response.Redirect(target);
             return Task.CompletedTask;
         };
+    })
+    .AddCookie(AuthSchemes.Receptionist, options =>
+    {
+        options.Cookie.Name = "__Host-ResidentPortal-Receptionist";
+        options.Cookie.HttpOnly = true;
+        options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+        options.Cookie.SameSite = SameSiteMode.Lax;
+        options.Cookie.Path = "/";
+        options.LoginPath = "/receptionportal";
+        options.AccessDeniedPath = "/receptionportal";
+        options.SlidingExpiration = true;
+        options.ExpireTimeSpan = TimeSpan.FromHours(8);
+        options.Events.OnRedirectToLogin = context =>
+        {
+            var path = context.Request.Path.Value ?? "/receptionportal";
+            if (path.Equals("/receptionportal", StringComparison.OrdinalIgnoreCase)
+                || path.Equals("/receptionportal/", StringComparison.OrdinalIgnoreCase)
+                || path.StartsWith("/receptionportal/account", StringComparison.OrdinalIgnoreCase))
+            {
+                context.Response.Redirect("/receptionportal");
+                return Task.CompletedTask;
+            }
+
+            var target = "/receptionportal?returnUrl=" + Uri.EscapeDataString(path + context.Request.QueryString);
+            context.Response.Redirect(target);
+            return Task.CompletedTask;
+        };
     });
 
 builder.Services.AddAuthorization(options =>
@@ -95,6 +124,21 @@ builder.Services.AddAuthorization(options =>
         policy.AddAuthenticationSchemes(AuthSchemes.Admin);
         policy.RequireAuthenticatedUser();
         policy.RequireRole(PortalRoles.Admin);
+    });
+
+    options.AddPolicy(AuthPolicies.ReceptionistOnly, policy =>
+    {
+        policy.AddAuthenticationSchemes(AuthSchemes.Receptionist);
+        policy.RequireAuthenticatedUser();
+        policy.RequireRole(PortalRoles.Receptionist);
+    });
+
+    options.AddPolicy(AuthPolicies.AdminOrReceptionist, policy =>
+    {
+        policy.AddAuthenticationSchemes(AuthSchemes.Admin, AuthSchemes.Receptionist);
+        policy.RequireAuthenticatedUser();
+        policy.RequireAssertion(context =>
+            context.User.IsInRole(PortalRoles.Admin) || context.User.IsInRole(PortalRoles.Receptionist));
     });
 });
 
@@ -135,21 +179,19 @@ app.Use(async (context, next) =>
     await next();
 });
 
+app.UseStaticFiles();
+
 app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.MapStaticAssets();
-
 app.MapControllerRoute(
         name: "areas",
-        pattern: "{area:exists}/{controller=Account}/{action=Index}/{id?}")
-    .WithStaticAssets();
+        pattern: "{area:exists}/{controller=Account}/{action=Index}/{id?}");
 
 app.MapControllerRoute(
         name: "default",
-        pattern: "{controller=Home}/{action=Index}/{id?}")
-    .WithStaticAssets();
+        pattern: "{controller=Home}/{action=Index}/{id?}");
 
 await VerifyDatabaseAsync(app);
 

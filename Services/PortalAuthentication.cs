@@ -34,6 +34,15 @@ public sealed class PortalAuthentication
             admin => admin.IsActive,
             cancellationToken);
 
+    public Task<Receptionist?> ValidateReceptionistAsync(string username, string password, CancellationToken cancellationToken) =>
+        ValidateAsync(
+            username,
+            password,
+            (name, token) => _db.Receptionists.SingleOrDefaultAsync(r => r.Username == name, token),
+            receptionist => receptionist.PasswordHash,
+            receptionist => receptionist.IsActive,
+            cancellationToken);
+
     private async Task<TUser?> ValidateAsync<TUser>(
         string username,
         string password,

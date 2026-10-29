@@ -62,6 +62,9 @@ public class HomeController : Controller
         await _audit.WriteAsync("Resident", resident.Uid, "Login succeeded", cancellationToken);
         await HttpContext.SignInAsync(AuthSchemes.Resident, CreatePrincipal(resident));
 
+        if (resident.MustChangePassword)
+            return RedirectToAction("Index", "Password", new { area = "", mustChange = true });
+
         if (ReturnUrlGuard.IsSafe(returnUrl, adminPortal: false)
             && !returnUrl!.StartsWith("/login", StringComparison.OrdinalIgnoreCase))
             return Redirect(returnUrl);

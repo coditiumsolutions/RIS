@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using ResidentPortal.Data;
 using ResidentPortal.Models;
 using ResidentPortal.Security;
 using ResidentPortal.Services;
@@ -11,16 +13,30 @@ namespace ResidentPortal.Controllers;
 [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
 public class PasswordController : Controller
 {
+    private readonly ApplicationDbContext _db;
     private readonly PasswordChangeService _passwords;
 
-    public PasswordController(PasswordChangeService passwords)
+    public PasswordController(ApplicationDbContext db, PasswordChangeService passwords)
     {
+        _db = db;
         _passwords = passwords;
     }
 
     [HttpGet]
-    public IActionResult Index()
+    public async Task<IActionResult> Index(bool mustChange, CancellationToken cancellationToken)
     {
+        var userId = User.GetUserId();
+        if (userId is null)
+            return RedirectToAction("Login", "Home", new { area = "" });
+
+        var resident = await _db.Residents
+            .AsNoTracking()
+            .SingleOrDefaultAsync(r => r.Uid == userId, cancellationToken);
+
+        if (resident is null)
+            return RedirectToAction("Login", "Home", new { area = "" });
+
+        ViewData["MustChange"] = mustChange || resident.MustChangePassword;
         return View(new ChangePasswordViewModel());
     }
 
@@ -29,8 +45,11 @@ public class PasswordController : Controller
     public async Task<IActionResult> Index(
         [Bind(nameof(ChangePasswordViewModel.CurrentPassword), nameof(ChangePasswordViewModel.NewPassword), nameof(ChangePasswordViewModel.ConfirmPassword))]
         ChangePasswordViewModel model,
+        bool mustChange,
         CancellationToken cancellationToken)
     {
+        ViewData["MustChange"] = mustChange;
+        
         if (!ModelState.IsValid)
             return View(model);
 
@@ -50,6 +69,7 @@ public class PasswordController : Controller
         switch (result)
         {
             case PasswordChangeStatus.Success:
+                await _db.SaveChangesAsync(cancellationToken);
                 TempData[ChangePasswordViewModel.SuccessMessageKey] = "Your password was changed.";
                 return RedirectToAction("Index", "Dashboard", new { area = "" });
             case PasswordChangeStatus.CurrentPasswordIncorrect:

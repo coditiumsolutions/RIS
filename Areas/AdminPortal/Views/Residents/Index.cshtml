@@ -1,3 +1,4 @@
+@model ResidentListViewModel
 @{
     ViewData["Title"] = "Resident Management";
 }
@@ -5,13 +6,100 @@
 <div class="page-header">
     <div>
         <h1 class="page-heading">Resident Management</h1>
-        <p class="page-subtitle">Resident administration actions will be available in a later release.</p>
+        <p class="page-subtitle">Create and manage resident accounts.</p>
+    </div>
+    <a class="btn btn-portal btn-admin" asp-area="AdminPortal" asp-controller="Residents" asp-action="Create">
+        <i class="bi bi-person-plus me-1" aria-hidden="true"></i> Add Resident
+    </a>
+</div>
+
+@if (TempData["Success"] is string successMsg)
+{
+    <div class="alert alert-success" role="status">@successMsg</div>
+}
+
+<div class="row g-3 mb-4">
+    <div class="col-md-6">
+        <div class="card portal-card stat-card">
+            <div class="card-body">
+                <p class="stat-label">Total residents</p>
+                <p class="stat-value">@Model.TotalCount</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card portal-card stat-card">
+            <div class="card-body">
+                <p class="stat-label">Active accounts</p>
+                <p class="stat-value">@Model.ActiveCount</p>
+            </div>
+        </div>
     </div>
 </div>
 
-<div class="placeholder-panel">
-    <p class="text-secondary mb-3">No resident administration actions are available yet.</p>
-    <a class="btn btn-portal btn-admin" asp-area="AdminPortal" asp-controller="Dashboard" asp-action="Index">
-        <i class="bi bi-arrow-left me-1" aria-hidden="true"></i> Back to dashboard
-    </a>
-</div>
+<section class="card portal-card">
+    <div class="card-body">
+        <form method="get" class="row g-3 mb-4">
+            <div class="col-md-9">
+                <label for="q" class="form-label">Search</label>
+                <input type="text" class="form-control" id="q" name="q" value="@Model.SearchQuery" placeholder="Name, username, unit, or mobile..." />
+            </div>
+            <div class="col-md-3 d-flex align-items-end">
+                <button type="submit" class="btn btn-portal btn-admin w-100">Search</button>
+            </div>
+        </form>
+
+        @if (Model.Residents.Any())
+        {
+            <div class="table-responsive">
+                <table class="table align-middle">
+                    <thead>
+                        <tr>
+                            <th scope="col">Name</th>
+                            <th scope="col">Username</th>
+                            <th scope="col">Unit</th>
+                            <th scope="col">Mobile</th>
+                            <th scope="col">Status</th>
+                            <th scope="col">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var resident in Model.Residents)
+                        {
+                            <tr class="@(!resident.IsActive ? "table-secondary" : "")">
+                                <td>@resident.ResidentName</td>
+                                <td>@resident.Username</td>
+                                <td>
+                                    @(resident.UnitNo ?? "-")
+                                    @if (!string.IsNullOrWhiteSpace(resident.Tower))
+                                    {
+                                        <br /><small class="text-secondary">Tower @resident.Tower</small>
+                                    }
+                                </td>
+                                <td>@(resident.Mobile ?? "-")</td>
+                                <td>
+                                    @if (resident.IsActive)
+                                    {
+                                        <span class="badge text-bg-success">Active</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge text-bg-secondary">Inactive</span>
+                                    }
+                                </td>
+                                <td>
+                                    <a asp-area="AdminPortal" asp-controller="Residents" asp-action="Edit" asp-route-id="@resident.Uid" class="btn btn-sm btn-outline-primary">Edit</a>
+                                    <a asp-area="AdminPortal" asp-controller="Residents" asp-action="ResetPassword" asp-route-id="@resident.Uid" class="btn btn-sm btn-outline-secondary">Reset Password</a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+        else
+        {
+            <p class="text-secondary mb-0">No residents found.</p>
+        }
+    </div>
+</section>
