@@ -871,10 +871,6 @@ a:hover {
   padding-right: 0.65rem;
 }
 
-.app-body.sidebar-collapsed .app-sidebar-nav .nav-item-disabled .coming-soon-badge {
-  display: none;
-}
-
 .sidebar-backdrop {
   display: none;
 }
@@ -1234,9 +1230,10 @@ a:hover {
   padding: 0.72rem 0.85rem;
   font-weight: 600;
   color: #8a93a0;
-  opacity: 0.72;
+  opacity: 0.55;
   pointer-events: none;
   cursor: not-allowed;
+  user-select: none;
 }
 
 .app-sidebar-nav .nav-item-disabled i {
@@ -1244,25 +1241,23 @@ a:hover {
   text-align: center;
   font-size: 1.05rem;
   color: #9aa3af;
-}
-
-.app-sidebar-nav .nav-item-disabled .coming-soon-badge {
-  margin-left: auto;
   flex-shrink: 0;
 }
 
 .portal-admin .app-sidebar-nav .nav-item-disabled {
-  color: rgba(215, 224, 236, 0.55);
+  color: rgba(215, 224, 236, 0.45);
 }
 
 .portal-admin .app-sidebar-nav .nav-item-disabled i {
-  color: rgba(201, 162, 39, 0.45);
+  color: rgba(201, 162, 39, 0.4);
 }
 
-.portal-admin .app-sidebar-nav .nav-item-disabled .coming-soon-badge {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(255, 255, 255, 0.12);
-  color: rgba(215, 224, 236, 0.75);
+.portal-reception .app-sidebar-nav .nav-item-disabled {
+  color: rgba(215, 240, 224, 0.45);
+}
+
+.portal-reception .app-sidebar-nav .nav-item-disabled i {
+  color: rgba(201, 162, 39, 0.4);
 }
 
 .table-responsive {
@@ -1333,10 +1328,6 @@ a:hover {
     justify-content: flex-start;
     padding-left: 0.85rem;
     padding-right: 0.85rem;
-  }
-
-  .app-body.sidebar-collapsed .app-sidebar-nav .nav-item-disabled .coming-soon-badge {
-    display: inline-flex;
   }
 
   .sidebar-backdrop {
