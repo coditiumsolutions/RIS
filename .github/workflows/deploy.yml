@@ -29,7 +29,7 @@ jobs:
       - name: Publish application
         run: |
           dotnet publish ResidentPortal.csproj -c Release -o "$env:PUBLISH_PATH"
-        shell: pwsh
+        shell: powershell
 
       - name: Stop IIS App Pool
         id: stop-pool
@@ -66,7 +66,7 @@ jobs:
           } else {
             Write-Host "App pool is already stopped (state: $($pool.State))"
           }
-        shell: pwsh
+        shell: powershell
 
       - name: Backup current deployment
         run: |
@@ -100,7 +100,7 @@ jobs:
           }
           
           Write-Host "Backup retention complete. Current backups: $(($backups | Select-Object -First 5).Count)"
-        shell: pwsh
+        shell: powershell
 
       - name: Deploy to live folder
         run: |
@@ -147,7 +147,8 @@ jobs:
           }
           
           Write-Host "Deployment completed successfully (robocopy exit code: $exitCode)"
-        shell: pwsh
+          exit 0
+        shell: powershell
 
       - name: Start IIS App Pool
         if: always()
@@ -184,10 +185,11 @@ jobs:
           } else {
             Write-Host "App pool is already running"
           }
-        shell: pwsh
+        shell: powershell
 
       - name: Smoke test
         run: |
+          [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
           Write-Host "Running smoke test against $env:SITE_URL..."
           
           # Give the app pool a moment to warm up
@@ -209,4 +211,4 @@ jobs:
             Write-Error "Smoke test failed: $_"
             exit 1
           }
-        shell: pwsh
+        shell: powershell

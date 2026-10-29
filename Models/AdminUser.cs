@@ -16,5 +16,11 @@ public class AdminUser
 
     public bool MustChangePassword { get; set; }
 
+    public string? SecurityStamp { get; set; }
+
+    public int FailedLoginAttempts { get; set; }
+
+    public DateTime? LockoutEndUtc { get; set; }
+
     public DateTime CreatedAt { get; set; }
 }

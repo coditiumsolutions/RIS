@@ -108,7 +108,7 @@
                         @foreach (var visitor in Model.RecentActivity)
                         {
                             <tr>
-                                <td>
+                                <td class="visitor-name-cell" title="@visitor.VisitorName">
                                     @visitor.VisitorName
                                     @if (visitor.IsWalkIn)
                                     {

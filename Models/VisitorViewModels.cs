@@ -5,35 +5,39 @@ namespace ResidentPortal.Models;
 public class RegisterVisitorViewModel
 {
     [Required(ErrorMessage = "Visitor name is required.")]
-    [StringLength(150, ErrorMessage = "Visitor name cannot exceed 150 characters.")]
+    [StringLength(100, ErrorMessage = "Visitor name cannot exceed 100 characters.")]
     [Display(Name = "Visitor Name")]
     public string VisitorName { get; set; } = string.Empty;
 
     [Required(ErrorMessage = "Phone number is required.")]
     [StringLength(30, ErrorMessage = "Phone number cannot exceed 30 characters.")]
+    [ContactPhone]
     [Display(Name = "Phone")]
     public string Phone { get; set; } = string.Empty;
 
     [Required(ErrorMessage = "Purpose of visit is required.")]
-    [StringLength(300, ErrorMessage = "Purpose cannot exceed 300 characters.")]
+    [StringLength(500, ErrorMessage = "Purpose cannot exceed 500 characters.")]
     [Display(Name = "Purpose of Visit")]
     public string Purpose { get; set; } = string.Empty;
 
     [Required(ErrorMessage = "Duration is required.")]
+    [StringLength(30, ErrorMessage = "Duration cannot exceed 30 characters.")]
+    [AllowedDuration]
     [Display(Name = "Duration")]
     public string Duration { get; set; } = string.Empty;
 
     [Required(ErrorMessage = "Arrival date is required.")]
     [DataType(DataType.Date)]
     [Display(Name = "Arrival Date")]
-    public DateOnly ArrivalDate { get; set; } = DateOnly.FromDateTime(DateTime.Today);
+    public DateOnly? ArrivalDate { get; set; }
 
     [Required(ErrorMessage = "Number of guests is required.")]
-    [Range(1, 100, ErrorMessage = "Number of guests must be at least 1.")]
+    [Range(1, int.MaxValue, ErrorMessage = "Number of guests must be at least 1.")]
     [Display(Name = "Number of Guests")]
-    public int NumberOfGuests { get; set; } = 1;
+    public int? NumberOfGuests { get; set; }
 
     [StringLength(30, ErrorMessage = "CNIC cannot exceed 30 characters.")]
+    [Cnic]
     [Display(Name = "CNIC (Optional)")]
     public string? CNIC { get; set; }
 
@@ -95,33 +99,38 @@ public class ReceptionistVisitorListViewModel
 public class WalkInVisitorViewModel
 {
     [Required(ErrorMessage = "Visitor name is required.")]
-    [StringLength(150, ErrorMessage = "Visitor name cannot exceed 150 characters.")]
+    [StringLength(100, ErrorMessage = "Visitor name cannot exceed 100 characters.")]
     [Display(Name = "Visitor Name")]
     public string VisitorName { get; set; } = string.Empty;
 
     [Required(ErrorMessage = "Phone number is required.")]
     [StringLength(30, ErrorMessage = "Phone number cannot exceed 30 characters.")]
+    [ContactPhone]
     [Display(Name = "Phone")]
     public string Phone { get; set; } = string.Empty;
 
-    [Required(ErrorMessage = "Resident selection is required.")]
+    [Required(ErrorMessage = "Please select the visiting resident.")]
     [Display(Name = "Visiting Resident")]
-    public int ResidentId { get; set; }
+    public int? ResidentId { get; set; }
 
     [Required(ErrorMessage = "Purpose of visit is required.")]
-    [StringLength(300, ErrorMessage = "Purpose cannot exceed 300 characters.")]
+    [StringLength(500, ErrorMessage = "Purpose cannot exceed 500 characters.")]
     [Display(Name = "Purpose of Visit")]
     public string Purpose { get; set; } = string.Empty;
 
     [Required(ErrorMessage = "Duration is required.")]
+    [StringLength(30, ErrorMessage = "Duration cannot exceed 30 characters.")]
+    [AllowedDuration]
     [Display(Name = "Duration")]
     public string Duration { get; set; } = string.Empty;
 
-    [Range(1, 100, ErrorMessage = "Number of guests must be at least 1.")]
+    [Required(ErrorMessage = "Number of guests is required.")]
+    [Range(1, int.MaxValue, ErrorMessage = "Number of guests must be at least 1.")]
     [Display(Name = "Number of Guests")]
-    public int NumberOfGuests { get; set; } = 1;
+    public int? NumberOfGuests { get; set; }
 
     [StringLength(30, ErrorMessage = "CNIC cannot exceed 30 characters.")]
+    [Cnic]
     [Display(Name = "CNIC (Optional)")]
     public string? CNIC { get; set; }
 

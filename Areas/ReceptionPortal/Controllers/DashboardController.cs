@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using ResidentPortal.Data;
 using ResidentPortal.Models;
 using ResidentPortal.Security;
+using ResidentPortal.Services;
 
 namespace ResidentPortal.Areas.ReceptionPortal.Controllers;
 
@@ -36,7 +37,10 @@ public class DashboardController : Controller
         if (receptionist.MustChangePassword)
             return RedirectToAction("Index", "Password", new { area = "ReceptionPortal", mustChange = true });
 
-        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        var timeZone = HttpContext.RequestServices.GetRequiredService<BusinessTimeZone>();
+        var today = timeZone.Today;
+        var todayStartUtc = timeZone.ConvertToUtc(today.ToDateTime(TimeOnly.MinValue));
+        var tomorrowStartUtc = timeZone.ConvertToUtc(today.AddDays(1).ToDateTime(TimeOnly.MinValue));
 
         var expectedToday = await _db.VisitorRequests
             .CountAsync(v => v.ArrivalDate == today &&
@@ -44,15 +48,17 @@ public class DashboardController : Controller
 
         var checkedInToday = await _db.VisitorRequests
             .CountAsync(v => v.CheckedInAt != null &&
-                v.CheckedInAt.Value.Date == DateTime.UtcNow.Date &&
+                v.CheckedInAt.Value >= todayStartUtc &&
+                v.CheckedInAt.Value < tomorrowStartUtc &&
                 v.Status == VisitorStatus.CheckedIn, cancellationToken);
 
         var checkedOutToday = await _db.VisitorRequests
             .CountAsync(v => v.CheckedOutAt != null &&
-                v.CheckedOutAt.Value.Date == DateTime.UtcNow.Date, cancellationToken);
+                v.CheckedOutAt.Value >= todayStartUtc &&
+                v.CheckedOutAt.Value < tomorrowStartUtc, cancellationToken);
 
         var walkInsToday = await _db.VisitorRequests
-            .CountAsync(v => v.IsWalkIn && v.CreatedAt.Date == DateTime.UtcNow.Date, cancellationToken);
+            .CountAsync(v => v.IsWalkIn && v.CreatedAt >= todayStartUtc && v.CreatedAt < tomorrowStartUtc, cancellationToken);
 
         var recentActivity = await _db.VisitorRequests
             .Include(v => v.Resident)

@@ -79,4 +79,23 @@ public static class VisitorDuration
         SevenDays,
         FourteenDays
     };
+
+    public static bool IsAllowed(string? duration) =>
+        !string.IsNullOrWhiteSpace(duration) && All.Contains(duration);
+
+    public static int GetStayDays(string duration) => duration switch
+    {
+        OneDay => 1,
+        TwoDays => 2,
+        ThreeDays => 3,
+        SevenDays => 7,
+        FourteenDays => 14,
+        _ => 0
+    };
+
+    public static bool IsWithinVisitWindow(DateOnly arrivalDate, string duration, DateOnly today)
+    {
+        var lastDay = arrivalDate.AddDays(GetStayDays(duration));
+        return today >= arrivalDate && today <= lastDay;
+    }
 }

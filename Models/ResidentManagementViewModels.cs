@@ -55,11 +55,14 @@ public class CreateResidentViewModel
     [Display(Name = "Email (Optional)")]
     public string? Email { get; set; }
 
+    [Required(ErrorMessage = "Mobile number is required.")]
     [StringLength(30, ErrorMessage = "Mobile cannot exceed 30 characters.")]
+    [PakistaniMobile]
     [Display(Name = "Mobile")]
     public string? Mobile { get; set; }
 
     [StringLength(30, ErrorMessage = "Mobile 2 cannot exceed 30 characters.")]
+    [PakistaniMobile]
     [Display(Name = "Mobile 2 (Optional)")]
     public string? Mobile2 { get; set; }
 
@@ -106,11 +109,14 @@ public class EditResidentViewModel
     [Display(Name = "Email (Optional)")]
     public string? Email { get; set; }
 
+    [Required(ErrorMessage = "Mobile number is required.")]
     [StringLength(30, ErrorMessage = "Mobile cannot exceed 30 characters.")]
+    [PakistaniMobile]
     [Display(Name = "Mobile")]
     public string? Mobile { get; set; }
 
     [StringLength(30, ErrorMessage = "Mobile 2 cannot exceed 30 characters.")]
+    [PakistaniMobile]
     [Display(Name = "Mobile 2 (Optional)")]
     public string? Mobile2 { get; set; }
 

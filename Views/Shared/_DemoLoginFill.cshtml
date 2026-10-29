@@ -1,0 +1,18 @@
+@model string
+@inject Microsoft.Extensions.Configuration.IConfiguration Configuration
+@{
+    var enabled = Configuration.GetValue("DemoLogin:Enabled", true);
+    var username = enabled ? Configuration[$"DemoLogin:{Model}:Username"] : null;
+    var password = enabled ? Configuration[$"DemoLogin:{Model}:Password"] : null;
+}
+@if (enabled && !string.IsNullOrWhiteSpace(username) && !string.IsNullOrWhiteSpace(password))
+{
+    <button type="button"
+            class="btn btn-outline-secondary btn-sm w-100 mt-3"
+            id="fill-demo-credentials"
+            data-demo-username="@username"
+            data-demo-password="@password">
+        Fill test credentials
+    </button>
+    <script src="~/js/demo-login.js" asp-append-version="true"></script>
+}

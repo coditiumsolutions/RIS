@@ -9,7 +9,7 @@ using ResidentPortal.Services;
 namespace ResidentPortal.Areas.AdminPortal.Controllers;
 
 [Area("AdminPortal")]
-[Authorize(Policy = AuthPolicies.AdminOnly)]
+[Authorize(Policy = AuthPolicies.AdminOnly, AuthenticationSchemes = AuthSchemes.Admin)]
 [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
 public class UsersController : Controller
 {
@@ -94,6 +94,7 @@ public class UsersController : Controller
             Email = model.Email?.Trim(),
             IsActive = true,
             MustChangePassword = true,
+            SecurityStamp = Guid.NewGuid().ToString("D").ToLowerInvariant(),
             CreatedAt = DateTime.UtcNow
         };
 
@@ -147,10 +148,14 @@ public class UsersController : Controller
         }
 
         var userId = User.GetUserId();
+        var wasActive = receptionist.IsActive;
         receptionist.FullName = model.FullName.Trim();
         receptionist.Username = model.Username.Trim();
         receptionist.Email = model.Email?.Trim();
         receptionist.IsActive = model.IsActive;
+
+        if (wasActive && !model.IsActive)
+            receptionist.SecurityStamp = Guid.NewGuid().ToString("D").ToLowerInvariant();
 
         await _db.SaveChangesAsync(cancellationToken);
         await _audit.WriteAsync("Admin", userId, $"Updated receptionist: {receptionist.FullName} (ID: {receptionist.Uid})", cancellationToken);
@@ -193,11 +198,38 @@ public class UsersController : Controller
         var userId = User.GetUserId();
         receptionist.PasswordHash = _passwords.Hash(model.NewPassword);
         receptionist.MustChangePassword = model.MustChangePassword;
+        receptionist.SecurityStamp = Guid.NewGuid().ToString("D").ToLowerInvariant();
 
         await _db.SaveChangesAsync(cancellationToken);
         await _audit.WriteAsync("Admin", userId, $"Reset password for receptionist: {receptionist.FullName} (ID: {receptionist.Uid})", cancellationToken);
 
         TempData["Success"] = $"Password for {receptionist.FullName} has been reset.";
+        return RedirectToAction(nameof(Index));
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ToggleReceptionistStatus(int id, CancellationToken cancellationToken)
+    {
+        var receptionist = await _db.Receptionists.FindAsync(new object[] { id }, cancellationToken);
+        if (receptionist is null)
+            return NotFound();
+
+        var userId = User.GetUserId();
+        var wasActive = receptionist.IsActive;
+        receptionist.IsActive = !receptionist.IsActive;
+
+        if (wasActive)
+        {
+            receptionist.SecurityStamp = Guid.NewGuid().ToString("D").ToLowerInvariant();
+        }
+
+        await _db.SaveChangesAsync(cancellationToken);
+
+        var action = receptionist.IsActive ? "activated" : "deactivated";
+        await _audit.WriteAsync("Admin", userId, $"Receptionist {action}: {receptionist.FullName} (ID: {receptionist.Uid})", cancellationToken);
+
+        TempData["Success"] = $"Receptionist {receptionist.FullName} has been {action}.";
         return RedirectToAction(nameof(Index));
     }
 }

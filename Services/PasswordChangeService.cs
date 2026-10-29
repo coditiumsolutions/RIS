@@ -45,6 +45,8 @@ public sealed class PasswordChangeService
 
         resident.PasswordHash = _passwords.Hash(newPassword);
         resident.MustChangePassword = false;
+        resident.SecurityStamp = Guid.NewGuid().ToString("D").ToLowerInvariant();
+        await _db.SaveChangesAsync(cancellationToken);
         await _audit.WriteAsync("Resident", resident.Uid, "Password changed", cancellationToken);
         return PasswordChangeStatus.Success;
     }
@@ -69,6 +71,8 @@ public sealed class PasswordChangeService
 
         admin.PasswordHash = _passwords.Hash(newPassword);
         admin.MustChangePassword = false;
+        admin.SecurityStamp = Guid.NewGuid().ToString("D").ToLowerInvariant();
+        await _db.SaveChangesAsync(cancellationToken);
         await _audit.WriteAsync("Admin", admin.Uid, "Password changed", cancellationToken);
         return PasswordChangeStatus.Success;
     }
@@ -93,6 +97,8 @@ public sealed class PasswordChangeService
 
         receptionist.PasswordHash = _passwords.Hash(newPassword);
         receptionist.MustChangePassword = false;
+        receptionist.SecurityStamp = Guid.NewGuid().ToString("D").ToLowerInvariant();
+        await _db.SaveChangesAsync(cancellationToken);
         await _audit.WriteAsync("Receptionist", receptionist.Uid, "Password changed", cancellationToken);
         return PasswordChangeStatus.Success;
     }

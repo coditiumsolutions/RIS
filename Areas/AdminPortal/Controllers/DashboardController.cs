@@ -10,7 +10,7 @@ using ResidentPortal.Services;
 namespace ResidentPortal.Areas.AdminPortal.Controllers;
 
 [Area("AdminPortal")]
-[Authorize(Policy = AuthPolicies.AdminOnly)]
+[Authorize(Policy = AuthPolicies.AdminOnly, AuthenticationSchemes = AuthSchemes.Admin)]
 [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
 public class DashboardController : Controller
 {
@@ -34,14 +34,34 @@ public class DashboardController : Controller
         if (admin is null)
             return await SignOutInactiveAsync();
 
+        var timeZone = HttpContext.RequestServices.GetRequiredService<BusinessTimeZone>();
+        var today = timeZone.Today;
+
+        var residentCount = await _db.Residents.CountAsync(cancellationToken);
+        var visitorsToday = await _db.VisitorRequests.CountAsync(v => v.ArrivalDate == today, cancellationToken);
+        var portalUserCount = await _db.AdminUsers.CountAsync(cancellationToken)
+            + await _db.Receptionists.CountAsync(cancellationToken);
+
+        var recentActivity = await _db.AuditLogs
+            .AsNoTracking()
+            .OrderByDescending(a => a.CreatedAt)
+            .Take(8)
+            .Select(a => new AdminActivityItem
+            {
+                Title = a.Action,
+                Detail = a.UserType + (a.UserId.HasValue ? $" #{a.UserId}" : string.Empty),
+                When = a.CreatedAt
+            })
+            .ToListAsync(cancellationToken);
+
         var model = new AdminDashboardViewModel
         {
             AdminName = admin.FullName,
             Username = admin.Username,
-            SampleResidentCount = 128,
-            SampleVisitorCount = 14,
-            SampleUserCount = 6,
-            RecentActivity = SampleDashboardData.RecentActivity
+            ResidentCount = residentCount,
+            VisitorsTodayCount = visitorsToday,
+            PortalUserCount = portalUserCount,
+            RecentActivity = recentActivity
         };
         return View(model);
     }

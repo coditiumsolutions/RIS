@@ -6,21 +6,13 @@
 <div class="page-header">
     <div>
         <h1 class="page-heading">Welcome, @Model.AdminName</h1>
-        <p class="page-subtitle">Administration overview. Counts and activity on this page are sample data.</p>
+        <p class="page-subtitle">Administration overview from live portal data.</p>
     </div>
-    <span class="sample-pill"><i class="bi bi-info-circle" aria-hidden="true"></i> Sample data</span>
 </div>
 
 @if (TempData[ChangePasswordViewModel.SuccessMessageKey] is string passwordChanged)
 {
     <div class="alert alert-success" role="status">@passwordChanged</div>
-}
-
-@if (HostEnvironment.IsDevelopment())
-{
-    <div class="alert alert-warning" role="status">
-        This development administrator account is for local use. Change the password before production deployment.
-    </div>
 }
 
 <div class="row g-3 mb-4">
@@ -29,7 +21,7 @@
             <div class="card-body">
                 <div class="stat-icon" aria-hidden="true"><i class="bi bi-houses"></i></div>
                 <p class="stat-label">Registered residents</p>
-                <p class="stat-value">@Model.SampleResidentCount</p>
+                <p class="stat-value">@Model.ResidentCount</p>
             </div>
         </section>
     </div>
@@ -38,7 +30,7 @@
             <div class="card-body">
                 <div class="stat-icon" aria-hidden="true"><i class="bi bi-person-badge"></i></div>
                 <p class="stat-label">Visitors today</p>
-                <p class="stat-value">@Model.SampleVisitorCount</p>
+                <p class="stat-value">@Model.VisitorsTodayCount</p>
             </div>
         </section>
     </div>
@@ -47,7 +39,7 @@
             <div class="card-body">
                 <div class="stat-icon" aria-hidden="true"><i class="bi bi-people"></i></div>
                 <p class="stat-label">Portal users</p>
-                <p class="stat-value">@Model.SampleUserCount</p>
+                <p class="stat-value">@Model.PortalUserCount</p>
             </div>
         </section>
     </div>
@@ -57,34 +49,41 @@
 <div class="shortcut-grid mb-4">
     <a class="shortcut-link" asp-area="AdminPortal" asp-controller="Residents" asp-action="Index">
         <strong><i class="bi bi-houses me-1" aria-hidden="true"></i> Resident Management</strong>
-        <span class="d-block text-secondary mt-1">Accounts and residence records, coming later.</span>
+        <span class="d-block text-secondary mt-1">Create, edit, and search resident accounts.</span>
     </a>
     <a class="shortcut-link" asp-area="AdminPortal" asp-controller="Visitors" asp-action="Index">
         <strong><i class="bi bi-person-badge me-1" aria-hidden="true"></i> Visitor Management</strong>
-        <span class="d-block text-secondary mt-1">Visitor passes and gate activity, coming later.</span>
+        <span class="d-block text-secondary mt-1">Review, approve, and decline visitor requests.</span>
     </a>
     <a class="shortcut-link" asp-area="AdminPortal" asp-controller="Users" asp-action="Index">
         <strong><i class="bi bi-people me-1" aria-hidden="true"></i> User Management</strong>
-        <span class="d-block text-secondary mt-1">Administrator accounts, coming later.</span>
+        <span class="d-block text-secondary mt-1">Manage receptionist accounts and portal users.</span>
     </a>
 </div>
 
 <section class="card portal-card">
     <div class="card-body">
         <h2 class="h5">Recent activity</h2>
-        <ul class="list-group list-group-flush mt-3">
-            @foreach (var item in Model.RecentActivity)
-            {
-                <li class="list-group-item px-0">
-                    <div class="d-flex justify-content-between gap-3">
-                        <div>
-                            <strong>@item.Title</strong>
-                            <div class="text-secondary">@item.Detail</div>
+        @if (Model.RecentActivity.Any())
+        {
+            <ul class="list-group list-group-flush mt-3">
+                @foreach (var item in Model.RecentActivity)
+                {
+                    <li class="list-group-item px-0">
+                        <div class="d-flex justify-content-between gap-3">
+                            <div>
+                                <strong>@item.Title</strong>
+                                <div class="text-secondary">@item.Detail</div>
+                            </div>
+                            <time class="text-secondary text-nowrap">@TimeZone.FormatDateTime(item.When, "dd MMM, HH:mm")</time>
                         </div>
-                        <time class="text-secondary text-nowrap">@item.When.ToString("dd MMM, HH:mm", CultureInfo.InvariantCulture)</time>
-                    </div>
-                </li>
-            }
-        </ul>
+                    </li>
+                }
+            </ul>
+        }
+        else
+        {
+            <p class="text-secondary mb-0 mt-3">No recent activity recorded.</p>
+        }
     </div>
 </section>

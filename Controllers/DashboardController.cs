@@ -26,10 +26,24 @@ public class DashboardController : Controller
         if (resident is null)
             return await SignOutInactiveAsync();
 
+        var recentVisitors = await _db.VisitorRequests
+            .AsNoTracking()
+            .Where(v => v.ResidentId == resident.Uid)
+            .OrderByDescending(v => v.CreatedAt)
+            .Take(5)
+            .Select(v => new VisitorActivityItem
+            {
+                VisitorName = v.VisitorName,
+                Purpose = v.Purpose,
+                Status = v.Status,
+                When = v.CreatedAt
+            })
+            .ToListAsync(cancellationToken);
+
         var model = new ResidentDashboardViewModel
         {
             Profile = ToProfile(resident),
-            RecentVisitors = SampleDashboardData.RecentVisitors
+            RecentVisitors = recentVisitors
         };
         return View(model);
     }

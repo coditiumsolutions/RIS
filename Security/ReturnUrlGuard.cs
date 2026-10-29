@@ -17,13 +17,10 @@ public static class ReturnUrlGuard
         if (string.IsNullOrWhiteSpace(returnUrl))
             return false;
 
-        if (!returnUrl.StartsWith('/'))
+        if (ContainsControlOrWhitespaceChars(returnUrl))
             return false;
 
-        if (returnUrl.StartsWith("//", StringComparison.Ordinal) || returnUrl.StartsWith("/\\", StringComparison.Ordinal))
-            return false;
-
-        if (returnUrl.Contains('\\') || returnUrl.Contains('\r') || returnUrl.Contains('\n'))
+        if (!IsLocalUrl(returnUrl))
             return false;
 
         var isAdminPath = returnUrl.StartsWith("/adminportal", StringComparison.OrdinalIgnoreCase);
@@ -36,5 +33,34 @@ public static class ReturnUrlGuard
             PortalType.Resident => !isAdminPath && !isReceptionPath,
             _ => false
         };
+    }
+
+    // Mirrors Microsoft.AspNetCore.Mvc.Routing.UrlHelper.IsLocalUrl
+    public static bool IsLocalUrl(string url)
+    {
+        if (string.IsNullOrEmpty(url))
+            return false;
+
+        if (url.Contains('\\'))
+            return false;
+
+        if (url[0] == '/' && (url.Length == 1 || (url[1] != '/' && url[1] != '\\')))
+            return true;
+
+        if (url.Length > 1 && url[0] == '~' && url[1] == '/')
+            return true;
+
+        return false;
+    }
+
+    private static bool ContainsControlOrWhitespaceChars(string value)
+    {
+        foreach (var c in value)
+        {
+            if (char.IsControl(c) || char.IsWhiteSpace(c))
+                return true;
+        }
+
+        return false;
     }
 }

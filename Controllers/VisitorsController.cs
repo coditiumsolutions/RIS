@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -15,12 +16,14 @@ public class VisitorsController : Controller
     private readonly ApplicationDbContext _db;
     private readonly AuditLogger _audit;
     private readonly AppSettingsService _settings;
+    private readonly BusinessTimeZone _timeZone;
 
-    public VisitorsController(ApplicationDbContext db, AuditLogger audit, AppSettingsService settings)
+    public VisitorsController(ApplicationDbContext db, AuditLogger audit, AppSettingsService settings, BusinessTimeZone timeZone)
     {
         _db = db;
         _audit = audit;
         _settings = settings;
+        _timeZone = timeZone;
     }
 
     [HttpGet]
@@ -29,6 +32,9 @@ public class VisitorsController : Controller
         var userId = User.GetUserId();
         if (userId is null)
             return RedirectToAction("Login", "Home");
+
+        if (!await ResidentIsActiveAsync(userId.Value, cancellationToken))
+            return await SignOutInactiveAsync();
 
         var visitors = await _db.VisitorRequests
             .Where(v => v.ResidentId == userId.Value)
@@ -70,11 +76,18 @@ public class VisitorsController : Controller
     }
 
     [HttpGet]
-    public IActionResult Register()
+    public async Task<IActionResult> Register(CancellationToken cancellationToken)
     {
+        var userId = User.GetUserId();
+        if (userId is null)
+            return RedirectToAction("Login", "Home");
+
+        if (!await ResidentIsActiveAsync(userId.Value, cancellationToken))
+            return await SignOutInactiveAsync();
+
         var model = new RegisterVisitorViewModel
         {
-            ArrivalDate = DateOnly.FromDateTime(DateTime.Today),
+            ArrivalDate = _timeZone.Today,
             Duration = VisitorDuration.LessThan6Hours
         };
         return View(model);
@@ -91,14 +104,29 @@ public class VisitorsController : Controller
         if (userId is null)
             return RedirectToAction("Login", "Home");
 
+        if (!await ResidentIsActiveAsync(userId.Value, cancellationToken))
+            return await SignOutInactiveAsync();
+
         var maxGuests = await _settings.GetMaxGuestsPerVisitAsync(cancellationToken);
-        if (model.NumberOfGuests > maxGuests)
+        if (!model.NumberOfGuests.HasValue || model.NumberOfGuests.Value < 1 || model.NumberOfGuests.Value > maxGuests)
         {
-            ModelState.AddModelError(nameof(model.NumberOfGuests), $"Maximum {maxGuests} guests allowed per visit.");
+            ModelState.AddModelError(nameof(model.NumberOfGuests), $"Number of guests must be between 1 and {maxGuests}.");
             return View(model);
         }
 
-        if (model.ArrivalDate < DateOnly.FromDateTime(DateTime.Today))
+        if (!VisitorDuration.IsAllowed(model.Duration))
+        {
+            ModelState.AddModelError(nameof(model.Duration), "Please select a valid visit duration.");
+            return View(model);
+        }
+
+        if (!model.ArrivalDate.HasValue)
+        {
+            ModelState.AddModelError(nameof(model.ArrivalDate), "Arrival date is required.");
+            return View(model);
+        }
+
+        if (model.ArrivalDate.Value < _timeZone.Today)
         {
             ModelState.AddModelError(nameof(model.ArrivalDate), "Arrival date cannot be in the past.");
             return View(model);
@@ -114,8 +142,8 @@ public class VisitorsController : Controller
             Phone = model.Phone.Trim(),
             Purpose = model.Purpose.Trim(),
             Duration = model.Duration,
-            ArrivalDate = model.ArrivalDate,
-            NumberOfGuests = model.NumberOfGuests,
+            ArrivalDate = model.ArrivalDate.Value,
+            NumberOfGuests = model.NumberOfGuests!.Value,
             CNIC = model.CNIC?.Trim(),
             VehicleRegistrationNo = model.VehicleRegistrationNo?.Trim(),
             Status = approvalRequired ? VisitorStatus.Pending : VisitorStatus.Approved,
@@ -143,6 +171,9 @@ public class VisitorsController : Controller
         var userId = User.GetUserId();
         if (userId is null)
             return RedirectToAction("Login", "Home");
+
+        if (!await ResidentIsActiveAsync(userId.Value, cancellationToken))
+            return await SignOutInactiveAsync();
 
         var visitor = await _db.VisitorRequests
             .Include(v => v.Resident)
@@ -181,6 +212,9 @@ public class VisitorsController : Controller
         if (userId is null)
             return RedirectToAction("Login", "Home");
 
+        if (!await ResidentIsActiveAsync(userId.Value, cancellationToken))
+            return await SignOutInactiveAsync();
+
         var visitor = await _db.VisitorRequests
             .SingleOrDefaultAsync(v => v.Uid == id && v.ResidentId == userId.Value, cancellationToken);
 
@@ -201,5 +235,16 @@ public class VisitorsController : Controller
 
         TempData["Success"] = $"Visitor {visitor.VisitorName} has been cancelled.";
         return RedirectToAction(nameof(Index));
+    }
+
+    private async Task<bool> ResidentIsActiveAsync(int userId, CancellationToken cancellationToken)
+    {
+        return await _db.Residents.AnyAsync(r => r.Uid == userId && r.IsActive, cancellationToken);
+    }
+
+    private async Task<IActionResult> SignOutInactiveAsync()
+    {
+        await HttpContext.SignOutAsync(AuthSchemes.Resident);
+        return RedirectToAction("Login", "Home");
     }
 }

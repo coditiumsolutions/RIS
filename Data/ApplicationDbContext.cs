@@ -45,6 +45,9 @@ public class ApplicationDbContext : DbContext
             entity.Property(e => e.Status).HasColumnName("Status").HasMaxLength(30).HasDefaultValue("Active");
             entity.Property(e => e.IsActive).HasDefaultValue(true);
             entity.Property(e => e.MustChangePassword).HasDefaultValue(false);
+            entity.Property(e => e.SecurityStamp).HasMaxLength(36);
+            entity.Property(e => e.FailedLoginAttempts).HasDefaultValue(0);
+            entity.Property(e => e.LockoutEndUtc).HasColumnType("datetime2");
             entity.Property(e => e.CreatedAt).HasColumnType("datetime2").HasDefaultValueSql("SYSUTCDATETIME()");
             entity.HasIndex(e => e.Username).IsUnique();
             entity.HasMany(e => e.VisitorRequests).WithOne(v => v.Resident).HasForeignKey(v => v.ResidentId);
@@ -61,6 +64,9 @@ public class ApplicationDbContext : DbContext
             entity.Property(e => e.Email).HasMaxLength(256);
             entity.Property(e => e.IsActive).HasDefaultValue(true);
             entity.Property(e => e.MustChangePassword).HasDefaultValue(false);
+            entity.Property(e => e.SecurityStamp).HasMaxLength(36);
+            entity.Property(e => e.FailedLoginAttempts).HasDefaultValue(0);
+            entity.Property(e => e.LockoutEndUtc).HasColumnType("datetime2");
             entity.Property(e => e.CreatedAt).HasColumnType("datetime2").HasDefaultValueSql("SYSUTCDATETIME()");
             entity.HasIndex(e => e.Username).IsUnique();
         });
@@ -76,6 +82,9 @@ public class ApplicationDbContext : DbContext
             entity.Property(e => e.Email).HasMaxLength(256);
             entity.Property(e => e.IsActive).HasDefaultValue(true);
             entity.Property(e => e.MustChangePassword).HasDefaultValue(false);
+            entity.Property(e => e.SecurityStamp).HasMaxLength(36);
+            entity.Property(e => e.FailedLoginAttempts).HasDefaultValue(0);
+            entity.Property(e => e.LockoutEndUtc).HasColumnType("datetime2");
             entity.Property(e => e.CreatedAt).HasColumnType("datetime2").HasDefaultValueSql("SYSUTCDATETIME()");
             entity.HasIndex(e => e.Username).IsUnique();
         });
@@ -107,7 +116,7 @@ public class ApplicationDbContext : DbContext
             entity.Property(e => e.Uid).HasColumnName("uid").UseIdentityColumn();
             entity.Property(e => e.VisitorName).HasMaxLength(150).IsRequired();
             entity.Property(e => e.Phone).HasMaxLength(30).IsRequired();
-            entity.Property(e => e.Purpose).HasMaxLength(300).IsRequired();
+            entity.Property(e => e.Purpose).HasMaxLength(500).IsRequired();
             entity.Property(e => e.Duration).HasMaxLength(30).IsRequired();
             entity.Property(e => e.ArrivalDate).HasColumnType("date");
             entity.Property(e => e.NumberOfGuests).HasDefaultValue(1);

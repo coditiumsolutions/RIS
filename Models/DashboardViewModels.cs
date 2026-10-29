@@ -48,11 +48,11 @@ public class AdminDashboardViewModel
 
     public string Username { get; set; } = string.Empty;
 
-    public int SampleResidentCount { get; set; }
+    public int ResidentCount { get; set; }
 
-    public int SampleVisitorCount { get; set; }
+    public int VisitorsTodayCount { get; set; }
 
-    public int SampleUserCount { get; set; }
+    public int PortalUserCount { get; set; }
 
     public IReadOnlyList<AdminActivityItem> RecentActivity { get; set; } = [];
 }

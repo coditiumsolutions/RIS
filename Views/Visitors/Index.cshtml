@@ -93,7 +93,7 @@
                         @foreach (var visitor in Model.Visitors)
                         {
                             <tr>
-                                <td>
+                                <td class="visitor-name-cell" title="@visitor.VisitorName">
                                     <a asp-area="" asp-controller="Visitors" asp-action="Details" asp-route-id="@visitor.Uid">
                                         @visitor.VisitorName
                                     </a>

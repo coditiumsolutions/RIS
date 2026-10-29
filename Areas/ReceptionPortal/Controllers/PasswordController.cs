@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -62,7 +63,22 @@ public class PasswordController : Controller
         switch (status)
         {
             case PasswordChangeStatus.Success:
-                await _db.SaveChangesAsync(cancellationToken);
+                var receptionist = await _db.Receptionists.AsNoTracking().SingleOrDefaultAsync(r => r.Uid == userId.Value, cancellationToken);
+                if (receptionist is not null)
+                {
+                    var claims = new List<System.Security.Claims.Claim>
+                    {
+                        new(System.Security.Claims.ClaimTypes.NameIdentifier, receptionist.Uid.ToString()),
+                        new(System.Security.Claims.ClaimTypes.Name, receptionist.FullName),
+                        new(System.Security.Claims.ClaimTypes.Role, PortalRoles.Receptionist),
+                        new("username", receptionist.Username),
+                        new("MustChangePassword", receptionist.MustChangePassword.ToString()),
+                        new("SecurityStamp", receptionist.SecurityStamp ?? string.Empty)
+                    };
+                    if (!string.IsNullOrWhiteSpace(receptionist.Email))
+                        claims.Add(new System.Security.Claims.Claim(System.Security.Claims.ClaimTypes.Email, receptionist.Email));
+                    await HttpContext.SignInAsync(AuthSchemes.Receptionist, new System.Security.Claims.ClaimsPrincipal(new System.Security.Claims.ClaimsIdentity(claims, AuthSchemes.Receptionist)));
+                }
                 TempData[ChangePasswordViewModel.SuccessMessageKey] = "Your password has been changed successfully.";
                 return RedirectToAction("Index", "Dashboard", new { area = "ReceptionPortal" });
 

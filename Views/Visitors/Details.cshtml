@@ -55,7 +55,7 @@
                     <dt>Phone</dt>
                     <dd>@Model.Phone</dd>
                     <dt>Purpose</dt>
-                    <dd>@Model.Purpose</dd>
+                    <dd class="visitor-purpose-cell">@Model.Purpose</dd>
                     <dt>Duration</dt>
                     <dd>@Model.Duration</dd>
                     <dt>Arrival Date</dt>
@@ -90,16 +90,16 @@
                 </p>
                 <dl class="profile-list">
                     <dt>Registered</dt>
-                    <dd>@Model.CreatedAt.ToString("dd MMM yyyy, HH:mm", CultureInfo.InvariantCulture) UTC</dd>
+                    <dd>@TimeZone.FormatDateTime(Model.CreatedAt)</dd>
                     @if (Model.CheckedInAt.HasValue)
                     {
                         <dt>Checked In</dt>
-                        <dd>@Model.CheckedInAt.Value.ToString("dd MMM yyyy, HH:mm", CultureInfo.InvariantCulture) UTC</dd>
+                        <dd>@TimeZone.FormatDateTime(Model.CheckedInAt)</dd>
                     }
                     @if (Model.CheckedOutAt.HasValue)
                     {
                         <dt>Checked Out</dt>
-                        <dd>@Model.CheckedOutAt.Value.ToString("dd MMM yyyy, HH:mm", CultureInfo.InvariantCulture) UTC</dd>
+                        <dd>@TimeZone.FormatDateTime(Model.CheckedOutAt)</dd>
                     }
                     @if (!string.IsNullOrWhiteSpace(Model.DeclineReason))
                     {

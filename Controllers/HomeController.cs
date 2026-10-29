@@ -2,6 +2,7 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using ResidentPortal.Models;
 using ResidentPortal.Security;
 using ResidentPortal.Services;
@@ -24,16 +25,24 @@ public class HomeController : Controller
 
     [Authorize(Policy = AuthPolicies.ResidentOnly)]
     [HttpGet]
+    [HttpHead]
     public IActionResult Index()
     {
+        if (HttpMethods.IsHead(Request.Method))
+            return Ok();
+
         ViewData["Title"] = "Home";
         return View();
     }
 
     [AllowAnonymous]
     [HttpGet("/login")]
+    [HttpHead("/login")]
     public async Task<IActionResult> Login(string? returnUrl)
     {
+        if (HttpMethods.IsHead(Request.Method))
+            return Ok();
+
         if (await ResidentIsSignedInAsync())
             return RedirectToAction(nameof(Index), new { area = "" });
 
@@ -44,22 +53,36 @@ public class HomeController : Controller
     [AllowAnonymous]
     [HttpPost("/login")]
     [ValidateAntiForgeryToken]
+    [EnableRateLimiting("login")]
     public async Task<IActionResult> Login(LoginViewModel model, string? returnUrl, CancellationToken cancellationToken)
     {
         ViewData["ReturnUrl"] = returnUrl;
         if (!ModelState.IsValid)
             return View(model);
 
-        var resident = await _authentication.ValidateResidentAsync(model.Username, model.Password, cancellationToken);
-        if (resident is null)
+        var (result, resident, lockoutRemaining) = await _authentication.ValidateResidentAsync(model.Username, model.Password, cancellationToken);
+
+        switch (result)
         {
-            await _audit.WriteAsync("Resident", null, "Login failed", cancellationToken);
-            _logger.LogWarning("Resident login failed.");
-            ModelState.AddModelError(string.Empty, "Invalid username or password.");
-            return View(model);
+            case LoginResult.AccountLocked:
+                await _audit.WriteAsync("Resident", null, "Login blocked - account locked", cancellationToken);
+                var minutes = lockoutRemaining.HasValue ? (int)Math.Ceiling(lockoutRemaining.Value.TotalMinutes) : 15;
+                ModelState.AddModelError(string.Empty, $"Account is locked. Please try again in {minutes} minute(s).");
+                return View(model);
+
+            case LoginResult.AccountInactive:
+                await _audit.WriteAsync("Resident", null, "Login blocked - account inactive", cancellationToken);
+                ModelState.AddModelError(string.Empty, "Your account has been deactivated. Please contact administration.");
+                return View(model);
+
+            case LoginResult.InvalidCredentials:
+                await _audit.WriteAsync("Resident", null, "Login failed", cancellationToken);
+                _logger.LogWarning("Resident login failed.");
+                ModelState.AddModelError(string.Empty, "Invalid username or password.");
+                return View(model);
         }
 
-        await _audit.WriteAsync("Resident", resident.Uid, "Login succeeded", cancellationToken);
+        await _audit.WriteAsync("Resident", resident!.Uid, "Login succeeded", cancellationToken);
         await HttpContext.SignInAsync(AuthSchemes.Resident, CreatePrincipal(resident));
 
         if (resident.MustChangePassword)
@@ -78,6 +101,13 @@ public class HomeController : Controller
     public async Task<IActionResult> Logout(CancellationToken cancellationToken)
     {
         var userId = User.GetUserId();
+
+        if (userId.HasValue)
+        {
+            var stampService = HttpContext.RequestServices.GetRequiredService<SecurityStampService>();
+            await stampService.RotateStampAsync("Resident", userId.Value, cancellationToken);
+        }
+
         await HttpContext.SignOutAsync(AuthSchemes.Resident);
         await _audit.WriteAsync("Resident", userId, "Logout", cancellationToken);
         return RedirectToAction(nameof(Login));
@@ -96,6 +126,14 @@ public class HomeController : Controller
         return View(new ErrorViewModel { RequestId = System.Diagnostics.Activity.Current?.Id ?? HttpContext.TraceIdentifier });
     }
 
+    [AllowAnonymous]
+    [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
+    public IActionResult NotFound(int? statusCode)
+    {
+        Response.StatusCode = statusCode ?? 404;
+        return View();
+    }
+
     private async Task<bool> ResidentIsSignedInAsync()
     {
         var result = await HttpContext.AuthenticateAsync(AuthSchemes.Resident);
@@ -110,7 +148,8 @@ public class HomeController : Controller
             new(ClaimTypes.NameIdentifier, resident.Uid.ToString()),
             new(ClaimTypes.Name, resident.ResidentName),
             new(ClaimTypes.Role, PortalRoles.Resident),
-            new("username", resident.Username)
+            new("username", resident.Username),
+            new("SecurityStamp", resident.SecurityStamp ?? string.Empty)
         };
 
         if (!string.IsNullOrWhiteSpace(resident.Email))
