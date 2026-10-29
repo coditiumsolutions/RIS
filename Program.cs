@@ -2,6 +2,7 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.EntityFrameworkCore;
 using ResidentPortal.Data;
 using ResidentPortal.Security;
@@ -57,6 +58,18 @@ builder.Services.AddScoped<AppSettingsService>();
 builder.Services.AddScoped<SecurityStampService>();
 builder.Services.AddScoped<AccountLockoutService>();
 builder.Services.AddSingleton<LoginFailureRateLimiter>();
+builder.Services.Configure<VisitorPhotoStorageOptions>(
+    builder.Configuration.GetSection(VisitorPhotoStorageOptions.SectionName));
+builder.Services.AddSingleton<VisitorPhotoStorage>();
+builder.Services.AddScoped<VisitorPhotoService>();
+builder.Services.Configure<FormOptions>(options =>
+{
+    options.MultipartBodyLengthLimit = 3 * 1024 * 1024;
+});
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.Limits.MaxRequestBodySize = 3 * 1024 * 1024;
+});
 
 builder.Services.AddAuthentication(options =>
     {
@@ -318,13 +331,14 @@ app.Use(async (context, next) =>
     context.Response.Headers.XContentTypeOptions = "nosniff";
     context.Response.Headers.XFrameOptions = "DENY";
     context.Response.Headers["Referrer-Policy"] = "strict-origin-when-cross-origin";
-    context.Response.Headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()";
+    context.Response.Headers["Permissions-Policy"] = "camera=(self), microphone=(), geolocation=()";
     context.Response.Headers["Content-Security-Policy"] =
         "default-src 'self'; " +
         "script-src 'self'; " +
         "style-src 'self' 'unsafe-inline'; " +
         "font-src 'self'; " +
-        "img-src 'self' data:; " +
+        "img-src 'self' data: blob:; " +
+        "media-src 'self' blob:; " +
         "connect-src 'self'; " +
         "frame-ancestors 'none'; " +
         "form-action 'self'; " +

@@ -19,7 +19,13 @@
                     Walk-in visitors will be automatically checked in upon registration.
                 </div>
 
-                <form asp-area="ReceptionPortal" asp-controller="Visitors" asp-action="WalkIn" method="post" novalidate>
+                <form asp-area="ReceptionPortal" asp-controller="Visitors" asp-action="WalkIn" method="post" enctype="multipart/form-data" novalidate
+                      data-confirm-title="Register walk-in visitor?"
+                      data-confirm-text="They will be checked in immediately. You can optionally take a photo next."
+                      data-confirm-ok="Continue"
+                      data-confirm-cancel="Cancel"
+                      data-confirm-photo="CheckIn">
+                    <input type="file" name="photo" accept="image/jpeg,image/png" hidden />
                     <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
 
                     <div class="row g-3">

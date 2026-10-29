@@ -127,24 +127,28 @@
                                 <td>
                                     @if (visitor.Status == "Approved" || visitor.Status == "Pending")
                                     {
-                                        <form asp-area="ReceptionPortal" asp-controller="Visitors" asp-action="CheckIn" asp-route-id="@visitor.Uid" method="post" class="d-inline">
+                                        <form asp-area="ReceptionPortal" asp-controller="Visitors" asp-action="CheckIn" asp-route-id="@visitor.Uid" method="post" enctype="multipart/form-data" class="d-inline">
+                                            <input type="file" name="photo" accept="image/jpeg,image/png" hidden />
                                             <button type="submit"
                                                     class="btn btn-sm btn-success"
                                                     data-confirm-title="Check in visitor?"
                                                     data-confirm-text="@visitor.VisitorName · @visitor.NumberOfGuests guest@(visitor.NumberOfGuests == 1 ? "" : "s")"
                                                     data-confirm-ok="Check In"
-                                                    data-confirm-cancel="Cancel">Check In</button>
+                                                    data-confirm-cancel="Cancel"
+                                                    data-confirm-photo="CheckIn">Check In</button>
                                         </form>
                                     }
                                     else if (visitor.Status == "CheckedIn")
                                     {
-                                        <form asp-area="ReceptionPortal" asp-controller="Visitors" asp-action="CheckOut" asp-route-id="@visitor.Uid" method="post" class="d-inline">
+                                        <form asp-area="ReceptionPortal" asp-controller="Visitors" asp-action="CheckOut" asp-route-id="@visitor.Uid" method="post" enctype="multipart/form-data" class="d-inline">
+                                            <input type="file" name="photo" accept="image/jpeg,image/png" hidden />
                                             <button type="submit"
                                                     class="btn btn-sm btn-secondary"
                                                     data-confirm-title="Check out visitor?"
                                                     data-confirm-text="@visitor.VisitorName · @visitor.NumberOfGuests guest@(visitor.NumberOfGuests == 1 ? "" : "s")"
                                                     data-confirm-ok="Check Out"
-                                                    data-confirm-cancel="Cancel">Check Out</button>
+                                                    data-confirm-cancel="Cancel"
+                                                    data-confirm-photo="CheckOut">Check Out</button>
                                         </form>
                                     }
                                 </td>
