@@ -1,8 +1,18 @@
 namespace ResidentPortal.Security;
 
+public enum PortalType
+{
+    Resident,
+    Admin,
+    Receptionist
+}
+
 public static class ReturnUrlGuard
 {
-    public static bool IsSafe(string? returnUrl, bool adminPortal)
+    public static bool IsSafe(string? returnUrl, bool adminPortal) =>
+        IsSafe(returnUrl, adminPortal ? PortalType.Admin : PortalType.Resident);
+
+    public static bool IsSafe(string? returnUrl, PortalType portalType)
     {
         if (string.IsNullOrWhiteSpace(returnUrl))
             return false;
@@ -17,6 +27,14 @@ public static class ReturnUrlGuard
             return false;
 
         var isAdminPath = returnUrl.StartsWith("/adminportal", StringComparison.OrdinalIgnoreCase);
-        return adminPortal ? isAdminPath : !isAdminPath;
+        var isReceptionPath = returnUrl.StartsWith("/receptionportal", StringComparison.OrdinalIgnoreCase);
+
+        return portalType switch
+        {
+            PortalType.Admin => isAdminPath,
+            PortalType.Receptionist => isReceptionPath,
+            PortalType.Resident => !isAdminPath && !isReceptionPath,
+            _ => false
+        };
     }
 }

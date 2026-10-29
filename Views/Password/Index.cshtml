@@ -1,6 +1,7 @@
 @model ChangePasswordViewModel
 @{
     ViewData["Title"] = "Change Password";
+    var mustChange = ViewData["MustChange"] as bool? ?? false;
 }
 
 <div class="page-header">
@@ -10,11 +11,19 @@
     </div>
 </div>
 
+@if (mustChange)
+{
+    <div class="alert alert-warning" role="alert">
+        <i class="bi bi-exclamation-triangle me-1" aria-hidden="true"></i>
+        <strong>Password change required.</strong> You must change your password before continuing.
+    </div>
+}
+
 <div class="row">
     <div class="col-lg-6">
         <section class="card portal-card">
             <div class="card-body">
-                <form asp-area="" asp-controller="Password" asp-action="Index" method="post">
+                <form asp-area="" asp-controller="Password" asp-action="Index" asp-route-mustChange="@mustChange" method="post">
                     <div asp-validation-summary="ModelOnly" role="alert"></div>
                     <div class="mb-3">
                         <label asp-for="CurrentPassword" class="form-label"></label>

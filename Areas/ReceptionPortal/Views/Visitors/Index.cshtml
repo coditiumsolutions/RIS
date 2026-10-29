@@ -1,0 +1,147 @@
+@model ReceptionistVisitorListViewModel
+@{
+    ViewData["Title"] = "Visitor List";
+    string Badge(string status) => status switch
+    {
+        "CheckedIn" => "text-bg-success",
+        "CheckedOut" => "text-bg-secondary",
+        "Approved" => "text-bg-primary",
+        "Pending" => "text-bg-warning",
+        _ => "text-bg-light"
+    };
+    string StatusLabel(string status) => status switch
+    {
+        "CheckedIn" => "Checked In",
+        "CheckedOut" => "Checked Out",
+        _ => status
+    };
+}
+
+<div class="page-header">
+    <div>
+        <h1 class="page-heading">Visitor List</h1>
+        <p class="page-subtitle">Search and manage visitor check-in/check-out.</p>
+    </div>
+    <a class="btn btn-portal btn-reception" asp-area="ReceptionPortal" asp-controller="Visitors" asp-action="WalkIn">
+        <i class="bi bi-person-plus me-1" aria-hidden="true"></i> Register Walk-In
+    </a>
+</div>
+
+@if (TempData["Success"] is string successMsg)
+{
+    <div class="alert alert-success" role="status">@successMsg</div>
+}
+@if (TempData["Error"] is string errorMsg)
+{
+    <div class="alert alert-danger" role="alert">@errorMsg</div>
+}
+
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="card portal-card stat-card">
+            <div class="card-body">
+                <p class="stat-label">Expected today</p>
+                <p class="stat-value">@Model.ExpectedTodayCount</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card portal-card stat-card">
+            <div class="card-body">
+                <p class="stat-label">Currently checked in</p>
+                <p class="stat-value">@Model.CheckedInCount</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card portal-card stat-card">
+            <div class="card-body">
+                <p class="stat-label">Checked out today</p>
+                <p class="stat-value">@Model.CheckedOutTodayCount</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<section class="card portal-card">
+    <div class="card-body">
+        <form method="get" class="row g-3 mb-4">
+            <div class="col-md-6">
+                <label for="q" class="form-label">Search</label>
+                <input type="text" class="form-control" id="q" name="q" value="@Model.SearchQuery" placeholder="Name, phone, resident, or unit..." />
+            </div>
+            <div class="col-md-4">
+                <label for="date" class="form-label">Arrival Date</label>
+                <input type="date" class="form-control" id="date" name="date" value="@Model.DateFilter?.ToString("yyyy-MM-dd")" />
+            </div>
+            <div class="col-md-2 d-flex align-items-end">
+                <button type="submit" class="btn btn-portal btn-reception w-100">Search</button>
+            </div>
+        </form>
+
+        @if (Model.Visitors.Any())
+        {
+            <div class="table-responsive">
+                <table class="table align-middle">
+                    <thead>
+                        <tr>
+                            <th scope="col">Visitor</th>
+                            <th scope="col">Phone</th>
+                            <th scope="col">Resident</th>
+                            <th scope="col">Arrival</th>
+                            <th scope="col">Guests</th>
+                            <th scope="col">Status</th>
+                            <th scope="col">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var visitor in Model.Visitors)
+                        {
+                            <tr>
+                                <td>
+                                    <a asp-area="ReceptionPortal" asp-controller="Visitors" asp-action="Details" asp-route-id="@visitor.Uid">
+                                        @visitor.VisitorName
+                                    </a>
+                                    @if (visitor.IsWalkIn)
+                                    {
+                                        <span class="badge text-bg-info ms-1">Walk-in</span>
+                                    }
+                                </td>
+                                <td>@visitor.Phone</td>
+                                <td>
+                                    @visitor.ResidentName
+                                    @if (!string.IsNullOrWhiteSpace(visitor.ResidentUnit))
+                                    {
+                                        <br /><small class="text-secondary">Unit @visitor.ResidentUnit</small>
+                                    }
+                                </td>
+                                <td>@visitor.ArrivalDate.ToString("dd MMM yyyy", CultureInfo.InvariantCulture)</td>
+                                <td>@visitor.NumberOfGuests</td>
+                                <td><span class="badge @Badge(visitor.Status)">@StatusLabel(visitor.Status)</span></td>
+                                <td>
+                                    @if (visitor.Status == "Approved" || visitor.Status == "Pending")
+                                    {
+                                        <form asp-area="ReceptionPortal" asp-controller="Visitors" asp-action="CheckIn" asp-route-id="@visitor.Uid" method="post" class="d-inline">
+                                            <button type="submit" class="btn btn-sm btn-success">Check In</button>
+                                        </form>
+                                    }
+                                    else if (visitor.Status == "CheckedIn")
+                                    {
+                                        <form asp-area="ReceptionPortal" asp-controller="Visitors" asp-action="CheckOut" asp-route-id="@visitor.Uid" method="post" class="d-inline">
+                                            <button type="submit" class="btn btn-sm btn-secondary">Check Out</button>
+                                        </form>
+                                    }
+                                    <a asp-area="ReceptionPortal" asp-controller="Visitors" asp-action="Details" asp-route-id="@visitor.Uid" class="btn btn-sm btn-outline-secondary">Details</a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+        else
+        {
+            <p class="text-secondary mb-0">No visitors found matching your criteria.</p>
+        }
+    </div>
+</section>

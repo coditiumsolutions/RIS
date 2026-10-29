@@ -1,6 +1,10 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using ResidentPortal.Data;
+using ResidentPortal.Models;
 using ResidentPortal.Security;
+using ResidentPortal.Services;
 
 namespace ResidentPortal.Controllers;
 
@@ -8,8 +12,194 @@ namespace ResidentPortal.Controllers;
 [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
 public class VisitorsController : Controller
 {
-    public IActionResult Index()
+    private readonly ApplicationDbContext _db;
+    private readonly AuditLogger _audit;
+    private readonly AppSettingsService _settings;
+
+    public VisitorsController(ApplicationDbContext db, AuditLogger audit, AppSettingsService settings)
     {
-        return View();
+        _db = db;
+        _audit = audit;
+        _settings = settings;
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> Index(CancellationToken cancellationToken)
+    {
+        var userId = User.GetUserId();
+        if (userId is null)
+            return RedirectToAction("Login", "Home");
+
+        var visitors = await _db.VisitorRequests
+            .Where(v => v.ResidentId == userId.Value)
+            .OrderByDescending(v => v.ArrivalDate)
+            .ThenByDescending(v => v.CreatedAt)
+            .Take(50)
+            .Select(v => new VisitorRequestListItem
+            {
+                Uid = v.Uid,
+                VisitorName = v.VisitorName,
+                Phone = v.Phone,
+                Purpose = v.Purpose,
+                Duration = v.Duration,
+                ArrivalDate = v.ArrivalDate,
+                NumberOfGuests = v.NumberOfGuests,
+                Status = v.Status,
+                IsWalkIn = v.IsWalkIn,
+                CheckedInAt = v.CheckedInAt,
+                CheckedOutAt = v.CheckedOutAt,
+                CreatedAt = v.CreatedAt
+            })
+            .ToListAsync(cancellationToken);
+
+        var totalCount = await _db.VisitorRequests.CountAsync(v => v.ResidentId == userId.Value, cancellationToken);
+        var pendingCount = await _db.VisitorRequests.CountAsync(v => v.ResidentId == userId.Value && v.Status == VisitorStatus.Pending, cancellationToken);
+        var approvedCount = await _db.VisitorRequests.CountAsync(v => v.ResidentId == userId.Value && v.Status == VisitorStatus.Approved, cancellationToken);
+        var checkedInCount = await _db.VisitorRequests.CountAsync(v => v.ResidentId == userId.Value && v.Status == VisitorStatus.CheckedIn, cancellationToken);
+
+        var model = new ResidentVisitorListViewModel
+        {
+            Visitors = visitors,
+            TotalCount = totalCount,
+            PendingCount = pendingCount,
+            ApprovedCount = approvedCount,
+            CheckedInCount = checkedInCount
+        };
+
+        return View(model);
+    }
+
+    [HttpGet]
+    public IActionResult Register()
+    {
+        var model = new RegisterVisitorViewModel
+        {
+            ArrivalDate = DateOnly.FromDateTime(DateTime.Today),
+            Duration = VisitorDuration.LessThan6Hours
+        };
+        return View(model);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Register(RegisterVisitorViewModel model, CancellationToken cancellationToken)
+    {
+        if (!ModelState.IsValid)
+            return View(model);
+
+        var userId = User.GetUserId();
+        if (userId is null)
+            return RedirectToAction("Login", "Home");
+
+        var maxGuests = await _settings.GetMaxGuestsPerVisitAsync(cancellationToken);
+        if (model.NumberOfGuests > maxGuests)
+        {
+            ModelState.AddModelError(nameof(model.NumberOfGuests), $"Maximum {maxGuests} guests allowed per visit.");
+            return View(model);
+        }
+
+        if (model.ArrivalDate < DateOnly.FromDateTime(DateTime.Today))
+        {
+            ModelState.AddModelError(nameof(model.ArrivalDate), "Arrival date cannot be in the past.");
+            return View(model);
+        }
+
+        var approvalRequired = await _settings.IsVisitorApprovalRequiredAsync(cancellationToken);
+        var now = DateTime.UtcNow;
+
+        var visitor = new VisitorRequest
+        {
+            ResidentId = userId.Value,
+            VisitorName = model.VisitorName.Trim(),
+            Phone = model.Phone.Trim(),
+            Purpose = model.Purpose.Trim(),
+            Duration = model.Duration,
+            ArrivalDate = model.ArrivalDate,
+            NumberOfGuests = model.NumberOfGuests,
+            CNIC = model.CNIC?.Trim(),
+            VehicleRegistrationNo = model.VehicleRegistrationNo?.Trim(),
+            Status = approvalRequired ? VisitorStatus.Pending : VisitorStatus.Approved,
+            IsWalkIn = false,
+            ApprovedAt = approvalRequired ? null : now,
+            CreatedAt = now,
+            UpdatedAt = now
+        };
+
+        _db.VisitorRequests.Add(visitor);
+        await _db.SaveChangesAsync(cancellationToken);
+        await _audit.WriteAsync("Resident", userId, $"Registered visitor: {visitor.VisitorName}", cancellationToken);
+
+        var message = approvalRequired
+            ? $"Visitor {visitor.VisitorName} has been registered and is pending approval."
+            : $"Visitor {visitor.VisitorName} has been registered and approved.";
+
+        TempData["Success"] = message;
+        return RedirectToAction(nameof(Index));
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> Details(int id, CancellationToken cancellationToken)
+    {
+        var userId = User.GetUserId();
+        if (userId is null)
+            return RedirectToAction("Login", "Home");
+
+        var visitor = await _db.VisitorRequests
+            .Include(v => v.Resident)
+            .SingleOrDefaultAsync(v => v.Uid == id && v.ResidentId == userId.Value, cancellationToken);
+
+        if (visitor is null)
+            return NotFound();
+
+        var model = new VisitorDetailsViewModel
+        {
+            Uid = visitor.Uid,
+            VisitorName = visitor.VisitorName,
+            Phone = visitor.Phone,
+            Purpose = visitor.Purpose,
+            Duration = visitor.Duration,
+            ArrivalDate = visitor.ArrivalDate,
+            NumberOfGuests = visitor.NumberOfGuests,
+            CNIC = visitor.CNIC,
+            VehicleRegistrationNo = visitor.VehicleRegistrationNo,
+            Status = visitor.Status,
+            IsWalkIn = visitor.IsWalkIn,
+            CheckedInAt = visitor.CheckedInAt,
+            CheckedOutAt = visitor.CheckedOutAt,
+            CreatedAt = visitor.CreatedAt,
+            DeclineReason = visitor.DeclineReason
+        };
+
+        return View(model);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Cancel(int id, CancellationToken cancellationToken)
+    {
+        var userId = User.GetUserId();
+        if (userId is null)
+            return RedirectToAction("Login", "Home");
+
+        var visitor = await _db.VisitorRequests
+            .SingleOrDefaultAsync(v => v.Uid == id && v.ResidentId == userId.Value, cancellationToken);
+
+        if (visitor is null)
+            return NotFound();
+
+        if (visitor.Status != VisitorStatus.Pending && visitor.Status != VisitorStatus.Approved)
+        {
+            TempData["Error"] = "Only pending or approved visitors can be cancelled.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        visitor.Status = VisitorStatus.Cancelled;
+        visitor.UpdatedAt = DateTime.UtcNow;
+
+        await _db.SaveChangesAsync(cancellationToken);
+        await _audit.WriteAsync("Resident", userId, $"Cancelled visitor: {visitor.VisitorName} (ID: {visitor.Uid})", cancellationToken);
+
+        TempData["Success"] = $"Visitor {visitor.VisitorName} has been cancelled.";
+        return RedirectToAction(nameof(Index));
     }
 }

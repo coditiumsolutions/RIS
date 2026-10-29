@@ -44,6 +44,7 @@ public sealed class PasswordChangeService
             return PasswordChangeStatus.SameAsCurrent;
 
         resident.PasswordHash = _passwords.Hash(newPassword);
+        resident.MustChangePassword = false;
         await _audit.WriteAsync("Resident", resident.Uid, "Password changed", cancellationToken);
         return PasswordChangeStatus.Success;
     }
@@ -67,7 +68,32 @@ public sealed class PasswordChangeService
             return PasswordChangeStatus.SameAsCurrent;
 
         admin.PasswordHash = _passwords.Hash(newPassword);
+        admin.MustChangePassword = false;
         await _audit.WriteAsync("Admin", admin.Uid, "Password changed", cancellationToken);
+        return PasswordChangeStatus.Success;
+    }
+
+    public async Task<PasswordChangeStatus> ChangeReceptionistPasswordAsync(
+        int userId,
+        string currentPassword,
+        string newPassword,
+        CancellationToken cancellationToken)
+    {
+        var receptionist = await _db.Receptionists
+            .SingleOrDefaultAsync(r => r.Uid == userId && r.IsActive, cancellationToken);
+
+        if (receptionist is null)
+            return PasswordChangeStatus.AccountUnavailable;
+
+        if (!_passwords.Verify(receptionist.PasswordHash, currentPassword))
+            return PasswordChangeStatus.CurrentPasswordIncorrect;
+
+        if (_passwords.Verify(receptionist.PasswordHash, newPassword))
+            return PasswordChangeStatus.SameAsCurrent;
+
+        receptionist.PasswordHash = _passwords.Hash(newPassword);
+        receptionist.MustChangePassword = false;
+        await _audit.WriteAsync("Receptionist", receptionist.Uid, "Password changed", cancellationToken);
         return PasswordChangeStatus.Success;
     }
 }

@@ -1,0 +1,122 @@
+@model VisitorDetailsViewModel
+@{
+    ViewData["Title"] = "Visitor Details";
+    string Badge(string status) => status switch
+    {
+        "CheckedIn" => "text-bg-success",
+        "CheckedOut" => "text-bg-secondary",
+        "Approved" => "text-bg-primary",
+        "Pending" => "text-bg-warning",
+        "Declined" => "text-bg-danger",
+        "Cancelled" => "text-bg-dark",
+        _ => "text-bg-light"
+    };
+    string StatusLabel(string status) => status switch
+    {
+        "CheckedIn" => "Checked In",
+        "CheckedOut" => "Checked Out",
+        _ => status
+    };
+}
+
+<div class="page-header">
+    <div>
+        <h1 class="page-heading">Visitor Details</h1>
+        <p class="page-subtitle">
+            @Model.VisitorName
+            @if (Model.IsWalkIn)
+            {
+                <span class="badge text-bg-info ms-1">Walk-in</span>
+            }
+        </p>
+    </div>
+    <a asp-area="" asp-controller="Visitors" asp-action="Index" class="btn btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1" aria-hidden="true"></i> Back to List
+    </a>
+</div>
+
+@if (TempData["Success"] is string successMsg)
+{
+    <div class="alert alert-success" role="status">@successMsg</div>
+}
+@if (TempData["Error"] is string errorMsg)
+{
+    <div class="alert alert-danger" role="alert">@errorMsg</div>
+}
+
+<div class="row g-4">
+    <div class="col-lg-6">
+        <section class="card portal-card">
+            <div class="card-body">
+                <h2 class="h5 mb-3">Visitor Information</h2>
+                <dl class="profile-list">
+                    <dt>Name</dt>
+                    <dd>@Model.VisitorName</dd>
+                    <dt>Phone</dt>
+                    <dd>@Model.Phone</dd>
+                    <dt>Purpose</dt>
+                    <dd>@Model.Purpose</dd>
+                    <dt>Duration</dt>
+                    <dd>@Model.Duration</dd>
+                    <dt>Arrival Date</dt>
+                    <dd>@Model.ArrivalDate.ToString("dd MMM yyyy", CultureInfo.InvariantCulture)</dd>
+                    <dt>Number of Guests</dt>
+                    <dd>@Model.NumberOfGuests</dd>
+                    @if (!string.IsNullOrWhiteSpace(Model.CNIC))
+                    {
+                        <dt>CNIC</dt>
+                        <dd>@Model.CNIC</dd>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(Model.VehicleRegistrationNo))
+                    {
+                        <dt>Vehicle</dt>
+                        <dd>@Model.VehicleRegistrationNo</dd>
+                    }
+                </dl>
+            </div>
+        </section>
+    </div>
+
+    <div class="col-lg-6">
+        <section class="card portal-card">
+            <div class="card-body">
+                <h2 class="h5 mb-3">Status</h2>
+                <p class="mb-3">
+                    <span class="badge @Badge(Model.Status) fs-6">@StatusLabel(Model.Status)</span>
+                    @if (Model.IsWalkIn)
+                    {
+                        <span class="badge text-bg-info ms-1">Walk-in Visitor</span>
+                    }
+                </p>
+                <dl class="profile-list">
+                    <dt>Registered</dt>
+                    <dd>@Model.CreatedAt.ToString("dd MMM yyyy, HH:mm", CultureInfo.InvariantCulture) UTC</dd>
+                    @if (Model.CheckedInAt.HasValue)
+                    {
+                        <dt>Checked In</dt>
+                        <dd>@Model.CheckedInAt.Value.ToString("dd MMM yyyy, HH:mm", CultureInfo.InvariantCulture) UTC</dd>
+                    }
+                    @if (Model.CheckedOutAt.HasValue)
+                    {
+                        <dt>Checked Out</dt>
+                        <dd>@Model.CheckedOutAt.Value.ToString("dd MMM yyyy, HH:mm", CultureInfo.InvariantCulture) UTC</dd>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(Model.DeclineReason))
+                    {
+                        <dt>Decline Reason</dt>
+                        <dd class="text-danger">@Model.DeclineReason</dd>
+                    }
+                </dl>
+
+                @if (Model.Status == "Pending" || Model.Status == "Approved")
+                {
+                    <form asp-area="" asp-controller="Visitors" asp-action="Cancel" asp-route-id="@Model.Uid" method="post" class="mt-3">
+                        <button type="submit" class="btn btn-outline-danger" onclick="return confirm('Are you sure you want to cancel this visitor?')">
+                            <i class="bi bi-x-circle me-1" aria-hidden="true"></i> Cancel Visitor
+                        </button>
+                    </form>
+                }
+            </div>
+        </section>
+    </div>
+</div>

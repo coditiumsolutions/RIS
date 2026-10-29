@@ -1,0 +1,54 @@
+@model ChangePasswordViewModel
+@{
+    ViewData["Title"] = "Change Password";
+    var mustChange = ViewData["MustChange"] as bool? ?? false;
+}
+
+<div class="page-header">
+    <div>
+        <h1 class="page-heading">Change Password</h1>
+        <p class="page-subtitle">Update your account password.</p>
+    </div>
+</div>
+
+@if (mustChange)
+{
+    <div class="alert alert-warning" role="alert">
+        <i class="bi bi-exclamation-triangle me-1" aria-hidden="true"></i>
+        <strong>Password change required.</strong> You must change your password before continuing.
+    </div>
+}
+
+<div class="row">
+    <div class="col-lg-6">
+        <section class="card portal-card">
+            <div class="card-body">
+                <form asp-area="ReceptionPortal" asp-controller="Password" asp-action="Index" asp-route-mustChange="@mustChange" method="post" novalidate>
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+                    <div class="mb-3">
+                        <label asp-for="CurrentPassword" class="form-label"></label>
+                        <input asp-for="CurrentPassword" class="form-control" autocomplete="current-password" autofocus />
+                        <span asp-validation-for="CurrentPassword" class="text-danger small"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="NewPassword" class="form-label"></label>
+                        <input asp-for="NewPassword" class="form-control" autocomplete="new-password" />
+                        <span asp-validation-for="NewPassword" class="text-danger small"></span>
+                        <div class="form-text">Minimum 8 characters.</div>
+                    </div>
+                    <div class="mb-4">
+                        <label asp-for="ConfirmPassword" class="form-label"></label>
+                        <input asp-for="ConfirmPassword" class="form-control" autocomplete="new-password" />
+                        <span asp-validation-for="ConfirmPassword" class="text-danger small"></span>
+                    </div>
+                    <button type="submit" class="btn btn-portal btn-reception">Change Password</button>
+                </form>
+            </div>
+        </section>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

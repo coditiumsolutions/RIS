@@ -1,0 +1,212 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: [self-hosted, windows, ris]
+    
+    env:
+      PUBLISH_PATH: ${{ github.workspace }}\publish
+      LIVE_PATH: C:\Live\RIS
+      BACKUP_ROOT: C:\Deploy
+      APP_POOL_NAME: ris
+      SITE_URL: https://ris.coditium.com/
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Publish application
+        run: |
+          dotnet publish ResidentPortal.csproj -c Release -o "$env:PUBLISH_PATH"
+        shell: pwsh
+
+      - name: Stop IIS App Pool
+        id: stop-pool
+        run: |
+          Import-Module WebAdministration
+          
+          $poolName = $env:APP_POOL_NAME
+          $pool = Get-Item "IIS:\AppPools\$poolName" -ErrorAction SilentlyContinue
+          
+          if (-not $pool) {
+            Write-Error "App pool '$poolName' not found"
+            exit 1
+          }
+          
+          if ($pool.State -eq 'Started') {
+            Write-Host "Stopping app pool '$poolName'..."
+            Stop-WebAppPool -Name $poolName
+            
+            # Wait for the app pool to fully stop (max 60 seconds)
+            $timeout = 60
+            $elapsed = 0
+            while ((Get-WebAppPoolState -Name $poolName).Value -ne 'Stopped' -and $elapsed -lt $timeout) {
+              Start-Sleep -Seconds 2
+              $elapsed += 2
+              Write-Host "Waiting for app pool to stop... ($elapsed seconds)"
+            }
+            
+            if ((Get-WebAppPoolState -Name $poolName).Value -ne 'Stopped') {
+              Write-Error "App pool failed to stop within $timeout seconds"
+              exit 1
+            }
+            
+            Write-Host "App pool stopped successfully"
+          } else {
+            Write-Host "App pool is already stopped (state: $($pool.State))"
+          }
+        shell: pwsh
+
+      - name: Backup current deployment
+        run: |
+          $timestamp = Get-Date -Format "yyyyMMdd_HHmmss"
+          $backupPath = Join-Path $env:BACKUP_ROOT "RIS_backup_$timestamp"
+          
+          # Create backup root if it doesn't exist
+          if (-not (Test-Path $env:BACKUP_ROOT)) {
+            New-Item -ItemType Directory -Path $env:BACKUP_ROOT -Force | Out-Null
+          }
+          
+          # Copy current live site to backup (if it exists)
+          if (Test-Path $env:LIVE_PATH) {
+            Write-Host "Backing up $env:LIVE_PATH to $backupPath..."
+            Copy-Item -Path $env:LIVE_PATH -Destination $backupPath -Recurse -Force
+            Write-Host "Backup completed"
+          } else {
+            Write-Host "No existing deployment to back up"
+          }
+          
+          # Keep only the newest 5 backups
+          $backups = Get-ChildItem -Path $env:BACKUP_ROOT -Directory -Filter "RIS_backup_*" | 
+                     Sort-Object Name -Descending
+          
+          if ($backups.Count -gt 5) {
+            $toDelete = $backups | Select-Object -Skip 5
+            foreach ($old in $toDelete) {
+              Write-Host "Removing old backup: $($old.Name)"
+              Remove-Item -Path $old.FullName -Recurse -Force
+            }
+          }
+          
+          Write-Host "Backup retention complete. Current backups: $(($backups | Select-Object -First 5).Count)"
+        shell: pwsh
+
+      - name: Deploy to live folder
+        run: |
+          # Ensure live path exists
+          if (-not (Test-Path $env:LIVE_PATH)) {
+            New-Item -ItemType Directory -Path $env:LIVE_PATH -Force | Out-Null
+          }
+          
+          # Use robocopy to copy files, excluding web.config and logs folder
+          # /MIR = mirror (but we exclude some items)
+          # /E = copy subdirectories including empty ones
+          # /XF = exclude files
+          # /XD = exclude directories
+          # /NP = no progress (cleaner logs)
+          # /NFL = no file list (reduce noise, remove if you want verbose)
+          # /NDL = no directory list
+          
+          Write-Host "Deploying to $env:LIVE_PATH..."
+          
+          $robocopyArgs = @(
+            "$env:PUBLISH_PATH",
+            "$env:LIVE_PATH",
+            "/E",
+            "/XF", "web.config",
+            "/XD", "logs",
+            "/NP",
+            "/R:3",
+            "/W:5"
+          )
+          
+          & robocopy @robocopyArgs
+          $exitCode = $LASTEXITCODE
+          
+          # Robocopy exit codes: 0-7 are success, 8+ are errors
+          # 0 = No files copied, no errors
+          # 1 = Files copied successfully
+          # 2 = Extra files/dirs detected (with /MIR would be deleted)
+          # 4 = Mismatched files/dirs detected
+          # 8+ = Errors occurred
+          
+          if ($exitCode -ge 8) {
+            Write-Error "Robocopy failed with exit code $exitCode"
+            exit 1
+          }
+          
+          Write-Host "Deployment completed successfully (robocopy exit code: $exitCode)"
+        shell: pwsh
+
+      - name: Start IIS App Pool
+        if: always()
+        run: |
+          Import-Module WebAdministration
+          
+          $poolName = $env:APP_POOL_NAME
+          $pool = Get-Item "IIS:\AppPools\$poolName" -ErrorAction SilentlyContinue
+          
+          if (-not $pool) {
+            Write-Error "App pool '$poolName' not found"
+            exit 1
+          }
+          
+          if ((Get-WebAppPoolState -Name $poolName).Value -ne 'Started') {
+            Write-Host "Starting app pool '$poolName'..."
+            Start-WebAppPool -Name $poolName
+            
+            # Wait for the app pool to start (max 30 seconds)
+            $timeout = 30
+            $elapsed = 0
+            while ((Get-WebAppPoolState -Name $poolName).Value -ne 'Started' -and $elapsed -lt $timeout) {
+              Start-Sleep -Seconds 2
+              $elapsed += 2
+              Write-Host "Waiting for app pool to start... ($elapsed seconds)"
+            }
+            
+            if ((Get-WebAppPoolState -Name $poolName).Value -ne 'Started') {
+              Write-Error "App pool failed to start within $timeout seconds"
+              exit 1
+            }
+            
+            Write-Host "App pool started successfully"
+          } else {
+            Write-Host "App pool is already running"
+          }
+        shell: pwsh
+
+      - name: Smoke test
+        run: |
+          Write-Host "Running smoke test against $env:SITE_URL..."
+          
+          # Give the app pool a moment to warm up
+          Start-Sleep -Seconds 5
+          
+          try {
+            $response = Invoke-WebRequest -Uri $env:SITE_URL -UseBasicParsing -MaximumRedirection 5 -TimeoutSec 30
+            $statusCode = $response.StatusCode
+            
+            Write-Host "Response status code: $statusCode"
+            
+            if ($statusCode -ge 200 -and $statusCode -lt 400) {
+              Write-Host "Smoke test passed!"
+            } else {
+              Write-Error "Smoke test failed: unexpected status code $statusCode"
+              exit 1
+            }
+          } catch {
+            Write-Error "Smoke test failed: $_"
+            exit 1
+          }
+        shell: pwsh

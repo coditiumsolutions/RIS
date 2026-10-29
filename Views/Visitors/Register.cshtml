@@ -1,0 +1,88 @@
+@model RegisterVisitorViewModel
+@{
+    ViewData["Title"] = "Register Visitor";
+}
+
+<div class="page-header">
+    <div>
+        <h1 class="page-heading">Register Visitor</h1>
+        <p class="page-subtitle">Pre-register a visitor for your residence.</p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <section class="card portal-card">
+            <div class="card-body">
+                <form asp-area="" asp-controller="Visitors" asp-action="Register" method="post" novalidate>
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+                    <h2 class="h6 text-secondary mb-3">Visitor Information</h2>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label asp-for="VisitorName" class="form-label"></label>
+                            <input asp-for="VisitorName" class="form-control" autofocus />
+                            <span asp-validation-for="VisitorName" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="Phone" class="form-label"></label>
+                            <input asp-for="Phone" class="form-control" type="tel" />
+                            <span asp-validation-for="Phone" class="text-danger small"></span>
+                        </div>
+                        <div class="col-12">
+                            <label asp-for="Purpose" class="form-label"></label>
+                            <textarea asp-for="Purpose" class="form-control" rows="2" placeholder="e.g., Family visit, Business meeting, Delivery..."></textarea>
+                            <span asp-validation-for="Purpose" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <h2 class="h6 text-secondary mb-3 mt-4">Visit Details</h2>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label asp-for="ArrivalDate" class="form-label"></label>
+                            <input asp-for="ArrivalDate" class="form-control" type="date" />
+                            <span asp-validation-for="ArrivalDate" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="Duration" class="form-label"></label>
+                            <select asp-for="Duration" class="form-select" asp-items="@(new SelectList(VisitorDuration.All))">
+                            </select>
+                            <span asp-validation-for="Duration" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="NumberOfGuests" class="form-label"></label>
+                            <input asp-for="NumberOfGuests" class="form-control" type="number" min="1" />
+                            <span asp-validation-for="NumberOfGuests" class="text-danger small"></span>
+                            <div class="form-text">Including the named visitor (head of party).</div>
+                        </div>
+                    </div>
+
+                    <h2 class="h6 text-secondary mb-3 mt-4">Optional Information</h2>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label asp-for="CNIC" class="form-label"></label>
+                            <input asp-for="CNIC" class="form-control" />
+                            <span asp-validation-for="CNIC" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="VehicleRegistrationNo" class="form-label"></label>
+                            <input asp-for="VehicleRegistrationNo" class="form-control" />
+                            <span asp-validation-for="VehicleRegistrationNo" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <div class="mt-4">
+                        <button type="submit" class="btn btn-portal btn-resident">
+                            <i class="bi bi-person-plus me-1" aria-hidden="true"></i> Register Visitor
+                        </button>
+                        <a asp-area="" asp-controller="Visitors" asp-action="Index" class="btn btn-outline-secondary ms-2">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </section>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
