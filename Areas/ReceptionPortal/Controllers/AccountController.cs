@@ -2,6 +2,7 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using ResidentPortal.Models;
 using ResidentPortal.Security;
 using ResidentPortal.Services;
@@ -25,8 +26,12 @@ public class AccountController : Controller
 
     [AllowAnonymous]
     [HttpGet]
+    [HttpHead]
     public async Task<IActionResult> Index(string? returnUrl)
     {
+        if (HttpMethods.IsHead(Request.Method))
+            return Ok();
+
         if (await ReceptionistIsSignedInAsync())
             return RedirectToAction("Index", "Dashboard", new { area = "ReceptionPortal" });
 
@@ -37,22 +42,36 @@ public class AccountController : Controller
     [AllowAnonymous]
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [EnableRateLimiting("login")]
     public async Task<IActionResult> Index(LoginViewModel model, string? returnUrl, CancellationToken cancellationToken)
     {
         ViewData["ReturnUrl"] = returnUrl;
         if (!ModelState.IsValid)
             return View(model);
 
-        var receptionist = await _authentication.ValidateReceptionistAsync(model.Username, model.Password, cancellationToken);
-        if (receptionist is null)
+        var (result, receptionist, lockoutRemaining) = await _authentication.ValidateReceptionistAsync(model.Username, model.Password, cancellationToken);
+
+        switch (result)
         {
-            await _audit.WriteAsync("Receptionist", null, "Login failed", cancellationToken);
-            _logger.LogWarning("Receptionist login failed.");
-            ModelState.AddModelError(string.Empty, "Invalid username or password.");
-            return View(model);
+            case LoginResult.AccountLocked:
+                await _audit.WriteAsync("Receptionist", null, "Login blocked - account locked", cancellationToken);
+                var minutes = lockoutRemaining.HasValue ? (int)Math.Ceiling(lockoutRemaining.Value.TotalMinutes) : 15;
+                ModelState.AddModelError(string.Empty, $"Account is locked. Please try again in {minutes} minute(s).");
+                return View(model);
+
+            case LoginResult.AccountInactive:
+                await _audit.WriteAsync("Receptionist", null, "Login blocked - account inactive", cancellationToken);
+                ModelState.AddModelError(string.Empty, "Your account has been deactivated. Please contact administration.");
+                return View(model);
+
+            case LoginResult.InvalidCredentials:
+                await _audit.WriteAsync("Receptionist", null, "Login failed", cancellationToken);
+                _logger.LogWarning("Receptionist login failed.");
+                ModelState.AddModelError(string.Empty, "Invalid username or password.");
+                return View(model);
         }
 
-        await _audit.WriteAsync("Receptionist", receptionist.Uid, "Login succeeded", cancellationToken);
+        await _audit.WriteAsync("Receptionist", receptionist!.Uid, "Login succeeded", cancellationToken);
         await HttpContext.SignInAsync(AuthSchemes.Receptionist, CreatePrincipal(receptionist));
 
         if (receptionist.MustChangePassword)
@@ -70,9 +89,16 @@ public class AccountController : Controller
     public async Task<IActionResult> Logout(CancellationToken cancellationToken)
     {
         var userId = User.GetUserId();
+
+        if (userId.HasValue)
+        {
+            var stampService = HttpContext.RequestServices.GetRequiredService<SecurityStampService>();
+            await stampService.RotateStampAsync("Receptionist", userId.Value, cancellationToken);
+        }
+
         await HttpContext.SignOutAsync(AuthSchemes.Receptionist);
         await _audit.WriteAsync("Receptionist", userId, "Logout", cancellationToken);
-        return RedirectToAction(nameof(Index), new { area = "ReceptionPortal" });
+        return Redirect("/ReceptionPortal");
     }
 
     private async Task<bool> ReceptionistIsSignedInAsync()
@@ -89,7 +115,8 @@ public class AccountController : Controller
             new(ClaimTypes.Name, receptionist.FullName),
             new(ClaimTypes.Role, PortalRoles.Receptionist),
             new("username", receptionist.Username),
-            new("MustChangePassword", receptionist.MustChangePassword.ToString())
+            new("MustChangePassword", receptionist.MustChangePassword.ToString()),
+            new("SecurityStamp", receptionist.SecurityStamp ?? string.Empty)
         };
 
         if (!string.IsNullOrWhiteSpace(receptionist.Email))

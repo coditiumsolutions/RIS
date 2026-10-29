@@ -54,6 +54,7 @@ public sealed class DevelopmentAccountSeeder
             Email = _configuration["Seed:ResidentEmail"]?.Trim(),
             Mobile = _configuration["Seed:ResidentMobile"]?.Trim(),
             IsActive = true,
+            SecurityStamp = Guid.NewGuid().ToString("D").ToLowerInvariant(),
             CreatedAt = DateTime.UtcNow
         });
         await _db.SaveChangesAsync(cancellationToken);
@@ -77,6 +78,7 @@ public sealed class DevelopmentAccountSeeder
             PasswordHash = _passwords.Hash(safePassword),
             Email = _configuration["Seed:AdminEmail"]?.Trim(),
             IsActive = true,
+            SecurityStamp = Guid.NewGuid().ToString("D").ToLowerInvariant(),
             CreatedAt = DateTime.UtcNow
         });
         await _db.SaveChangesAsync(cancellationToken);

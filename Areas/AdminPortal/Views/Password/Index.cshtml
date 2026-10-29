@@ -14,7 +14,7 @@
     <div class="col-lg-6">
         <section class="card portal-card">
             <div class="card-body">
-                <form asp-area="AdminPortal" asp-controller="Password" asp-action="Index" method="post">
+                <form asp-area="AdminPortal" asp-controller="Password" asp-action="Index" method="post" novalidate>
                     <div asp-validation-summary="ModelOnly" role="alert"></div>
                     <div class="mb-3">
                         <label asp-for="CurrentPassword" class="form-label"></label>

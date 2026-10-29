@@ -1,7 +1,9 @@
-using Microsoft.AspNetCore.Antiforgery;
+using System.Security.Claims;
+using System.Threading.RateLimiting;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using ResidentPortal.Data;
 using ResidentPortal.Security;
@@ -48,13 +50,33 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 
 builder.Services.AddMemoryCache();
 builder.Services.AddSingleton<PasswordService>();
+builder.Services.AddSingleton<BusinessTimeZone>();
 builder.Services.AddScoped<PortalAuthentication>();
 builder.Services.AddScoped<AuditLogger>();
 builder.Services.AddScoped<DevelopmentAccountSeeder>();
 builder.Services.AddScoped<PasswordChangeService>();
 builder.Services.AddScoped<AppSettingsService>();
+builder.Services.AddScoped<SecurityStampService>();
+builder.Services.AddScoped<AccountLockoutService>();
 
-builder.Services.AddAuthentication()
+builder.Services.AddAuthentication(options =>
+    {
+        options.DefaultScheme = "portal";
+        options.DefaultAuthenticateScheme = "portal";
+        options.DefaultChallengeScheme = "portal";
+    })
+    .AddPolicyScheme("portal", "Portal", options =>
+    {
+        options.ForwardDefaultSelector = context =>
+        {
+            var path = context.Request.Path.Value ?? string.Empty;
+            if (path.StartsWith("/AdminPortal", StringComparison.OrdinalIgnoreCase))
+                return AuthSchemes.Admin;
+            if (path.StartsWith("/ReceptionPortal", StringComparison.OrdinalIgnoreCase))
+                return AuthSchemes.Receptionist;
+            return AuthSchemes.Resident;
+        };
+    })
     .AddCookie(AuthSchemes.Resident, options =>
     {
         options.Cookie.Name = "__Host-ResidentPortal-Resident";
@@ -66,18 +88,42 @@ builder.Services.AddAuthentication()
         options.AccessDeniedPath = "/login";
         options.SlidingExpiration = true;
         options.ExpireTimeSpan = TimeSpan.FromHours(8);
-        options.Events.OnRedirectToLogin = context =>
+        options.Events = new CookieAuthenticationEvents
         {
-            var path = context.Request.Path.Value ?? "/";
-            if (path.Equals("/login", StringComparison.OrdinalIgnoreCase))
+            OnRedirectToLogin = context =>
             {
-                context.Response.Redirect("/login");
-                return Task.CompletedTask;
-            }
+                var path = context.Request.Path.Value ?? "/";
+                if (path.Equals("/login", StringComparison.OrdinalIgnoreCase))
+                {
+                    context.Response.Redirect("/login");
+                    return Task.CompletedTask;
+                }
 
-            var target = "/login?returnUrl=" + Uri.EscapeDataString(path + context.Request.QueryString);
-            context.Response.Redirect(target);
-            return Task.CompletedTask;
+                var target = "/login?returnUrl=" + Uri.EscapeDataString(path + context.Request.QueryString);
+                context.Response.Redirect(target);
+                return Task.CompletedTask;
+            },
+            OnValidatePrincipal = async context =>
+            {
+                var userId = context.Principal?.FindFirstValue(ClaimTypes.NameIdentifier);
+                var stamp = context.Principal?.FindFirstValue("SecurityStamp");
+
+                if (string.IsNullOrWhiteSpace(userId) || !int.TryParse(userId, out var uid))
+                {
+                    context.RejectPrincipal();
+                    await context.HttpContext.SignOutAsync(AuthSchemes.Resident);
+                    return;
+                }
+
+                var stampService = context.HttpContext.RequestServices.GetRequiredService<SecurityStampService>();
+                var (isActive, currentStamp) = await stampService.GetUserStatusAsync("Resident", uid, context.HttpContext.RequestAborted);
+
+                if (!isActive || !string.Equals(stamp, currentStamp, StringComparison.OrdinalIgnoreCase))
+                {
+                    context.RejectPrincipal();
+                    await context.HttpContext.SignOutAsync(AuthSchemes.Resident);
+                }
+            }
         };
     })
     .AddCookie(AuthSchemes.Admin, options =>
@@ -87,24 +133,49 @@ builder.Services.AddAuthentication()
         options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
         options.Cookie.SameSite = SameSiteMode.Lax;
         options.Cookie.Path = "/";
-        options.LoginPath = "/adminportal";
-        options.AccessDeniedPath = "/adminportal";
+        options.LoginPath = "/AdminPortal";
+        options.AccessDeniedPath = "/AdminPortal";
         options.SlidingExpiration = true;
         options.ExpireTimeSpan = TimeSpan.FromHours(8);
-        options.Events.OnRedirectToLogin = context =>
+        options.Events = new CookieAuthenticationEvents
         {
-            var path = context.Request.Path.Value ?? "/adminportal";
-            if (path.Equals("/adminportal", StringComparison.OrdinalIgnoreCase)
-                || path.Equals("/adminportal/", StringComparison.OrdinalIgnoreCase)
-                || path.StartsWith("/adminportal/account", StringComparison.OrdinalIgnoreCase))
+            OnRedirectToLogin = context =>
             {
-                context.Response.Redirect("/adminportal");
-                return Task.CompletedTask;
-            }
+                var path = context.Request.Path.Value ?? "/AdminPortal";
+                if (path.StartsWith("/adminportal", StringComparison.OrdinalIgnoreCase)
+                    && (path.Equals("/adminportal", StringComparison.OrdinalIgnoreCase)
+                        || path.Equals("/adminportal/", StringComparison.OrdinalIgnoreCase)
+                        || path.StartsWith("/adminportal/account", StringComparison.OrdinalIgnoreCase)))
+                {
+                    context.Response.Redirect("/AdminPortal");
+                    return Task.CompletedTask;
+                }
 
-            var target = "/adminportal?returnUrl=" + Uri.EscapeDataString(path + context.Request.QueryString);
-            context.Response.Redirect(target);
-            return Task.CompletedTask;
+                var target = "/AdminPortal?returnUrl=" + Uri.EscapeDataString(path + context.Request.QueryString);
+                context.Response.Redirect(target);
+                return Task.CompletedTask;
+            },
+            OnValidatePrincipal = async context =>
+            {
+                var userId = context.Principal?.FindFirstValue(ClaimTypes.NameIdentifier);
+                var stamp = context.Principal?.FindFirstValue("SecurityStamp");
+
+                if (string.IsNullOrWhiteSpace(userId) || !int.TryParse(userId, out var uid))
+                {
+                    context.RejectPrincipal();
+                    await context.HttpContext.SignOutAsync(AuthSchemes.Admin);
+                    return;
+                }
+
+                var stampService = context.HttpContext.RequestServices.GetRequiredService<SecurityStampService>();
+                var (isActive, currentStamp) = await stampService.GetUserStatusAsync("Admin", uid, context.HttpContext.RequestAborted);
+
+                if (!isActive || !string.Equals(stamp, currentStamp, StringComparison.OrdinalIgnoreCase))
+                {
+                    context.RejectPrincipal();
+                    await context.HttpContext.SignOutAsync(AuthSchemes.Admin);
+                }
+            }
         };
     })
     .AddCookie(AuthSchemes.Receptionist, options =>
@@ -114,24 +185,49 @@ builder.Services.AddAuthentication()
         options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
         options.Cookie.SameSite = SameSiteMode.Lax;
         options.Cookie.Path = "/";
-        options.LoginPath = "/receptionportal";
-        options.AccessDeniedPath = "/receptionportal";
+        options.LoginPath = "/ReceptionPortal";
+        options.AccessDeniedPath = "/ReceptionPortal";
         options.SlidingExpiration = true;
         options.ExpireTimeSpan = TimeSpan.FromHours(8);
-        options.Events.OnRedirectToLogin = context =>
+        options.Events = new CookieAuthenticationEvents
         {
-            var path = context.Request.Path.Value ?? "/receptionportal";
-            if (path.Equals("/receptionportal", StringComparison.OrdinalIgnoreCase)
-                || path.Equals("/receptionportal/", StringComparison.OrdinalIgnoreCase)
-                || path.StartsWith("/receptionportal/account", StringComparison.OrdinalIgnoreCase))
+            OnRedirectToLogin = context =>
             {
-                context.Response.Redirect("/receptionportal");
-                return Task.CompletedTask;
-            }
+                var path = context.Request.Path.Value ?? "/ReceptionPortal";
+                if (path.StartsWith("/receptionportal", StringComparison.OrdinalIgnoreCase)
+                    && (path.Equals("/receptionportal", StringComparison.OrdinalIgnoreCase)
+                        || path.Equals("/receptionportal/", StringComparison.OrdinalIgnoreCase)
+                        || path.StartsWith("/receptionportal/account", StringComparison.OrdinalIgnoreCase)))
+                {
+                    context.Response.Redirect("/ReceptionPortal");
+                    return Task.CompletedTask;
+                }
 
-            var target = "/receptionportal?returnUrl=" + Uri.EscapeDataString(path + context.Request.QueryString);
-            context.Response.Redirect(target);
-            return Task.CompletedTask;
+                var target = "/ReceptionPortal?returnUrl=" + Uri.EscapeDataString(path + context.Request.QueryString);
+                context.Response.Redirect(target);
+                return Task.CompletedTask;
+            },
+            OnValidatePrincipal = async context =>
+            {
+                var userId = context.Principal?.FindFirstValue(ClaimTypes.NameIdentifier);
+                var stamp = context.Principal?.FindFirstValue("SecurityStamp");
+
+                if (string.IsNullOrWhiteSpace(userId) || !int.TryParse(userId, out var uid))
+                {
+                    context.RejectPrincipal();
+                    await context.HttpContext.SignOutAsync(AuthSchemes.Receptionist);
+                    return;
+                }
+
+                var stampService = context.HttpContext.RequestServices.GetRequiredService<SecurityStampService>();
+                var (isActive, currentStamp) = await stampService.GetUserStatusAsync("Receptionist", uid, context.HttpContext.RequestAborted);
+
+                if (!isActive || !string.Equals(stamp, currentStamp, StringComparison.OrdinalIgnoreCase))
+                {
+                    context.RejectPrincipal();
+                    await context.HttpContext.SignOutAsync(AuthSchemes.Receptionist);
+                }
+            }
         };
     });
 
@@ -179,6 +275,49 @@ builder.Services.AddAntiforgery(options =>
 builder.Services.AddControllersWithViews(options =>
 {
     options.Filters.Add(new Microsoft.AspNetCore.Mvc.AutoValidateAntiforgeryTokenAttribute());
+    options.Filters.Add<MustChangePasswordFilter>();
+});
+
+// QA-016: IP rate limiter on login POSTs (assumption: same 5 / 15 min window as account lockout)
+var loginPermitLimit = builder.Configuration.GetValue("Lockout:MaxFailedAttempts", 5);
+var loginWindowMinutes = builder.Configuration.GetValue("Lockout:LockoutMinutes", 15);
+builder.Services.AddRateLimiter(options =>
+{
+    options.OnRejected = async (context, token) =>
+    {
+        var path = context.HttpContext.Request.Path.Value ?? string.Empty;
+        var redirect = path.StartsWith("/adminportal", StringComparison.OrdinalIgnoreCase)
+            ? "/AdminPortal?rateLimited=true"
+            : path.StartsWith("/receptionportal", StringComparison.OrdinalIgnoreCase)
+                ? "/ReceptionPortal?rateLimited=true"
+                : "/login?rateLimited=true";
+        context.HttpContext.Response.Redirect(redirect);
+        await Task.CompletedTask;
+    };
+    options.AddPolicy("login", httpContext =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = loginPermitLimit,
+                Window = TimeSpan.FromMinutes(loginWindowMinutes),
+                QueueLimit = 0
+            }));
+});
+
+// Configure HSTS: 1 year with includeSubDomains (QA-021)
+builder.Services.AddHsts(options =>
+{
+    options.MaxAge = TimeSpan.FromDays(365);
+    options.IncludeSubDomains = true;
+    options.Preload = false;
+});
+
+// Configure HTTPS redirection: 308 Permanent (QA-022)
+builder.Services.AddHttpsRedirection(options =>
+{
+    options.RedirectStatusCode = StatusCodes.Status308PermanentRedirect;
+    options.HttpsPort = 443;
 });
 
 var app = builder.Build();
@@ -193,23 +332,38 @@ else
     app.UseHsts();
 }
 
+// Friendly 404 page (QA-005)
+app.UseStatusCodePagesWithReExecute("/Home/NotFound", "?statusCode={0}");
+
 // Handle antiforgery failures on login forms with friendly redirect
 app.UseAntiforgeryExceptionHandler();
 
 app.UseHttpsRedirection();
 
+// Security headers (QA-021 CSP, etc.)
 app.Use(async (context, next) =>
 {
     context.Response.Headers.XContentTypeOptions = "nosniff";
     context.Response.Headers.XFrameOptions = "DENY";
     context.Response.Headers["Referrer-Policy"] = "strict-origin-when-cross-origin";
     context.Response.Headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()";
+    context.Response.Headers["Content-Security-Policy"] =
+        "default-src 'self'; " +
+        "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; " +
+        "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com; " +
+        "font-src 'self' https://cdn.jsdelivr.net https://fonts.gstatic.com; " +
+        "img-src 'self' data:; " +
+        "connect-src 'self'; " +
+        "frame-ancestors 'none'; " +
+        "form-action 'self'; " +
+        "base-uri 'self';";
     await next();
 });
 
 app.UseStaticFiles();
 
 app.UseRouting();
+app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
 

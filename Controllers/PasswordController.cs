@@ -69,7 +69,21 @@ public class PasswordController : Controller
         switch (result)
         {
             case PasswordChangeStatus.Success:
-                await _db.SaveChangesAsync(cancellationToken);
+                var resident = await _db.Residents.AsNoTracking().SingleOrDefaultAsync(r => r.Uid == userId.Value, cancellationToken);
+                if (resident is not null)
+                {
+                    var claims = new List<System.Security.Claims.Claim>
+                    {
+                        new(System.Security.Claims.ClaimTypes.NameIdentifier, resident.Uid.ToString()),
+                        new(System.Security.Claims.ClaimTypes.Name, resident.ResidentName),
+                        new(System.Security.Claims.ClaimTypes.Role, PortalRoles.Resident),
+                        new("username", resident.Username),
+                        new("SecurityStamp", resident.SecurityStamp ?? string.Empty)
+                    };
+                    if (!string.IsNullOrWhiteSpace(resident.Email))
+                        claims.Add(new System.Security.Claims.Claim(System.Security.Claims.ClaimTypes.Email, resident.Email));
+                    await HttpContext.SignInAsync(AuthSchemes.Resident, new System.Security.Claims.ClaimsPrincipal(new System.Security.Claims.ClaimsIdentity(claims, AuthSchemes.Resident)));
+                }
                 TempData[ChangePasswordViewModel.SuccessMessageKey] = "Your password was changed.";
                 return RedirectToAction("Index", "Dashboard", new { area = "" });
             case PasswordChangeStatus.CurrentPasswordIncorrect:

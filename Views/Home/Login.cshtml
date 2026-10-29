@@ -36,6 +36,13 @@
                     Your session expired, please try again.
                 </div>
             }
+            @if (Context.Request.Query.ContainsKey("rateLimited"))
+            {
+                <div class="alert alert-warning" role="alert">
+                    <i class="bi bi-exclamation-triangle me-2" aria-hidden="true"></i>
+                    Too many login attempts. Please try again later.
+                </div>
+            }
             <form asp-controller="Home" asp-action="Login" method="post">
                 <div asp-validation-summary="ModelOnly" role="alert"></div>
                 <div class="mb-3">
