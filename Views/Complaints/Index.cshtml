@@ -1,0 +1,80 @@
+@model ComplaintListViewModel
+@{
+    ViewData["Title"] = "Complaints";
+    string Badge(string status) => status switch
+    {
+        "Initiated" => "text-bg-warning",
+        "Approved" => "text-bg-primary",
+        "Assigned" => "text-bg-info",
+        "WorkInProgress" => "text-bg-info",
+        "Resolved" => "text-bg-success",
+        "Closed" => "text-bg-secondary",
+        "Declined" => "text-bg-danger",
+        "Cancelled" => "text-bg-dark",
+        _ => "text-bg-light"
+    };
+}
+
+<div class="page-header">
+    <div>
+        <h1 class="page-heading">Complaints</h1>
+        <p class="page-subtitle">Raise and track maintenance and service issues.</p>
+    </div>
+    <a class="btn btn-portal btn-resident" asp-action="Create">
+        <i class="bi bi-plus-lg me-1" aria-hidden="true"></i> New complaint
+    </a>
+</div>
+
+@if (TempData["Success"] is string successMsg)
+{
+    <div class="alert alert-success" role="status">@successMsg</div>
+}
+@if (TempData["Error"] is string errorMsg)
+{
+    <div class="alert alert-danger" role="alert">@errorMsg</div>
+}
+
+<section class="card portal-card">
+    <div class="card-body">
+        @if (Model.Items.Any())
+        {
+            <div class="table-responsive">
+                <table class="table align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Category</th>
+                            <th>Priority</th>
+                            <th>Status</th>
+                            <th>Submitted</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model.Items)
+                        {
+                            <tr class="@(item.IsOverdue ? "table-warning" : null)">
+                                <td>@item.Uid</td>
+                                <td>@item.CategoryName</td>
+                                <td>@item.Priority</td>
+                                <td>
+                                    <span class="badge @Badge(item.Status)">@ComplaintStatus.Display(item.Status)</span>
+                                    @if (item.IsOverdue)
+                                    {
+                                        <span class="badge text-bg-danger ms-1">Overdue</span>
+                                    }
+                                </td>
+                                <td>@TimeZone.FormatDateTime(item.CreatedAtUtc, "dd MMM yyyy, HH:mm")</td>
+                                <td><a class="btn btn-sm btn-outline-secondary" asp-action="Details" asp-route-id="@item.Uid">Details</a></td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+        else
+        {
+            <p class="text-secondary mb-0">You have not submitted any complaints yet.</p>
+        }
+    </div>
+</section>

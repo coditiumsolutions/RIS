@@ -1,0 +1,5 @@
+@model ComplaintDetailsViewModel
+@{
+    ViewData["Title"] = $"Complaint #{Model.Uid}";
+}
+<partial name="_StaffComplaintDetails" model="Model" />

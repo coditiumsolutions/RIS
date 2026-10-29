@@ -1,0 +1,102 @@
+@model ComplaintReportsViewModel
+@{
+    var area = ViewContext.RouteData.Values["area"]?.ToString();
+}
+
+<div class="page-header">
+    <div>
+        <h1 class="page-heading">Complaint reports</h1>
+        <p class="page-subtitle">@(Model.IsAdvanced ? "Advanced operations analytics." : "Reception desk snapshot.")</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a class="btn btn-outline-secondary" asp-area="@area" asp-controller="Complaints" asp-action="Index">Back</a>
+        @if (Model.IsAdvanced)
+        {
+            <a class="btn btn-portal" asp-area="@area" asp-controller="Complaints" asp-action="ExportCsv">Export CSV</a>
+        }
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-6 col-md-4 col-lg-2"><div class="card portal-card stat-card"><div class="card-body"><p class="stat-label">Initiated</p><p class="stat-value">@Model.OpenInitiated</p></div></div></div>
+    <div class="col-6 col-md-4 col-lg-2"><div class="card portal-card stat-card"><div class="card-body"><p class="stat-label">Approved</p><p class="stat-value">@Model.OpenApproved</p></div></div></div>
+    <div class="col-6 col-md-4 col-lg-2"><div class="card portal-card stat-card"><div class="card-body"><p class="stat-label">Assigned</p><p class="stat-value">@Model.OpenAssigned</p></div></div></div>
+    <div class="col-6 col-md-4 col-lg-2"><div class="card portal-card stat-card"><div class="card-body"><p class="stat-label">In progress</p><p class="stat-value">@Model.OpenInProgress</p></div></div></div>
+    <div class="col-6 col-md-4 col-lg-2"><div class="card portal-card stat-card"><div class="card-body"><p class="stat-label">Today</p><p class="stat-value">@Model.TodayCreated</p></div></div></div>
+    <div class="col-6 col-md-4 col-lg-2"><div class="card portal-card stat-card"><div class="card-body"><p class="stat-label">Overdue</p><p class="stat-value">@Model.OverdueCount</p></div></div></div>
+</div>
+
+@if (Model.IsAdvanced)
+{
+    <div class="row g-4">
+        <div class="col-lg-4">
+            <section class="card portal-card h-100"><div class="card-body">
+                <h2 class="h6">Avg resolution (hours)</h2>
+                <p class="stat-value mb-0">@(Model.AvgResolutionHours is null ? "—" : Model.AvgResolutionHours.Value.ToString("0.0"))</p>
+            </div></section>
+        </div>
+        <div class="col-lg-4">
+            <section class="card portal-card h-100"><div class="card-body">
+                <h2 class="h6">Worker workload</h2>
+                @if (Model.WorkerWorkload.Any())
+                {
+                    <ul class="list-unstyled mb-0">
+                        @foreach (var row in Model.WorkerWorkload)
+                        {
+                            <li class="d-flex justify-content-between"><span>@row.Worker</span><strong>@row.Count</strong></li>
+                        }
+                    </ul>
+                }
+                else { <p class="text-secondary mb-0">No active assignments.</p> }
+            </div></section>
+        </div>
+        <div class="col-lg-4">
+            <section class="card portal-card h-100"><div class="card-body">
+                <h2 class="h6">By category</h2>
+                <ul class="list-unstyled mb-0">
+                    @foreach (var row in Model.ByCategory)
+                    {
+                        <li class="d-flex justify-content-between"><span>@row.Category</span><strong>@row.Count</strong></li>
+                    }
+                </ul>
+            </div></section>
+        </div>
+        <div class="col-lg-4">
+            <section class="card portal-card h-100"><div class="card-body">
+                <h2 class="h6">By priority</h2>
+                <ul class="list-unstyled mb-0">
+                    @foreach (var row in Model.ByPriority)
+                    {
+                        <li class="d-flex justify-content-between"><span>@row.Priority</span><strong>@row.Count</strong></li>
+                    }
+                </ul>
+            </div></section>
+        </div>
+        <div class="col-lg-4">
+            <section class="card portal-card h-100"><div class="card-body">
+                <h2 class="h6">Repeat complaints by unit</h2>
+                @if (Model.RepeatByUnit.Any())
+                {
+                    <ul class="list-unstyled mb-0">
+                        @foreach (var row in Model.RepeatByUnit)
+                        {
+                            <li class="d-flex justify-content-between"><span>Unit @row.Unit</span><strong>@row.Count</strong></li>
+                        }
+                    </ul>
+                }
+                else { <p class="text-secondary mb-0">No repeats yet.</p> }
+            </div></section>
+        </div>
+        <div class="col-lg-4">
+            <section class="card portal-card h-100"><div class="card-body">
+                <h2 class="h6">Monthly trend</h2>
+                <ul class="list-unstyled mb-0">
+                    @foreach (var row in Model.MonthlyTrend)
+                    {
+                        <li class="d-flex justify-content-between"><span>@row.Month</span><strong>@row.Count</strong></li>
+                    }
+                </ul>
+            </div></section>
+        </div>
+    </div>
+}

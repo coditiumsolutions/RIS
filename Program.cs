@@ -2,6 +2,7 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.EntityFrameworkCore;
 using ResidentPortal.Data;
 using ResidentPortal.Security;
@@ -57,6 +58,17 @@ builder.Services.AddScoped<AppSettingsService>();
 builder.Services.AddScoped<SecurityStampService>();
 builder.Services.AddScoped<AccountLockoutService>();
 builder.Services.AddSingleton<LoginFailureRateLimiter>();
+builder.Services.Configure<ComplaintPhotoStorageOptions>(
+    builder.Configuration.GetSection(ComplaintPhotoStorageOptions.SectionName));
+builder.Services.AddSingleton<ComplaintPhotoStorage>();
+builder.Services.AddScoped<SmtpSettingsService>();
+builder.Services.AddScoped<ComplaintEmailNotifier>();
+builder.Services.AddScoped<ComplaintWorkflow>();
+builder.Services.AddScoped<ComplaintQueryService>();
+builder.Services.Configure<FormOptions>(options =>
+{
+    options.MultipartBodyLengthLimit = Math.Max(options.MultipartBodyLengthLimit, 3 * 1024 * 1024);
+});
 
 builder.Services.AddAuthentication(options =>
     {

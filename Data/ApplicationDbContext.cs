@@ -22,6 +22,16 @@ public class ApplicationDbContext : DbContext
 
     public DbSet<VisitorRequest> VisitorRequests => Set<VisitorRequest>();
 
+    public DbSet<ComplaintCategory> ComplaintCategories => Set<ComplaintCategory>();
+
+    public DbSet<Complaint> Complaints => Set<Complaint>();
+
+    public DbSet<ComplaintHistory> ComplaintHistory => Set<ComplaintHistory>();
+
+    public DbSet<ComplaintPhoto> ComplaintPhotos => Set<ComplaintPhoto>();
+
+    public DbSet<SmtpSettings> SmtpSettings => Set<SmtpSettings>();
+
     public DbSet<AppSetting> AppSettings => Set<AppSetting>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -51,6 +61,7 @@ public class ApplicationDbContext : DbContext
             entity.Property(e => e.CreatedAt).HasColumnType("datetime2").HasDefaultValueSql("SYSUTCDATETIME()");
             entity.HasIndex(e => e.Username).IsUnique();
             entity.HasMany(e => e.VisitorRequests).WithOne(v => v.Resident).HasForeignKey(v => v.ResidentId);
+            entity.HasMany<Complaint>().WithOne(c => c.Resident).HasForeignKey(c => c.ResidentId);
         });
 
         modelBuilder.Entity<AdminUser>(entity =>
@@ -136,6 +147,86 @@ public class ApplicationDbContext : DbContext
             entity.HasIndex(e => e.ArrivalDate);
             entity.HasIndex(e => e.Status);
             entity.HasIndex(e => e.CreatedAt);
+        });
+
+        modelBuilder.Entity<ComplaintCategory>(entity =>
+        {
+            entity.ToTable("ComplaintCategories", "dbo");
+            entity.HasKey(e => e.Uid);
+            entity.Property(e => e.Uid).HasColumnName("uid").UseIdentityColumn();
+            entity.Property(e => e.Name).HasMaxLength(100).IsRequired();
+            entity.Property(e => e.IsActive).HasDefaultValue(true);
+            entity.Property(e => e.SortOrder).HasDefaultValue(0);
+            entity.Property(e => e.CreatedAtUtc).HasColumnType("datetime2").HasDefaultValueSql("SYSUTCDATETIME()");
+            entity.HasIndex(e => e.Name).IsUnique();
+        });
+
+        modelBuilder.Entity<Complaint>(entity =>
+        {
+            entity.ToTable("Complaints", "dbo");
+            entity.HasKey(e => e.Uid);
+            entity.Property(e => e.Uid).HasColumnName("uid").UseIdentityColumn();
+            entity.Property(e => e.Priority).HasMaxLength(20).IsRequired();
+            entity.Property(e => e.Description).HasMaxLength(2000).IsRequired();
+            entity.Property(e => e.PreferredVisitTime).HasMaxLength(200);
+            entity.Property(e => e.Status).HasColumnName("Status").HasMaxLength(30).HasDefaultValue(ComplaintStatus.Initiated);
+            entity.Property(e => e.DeclineReason).HasMaxLength(500);
+            entity.Property(e => e.WorkerName).HasMaxLength(150);
+            entity.Property(e => e.WorkerPhone).HasMaxLength(30);
+            entity.Property(e => e.AssignedAtUtc).HasColumnType("datetime2");
+            entity.Property(e => e.ResolvedAtUtc).HasColumnType("datetime2");
+            entity.Property(e => e.ClosedAtUtc).HasColumnType("datetime2");
+            entity.Property(e => e.SlaDueAtUtc).HasColumnType("datetime2");
+            entity.Property(e => e.CreatedAtUtc).HasColumnType("datetime2").HasDefaultValueSql("SYSUTCDATETIME()");
+            entity.Property(e => e.UpdatedAtUtc).HasColumnType("datetime2").HasDefaultValueSql("SYSUTCDATETIME()");
+            entity.HasOne(e => e.Category).WithMany(c => c.Complaints).HasForeignKey(e => e.CategoryId);
+            entity.HasIndex(e => e.ResidentId);
+            entity.HasIndex(e => e.Status);
+            entity.HasIndex(e => e.CreatedAtUtc);
+        });
+
+        modelBuilder.Entity<ComplaintHistory>(entity =>
+        {
+            entity.ToTable("ComplaintHistory", "dbo");
+            entity.HasKey(e => e.Uid);
+            entity.Property(e => e.Uid).HasColumnName("uid").UseIdentityColumn();
+            entity.Property(e => e.ActorUserType).HasMaxLength(20).IsRequired();
+            entity.Property(e => e.ActorDisplayName).HasMaxLength(150);
+            entity.Property(e => e.FromStatus).HasMaxLength(30);
+            entity.Property(e => e.ToStatus).HasMaxLength(30);
+            entity.Property(e => e.Note).HasMaxLength(1000);
+            entity.Property(e => e.CreatedAtUtc).HasColumnType("datetime2").HasDefaultValueSql("SYSUTCDATETIME()");
+            entity.HasOne(e => e.Complaint).WithMany(c => c.History).HasForeignKey(e => e.ComplaintId);
+            entity.HasIndex(e => e.ComplaintId);
+        });
+
+        modelBuilder.Entity<ComplaintPhoto>(entity =>
+        {
+            entity.ToTable("ComplaintPhotos", "dbo");
+            entity.HasKey(e => e.Uid);
+            entity.Property(e => e.Uid).HasColumnName("uid").UseIdentityColumn();
+            entity.Property(e => e.FilePath).HasMaxLength(80).IsRequired();
+            entity.Property(e => e.ContentType).HasMaxLength(50).IsRequired();
+            entity.Property(e => e.UploadedByUserType).HasMaxLength(20).IsRequired();
+            entity.Property(e => e.CapturedAtUtc).HasColumnType("datetime2").HasDefaultValueSql("SYSUTCDATETIME()");
+            entity.HasOne(e => e.Complaint).WithMany(c => c.Photos).HasForeignKey(e => e.ComplaintId);
+            entity.HasIndex(e => e.ComplaintId);
+        });
+
+        modelBuilder.Entity<SmtpSettings>(entity =>
+        {
+            entity.ToTable("SmtpSettings", "dbo");
+            entity.HasKey(e => e.Uid);
+            entity.Property(e => e.Uid).HasColumnName("uid").UseIdentityColumn();
+            entity.Property(e => e.Host).HasMaxLength(256);
+            entity.Property(e => e.Port).HasDefaultValue(587);
+            entity.Property(e => e.UseSsl).HasDefaultValue(true);
+            entity.Property(e => e.Username).HasMaxLength(256);
+            entity.Property(e => e.PasswordProtected).HasMaxLength(2000);
+            entity.Property(e => e.FromEmail).HasMaxLength(256);
+            entity.Property(e => e.FromName).HasMaxLength(150);
+            entity.Property(e => e.EmailNotificationsEnabled).HasDefaultValue(false);
+            entity.Property(e => e.UpdatedAtUtc).HasColumnType("datetime2").HasDefaultValueSql("SYSUTCDATETIME()");
         });
 
         modelBuilder.Entity<AppSetting>(entity =>

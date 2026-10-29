@@ -1,0 +1,60 @@
+@model CreateComplaintViewModel
+@{
+    ViewData["Title"] = "New Complaint";
+}
+
+<div class="page-header">
+    <div>
+        <h1 class="page-heading">New complaint</h1>
+        <p class="page-subtitle">Describe the issue. A photo is optional.</p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <section class="card portal-card">
+            <div class="card-body">
+                <form asp-action="Create" method="post" enctype="multipart/form-data" novalidate>
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label asp-for="CategoryId" class="form-label"></label>
+                            <select asp-for="CategoryId" class="form-select" asp-items="@(new SelectList(Model.Categories, "Uid", "Name"))">
+                                <option value="">-- Select --</option>
+                            </select>
+                            <span asp-validation-for="CategoryId" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="Priority" class="form-label"></label>
+                            <select asp-for="Priority" class="form-select" asp-items="@(new SelectList(ComplaintPriority.All))"></select>
+                            <span asp-validation-for="Priority" class="text-danger small"></span>
+                        </div>
+                        <div class="col-12">
+                            <label asp-for="Description" class="form-label"></label>
+                            <textarea asp-for="Description" class="form-control" rows="4"></textarea>
+                            <span asp-validation-for="Description" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="PreferredVisitTime" class="form-label"></label>
+                            <input asp-for="PreferredVisitTime" class="form-control" placeholder="e.g. Weekdays after 5pm" />
+                            <span asp-validation-for="PreferredVisitTime" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label" for="photo">Photo (optional)</label>
+                            <input class="form-control" type="file" id="photo" name="photo" accept="image/jpeg,image/png" />
+                            <div class="form-text">JPEG or PNG, max 2 MB.</div>
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <button type="submit" class="btn btn-portal btn-resident">Submit complaint</button>
+                        <a asp-action="Index" class="btn btn-outline-secondary ms-2">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </section>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

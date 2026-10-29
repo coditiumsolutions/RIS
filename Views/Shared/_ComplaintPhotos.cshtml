@@ -1,0 +1,19 @@
+@model IReadOnlyList<ComplaintPhotoItemViewModel>
+@if (Model is { Count: > 0 })
+{
+    <div class="visitor-photo-gallery mt-3">
+        <h3 class="h6 mb-2">Photos</h3>
+        <div class="visitor-photo-thumbs">
+            @foreach (var photo in Model)
+            {
+                <a class="visitor-photo-thumb"
+                   href="/ComplaintPhotos/@photo.Uid"
+                   data-visitor-photo-open
+                   data-visitor-photo-title="Complaint photo">
+                    <img src="/ComplaintPhotos/@photo.Uid" alt="Complaint photo" loading="lazy" />
+                    <span class="visitor-photo-thumb-label">Photo</span>
+                </a>
+            }
+        </div>
+    </div>
+}

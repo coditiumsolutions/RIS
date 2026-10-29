@@ -4,12 +4,21 @@
     string Display(string? value) => string.IsNullOrWhiteSpace(value) ? "—" : value;
 }
 
+@{
+    var emailForm = ViewBag.EmailForm as EditResidentEmailViewModel ?? new EditResidentEmailViewModel { Email = Model.Email };
+}
+
 <div class="page-header">
     <div>
         <h1 class="page-heading">My Profile</h1>
         <p class="page-subtitle">Your resident account details.</p>
     </div>
 </div>
+
+@if (TempData["Success"] is string successMsg)
+{
+    <div class="alert alert-success" role="status">@successMsg</div>
+}
 
 <div class="row g-4">
     <div class="col-lg-6">
@@ -22,7 +31,7 @@
                     <dt>Username</dt>
                     <dd>@Model.Username</dd>
                     <dt>Email</dt>
-                    <dd>@Model.Email</dd>
+                    <dd>@Display(Model.Email)</dd>
                     <dt>Mobile</dt>
                     <dd>@Model.Mobile</dd>
                     <dt>Status</dt>
@@ -30,6 +39,13 @@
                     <dt>Registered</dt>
                     <dd>@TimeZone.FormatDateTime(Model.CreatedAt, "dd MMM yyyy")</dd>
                 </dl>
+
+                <form asp-action="UpdateEmail" method="post" class="mt-3 border-top pt-3" novalidate>
+                    <label class="form-label" for="Email">Update email</label>
+                    <input class="form-control" id="Email" name="Email" type="email" value="@emailForm.Email" maxlength="256" />
+                    <div asp-validation-summary="ModelOnly" class="text-danger small mt-1"></div>
+                    <button type="submit" class="btn btn-portal btn-resident btn-sm mt-2">Save email</button>
+                </form>
             </div>
         </section>
     </div>

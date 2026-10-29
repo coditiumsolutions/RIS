@@ -1,0 +1,137 @@
+@model ComplaintListViewModel
+@{
+    var area = ViewContext.RouteData.Values["area"]?.ToString();
+    string Badge(string status) => status switch
+    {
+        "Initiated" => "text-bg-warning",
+        "Approved" => "text-bg-primary",
+        "Assigned" or "WorkInProgress" => "text-bg-info",
+        "Resolved" => "text-bg-success",
+        "Closed" => "text-bg-secondary",
+        "Declined" => "text-bg-danger",
+        "Cancelled" => "text-bg-dark",
+        _ => "text-bg-light"
+    };
+}
+
+<div class="page-header">
+    <div>
+        <h1 class="page-heading">Complaints</h1>
+        <p class="page-subtitle">Search, triage, and update resident complaints.</p>
+    </div>
+    <div class="d-flex gap-2 flex-wrap">
+        <a class="btn btn-outline-secondary" asp-area="@area" asp-controller="Complaints" asp-action="Reports">Reports</a>
+    </div>
+</div>
+
+@if (TempData["Success"] is string successMsg)
+{
+    <div class="alert alert-success" role="status">@successMsg</div>
+}
+@if (TempData["Error"] is string errorMsg)
+{
+    <div class="alert alert-danger" role="alert">@errorMsg</div>
+}
+
+<div class="row g-3 mb-3">
+    <div class="col-md-4"><div class="card portal-card stat-card"><div class="card-body"><p class="stat-label">Open</p><p class="stat-value">@Model.OpenCount</p></div></div></div>
+    <div class="col-md-4"><div class="card portal-card stat-card"><div class="card-body"><p class="stat-label">Today</p><p class="stat-value">@Model.TodayCount</p></div></div></div>
+    <div class="col-md-4"><div class="card portal-card stat-card"><div class="card-body"><p class="stat-label">Overdue</p><p class="stat-value">@Model.OverdueCount</p></div></div></div>
+</div>
+
+<section class="card portal-card mb-3">
+    <div class="card-body">
+        <form method="get" class="row g-2 align-items-end">
+            <div class="col-md-2">
+                <label class="form-label" for="StatusFilter">Status</label>
+                <select class="form-select" id="StatusFilter" name="StatusFilter" asp-items="@(new SelectList(ComplaintStatus.All, Model.StatusFilter))">
+                    <option value="">All</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label" for="PriorityFilter">Priority</label>
+                <select class="form-select" id="PriorityFilter" name="PriorityFilter" asp-items="@(new SelectList(ComplaintPriority.All, Model.PriorityFilter))">
+                    <option value="">All</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label" for="CategoryFilter">Category</label>
+                <select class="form-select" id="CategoryFilter" name="CategoryFilter" asp-items="@(new SelectList(Model.Categories, "Uid", "Name", Model.CategoryFilter))">
+                    <option value="">All</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label" for="UnitFilter">Unit</label>
+                <input class="form-control" id="UnitFilter" name="UnitFilter" value="@Model.UnitFilter" />
+            </div>
+            <div class="col-md-2">
+                <label class="form-label" for="ResidentFilter">Resident</label>
+                <input class="form-control" id="ResidentFilter" name="ResidentFilter" value="@Model.ResidentFilter" />
+            </div>
+            <div class="col-md-2">
+                <label class="form-label" for="WorkerFilter">Worker</label>
+                <input class="form-control" id="WorkerFilter" name="WorkerFilter" value="@Model.WorkerFilter" />
+            </div>
+            <div class="col-md-2">
+                <label class="form-label" for="FromDate">From</label>
+                <input class="form-control" type="date" id="FromDate" name="FromDate" value="@Model.FromDate?.ToString("yyyy-MM-dd")" />
+            </div>
+            <div class="col-md-2">
+                <label class="form-label" for="ToDate">To</label>
+                <input class="form-control" type="date" id="ToDate" name="ToDate" value="@Model.ToDate?.ToString("yyyy-MM-dd")" />
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-portal w-100">Filter</button>
+            </div>
+        </form>
+    </div>
+</section>
+
+<section class="card portal-card">
+    <div class="card-body">
+        @if (Model.Items.Any())
+        {
+            <div class="table-responsive">
+                <table class="table align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Resident</th>
+                            <th>Category</th>
+                            <th>Priority</th>
+                            <th>Status</th>
+                            <th>Worker</th>
+                            <th>Created</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model.Items)
+                        {
+                            <tr class="@(item.IsOverdue ? "table-warning" : null)">
+                                <td>@item.Uid</td>
+                                <td>@item.ResidentName @(string.IsNullOrWhiteSpace(item.ResidentUnit) ? "" : $"({item.ResidentUnit})")</td>
+                                <td>@item.CategoryName</td>
+                                <td>@item.Priority</td>
+                                <td>
+                                    <span class="badge @Badge(item.Status)">@ComplaintStatus.Display(item.Status)</span>
+                                    @if (item.IsOverdue)
+                                    {
+                                        <span class="badge text-bg-danger ms-1">Overdue</span>
+                                    }
+                                </td>
+                                <td>@(item.WorkerName ?? "—")</td>
+                                <td>@TimeZone.FormatDateTime(item.CreatedAtUtc, "dd MMM yyyy")</td>
+                                <td><a class="btn btn-sm btn-outline-secondary" asp-area="@area" asp-controller="Complaints" asp-action="Details" asp-route-id="@item.Uid">Open</a></td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+        else
+        {
+            <p class="text-secondary mb-0">No complaints match your filters.</p>
+        }
+    </div>
+</section>

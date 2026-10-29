@@ -1,0 +1,91 @@
+@model ComplaintDetailsViewModel
+@{
+    ViewData["Title"] = $"Complaint #{Model.Uid}";
+    string Badge(string status) => status switch
+    {
+        "Initiated" => "text-bg-warning",
+        "Approved" => "text-bg-primary",
+        "Assigned" or "WorkInProgress" => "text-bg-info",
+        "Resolved" => "text-bg-success",
+        "Closed" => "text-bg-secondary",
+        "Declined" => "text-bg-danger",
+        "Cancelled" => "text-bg-dark",
+        _ => "text-bg-light"
+    };
+}
+
+<div class="page-header">
+    <div>
+        <h1 class="page-heading">Complaint #@Model.Uid</h1>
+        <p class="page-subtitle">@Model.CategoryName · @Model.Priority</p>
+    </div>
+    <a class="btn btn-outline-secondary" asp-action="Index">Back to list</a>
+</div>
+
+@if (TempData["Success"] is string successMsg)
+{
+    <div class="alert alert-success" role="status">@successMsg</div>
+}
+@if (TempData["Error"] is string errorMsg)
+{
+    <div class="alert alert-danger" role="alert">@errorMsg</div>
+}
+
+<div class="row g-4">
+    <div class="col-lg-7">
+        <section class="card portal-card">
+            <div class="card-body">
+                <p><span class="badge @Badge(Model.Status)">@ComplaintStatus.Display(Model.Status)</span>
+                    @if (Model.IsOverdue)
+                    {
+                        <span class="badge text-bg-danger">Overdue</span>
+                    }
+                </p>
+                <dl class="profile-list">
+                    <dt>Description</dt>
+                    <dd style="white-space: pre-wrap;">@Model.Description</dd>
+                    <dt>Preferred visit</dt>
+                    <dd>@(string.IsNullOrWhiteSpace(Model.PreferredVisitTime) ? "—" : Model.PreferredVisitTime)</dd>
+                    <dt>Submitted</dt>
+                    <dd>@TimeZone.FormatDateTime(Model.CreatedAtUtc)</dd>
+                    @if (Model.SlaDueAtUtc is not null)
+                    {
+                        <dt>SLA due</dt>
+                        <dd>@TimeZone.FormatDateTime(Model.SlaDueAtUtc)</dd>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(Model.WorkerName))
+                    {
+                        <dt>Worker</dt>
+                        <dd>@Model.WorkerName @(string.IsNullOrWhiteSpace(Model.WorkerPhone) ? "" : $"· {Model.WorkerPhone}")</dd>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(Model.DeclineReason))
+                    {
+                        <dt>Decline reason</dt>
+                        <dd class="text-danger">@Model.DeclineReason</dd>
+                    }
+                </dl>
+
+                @if (Model.CanCancel)
+                {
+                    <form asp-action="Cancel" asp-route-id="@Model.Uid" method="post" class="mt-3">
+                        <button type="submit" class="btn btn-outline-danger"
+                                data-confirm-title="Cancel complaint?"
+                                data-confirm-text="Cancel complaint #@Model.Uid?"
+                                data-confirm-ok="Cancel complaint"
+                                data-confirm-cancel="Keep"
+                                data-confirm-icon="warning">Cancel complaint</button>
+                    </form>
+                }
+
+                <partial name="_ComplaintPhotos" model="Model.Photos" />
+            </div>
+        </section>
+    </div>
+    <div class="col-lg-5">
+        <section class="card portal-card">
+            <div class="card-body">
+                <partial name="_ComplaintTimeline" model="Model.History" />
+            </div>
+        </section>
+    </div>
+</div>
