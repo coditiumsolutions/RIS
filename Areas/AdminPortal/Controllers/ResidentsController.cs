@@ -9,7 +9,7 @@ using ResidentPortal.Services;
 namespace ResidentPortal.Areas.AdminPortal.Controllers;
 
 [Area("AdminPortal")]
-[Authorize(Policy = AuthPolicies.AdminOnly)]
+[Authorize(Policy = AuthPolicies.AdminOnly, AuthenticationSchemes = AuthSchemes.Admin)]
 [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
 public class ResidentsController : Controller
 {
@@ -110,6 +110,7 @@ public class ResidentsController : Controller
             Status = model.Status,
             IsActive = true,
             MustChangePassword = true,
+            SecurityStamp = Guid.NewGuid().ToString("D").ToLowerInvariant(),
             CreatedAt = DateTime.UtcNow
         };
 
@@ -171,6 +172,7 @@ public class ResidentsController : Controller
         }
 
         var userId = User.GetUserId();
+        var wasActive = resident.IsActive;
         resident.ResidentName = model.ResidentName.Trim();
         resident.Username = model.Username.Trim();
         resident.Email = model.Email?.Trim();
@@ -183,6 +185,9 @@ public class ResidentsController : Controller
         resident.Block = model.Block?.Trim();
         resident.Status = model.Status;
         resident.IsActive = model.IsActive;
+
+        if (wasActive && !model.IsActive)
+            resident.SecurityStamp = Guid.NewGuid().ToString("D").ToLowerInvariant();
 
         await _db.SaveChangesAsync(cancellationToken);
         await _audit.WriteAsync("Admin", userId, $"Updated resident: {resident.ResidentName} (ID: {resident.Uid})", cancellationToken);
@@ -224,6 +229,7 @@ public class ResidentsController : Controller
         var userId = User.GetUserId();
         resident.PasswordHash = _passwords.Hash(model.NewPassword);
         resident.MustChangePassword = model.MustChangePassword;
+        resident.SecurityStamp = Guid.NewGuid().ToString("D").ToLowerInvariant();
 
         await _db.SaveChangesAsync(cancellationToken);
         await _audit.WriteAsync("Admin", userId, $"Reset password for resident: {resident.ResidentName} (ID: {resident.Uid})", cancellationToken);

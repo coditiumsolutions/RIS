@@ -61,7 +61,7 @@
                     </div>
                     <p class="text-secondary small mt-2 mb-0">
                         <i class="bi bi-info-circle me-1" aria-hidden="true"></i>
-                        Administrator accounts can only be managed directly in the database.
+                        Administrator accounts are managed separately. Receptionist accounts can be created, edited, activated, deactivated, and reset from this page.
                     </p>
                 }
                 else
@@ -108,9 +108,14 @@
                                             }
                                         </td>
                                         <td>@receptionist.CreatedAt.ToString("dd MMM yyyy", CultureInfo.InvariantCulture)</td>
-                                        <td>
+                                        <td class="text-nowrap">
                                             <a asp-area="AdminPortal" asp-controller="Users" asp-action="EditReceptionist" asp-route-id="@receptionist.Uid" class="btn btn-sm btn-outline-primary">Edit</a>
                                             <a asp-area="AdminPortal" asp-controller="Users" asp-action="ResetReceptionistPassword" asp-route-id="@receptionist.Uid" class="btn btn-sm btn-outline-secondary">Reset Password</a>
+                                            <form asp-area="AdminPortal" asp-controller="Users" asp-action="ToggleReceptionistStatus" asp-route-id="@receptionist.Uid" method="post" class="d-inline">
+                                                <button type="submit" class="btn btn-sm @(receptionist.IsActive ? "btn-outline-danger" : "btn-outline-success")">
+                                                    @(receptionist.IsActive ? "Deactivate" : "Activate")
+                                                </button>
+                                            </form>
                                         </td>
                                     </tr>
                                 }

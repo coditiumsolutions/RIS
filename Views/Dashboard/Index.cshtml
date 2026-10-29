@@ -3,10 +3,20 @@
     ViewData["Title"] = "Dashboard";
     string Badge(string status) => status switch
     {
-        "Checked in" => "text-bg-success",
-        "Checked out" => "text-bg-secondary",
+        "CheckedIn" => "text-bg-success",
+        "CheckedOut" => "text-bg-secondary",
+        "Approved" => "text-bg-primary",
+        "Pending" => "text-bg-warning",
         "Expected" => "text-bg-warning",
+        "Declined" => "text-bg-danger",
+        "Cancelled" => "text-bg-dark",
         _ => "text-bg-light"
+    };
+    string StatusLabel(string status) => status switch
+    {
+        "CheckedIn" => "Checked In",
+        "CheckedOut" => "Checked Out",
+        _ => status
     };
 }
 
@@ -15,19 +25,11 @@
         <h1 class="page-heading">Welcome, @Model.Profile.ResidentName</h1>
         <p class="page-subtitle">Your home at the resident portal.</p>
     </div>
-    <span class="sample-pill"><i class="bi bi-info-circle" aria-hidden="true"></i> Visitor activity is sample data</span>
 </div>
 
 @if (TempData[ChangePasswordViewModel.SuccessMessageKey] is string passwordChanged)
 {
     <div class="alert alert-success" role="status">@passwordChanged</div>
-}
-
-@if (HostEnvironment.IsDevelopment())
-{
-    <div class="alert alert-warning" role="status">
-        This development account is for local use. Change the password before production deployment.
-    </div>
 }
 
 <div class="row g-4">
@@ -47,7 +49,7 @@
                     <dt>Status</dt>
                     <dd>@(Model.Profile.IsActive ? "Active" : "Inactive")</dd>
                     <dt>Registered</dt>
-                    <dd>@Model.Profile.CreatedAt.ToString("dd MMM yyyy", CultureInfo.InvariantCulture) UTC</dd>
+                    <dd>@TimeZone.FormatDateTime(Model.Profile.CreatedAt, "dd MMM yyyy")</dd>
                 </dl>
                 <a class="btn btn-portal btn-resident mt-3" asp-area="" asp-controller="Profile" asp-action="Index">
                     <i class="bi bi-person-vcard me-1" aria-hidden="true"></i> Open profile
@@ -61,7 +63,7 @@
                 <div class="d-flex justify-content-between align-items-start gap-3 flex-wrap">
                     <div>
                         <h2 class="h5 mb-1">Visitor Management</h2>
-                        <p class="text-secondary mb-0">A full visitor module will be added later. Recent activity below is sample data.</p>
+                        <p class="text-secondary mb-0">Your recent visitor registrations.</p>
                     </div>
                     <a class="btn btn-outline-portal" asp-area="" asp-controller="Visitors" asp-action="Index">Visitors</a>
                 </div>
@@ -76,13 +78,22 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach (var visitor in Model.RecentVisitors)
+                            @if (Model.RecentVisitors.Any())
+                            {
+                                foreach (var visitor in Model.RecentVisitors)
+                                {
+                                    <tr>
+                                        <td class="visitor-name-cell" title="@visitor.VisitorName">@visitor.VisitorName</td>
+                                        <td class="visitor-purpose-cell">@visitor.Purpose</td>
+                                        <td><span class="badge @Badge(visitor.Status)">@StatusLabel(visitor.Status)</span></td>
+                                        <td>@TimeZone.FormatDateTime(visitor.When, "dd MMM yyyy, HH:mm")</td>
+                                    </tr>
+                                }
+                            }
+                            else
                             {
                                 <tr>
-                                    <td>@visitor.VisitorName</td>
-                                    <td>@visitor.Purpose</td>
-                                    <td><span class="badge @Badge(visitor.Status)">@visitor.Status</span></td>
-                                    <td>@visitor.When.ToString("dd MMM yyyy, HH:mm", CultureInfo.InvariantCulture)</td>
+                                    <td colspan="4" class="text-secondary">No visitors registered yet.</td>
                                 </tr>
                             }
                         </tbody>
