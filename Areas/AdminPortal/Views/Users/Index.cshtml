@@ -112,7 +112,13 @@
                                             <a asp-area="AdminPortal" asp-controller="Users" asp-action="EditReceptionist" asp-route-id="@receptionist.Uid" class="btn btn-sm btn-outline-primary">Edit</a>
                                             <a asp-area="AdminPortal" asp-controller="Users" asp-action="ResetReceptionistPassword" asp-route-id="@receptionist.Uid" class="btn btn-sm btn-outline-secondary">Reset Password</a>
                                             <form asp-area="AdminPortal" asp-controller="Users" asp-action="ToggleReceptionistStatus" asp-route-id="@receptionist.Uid" method="post" class="d-inline">
-                                                <button type="submit" class="btn btn-sm @(receptionist.IsActive ? "btn-outline-danger" : "btn-outline-success")">
+                                                <button type="submit"
+                                                        class="btn btn-sm @(receptionist.IsActive ? "btn-outline-danger" : "btn-outline-success")"
+                                                        data-confirm-title="@(receptionist.IsActive ? "Deactivate receptionist?" : "Activate receptionist?")"
+                                                        data-confirm-text="@(receptionist.IsActive ? $"Deactivate {receptionist.FullName}? They will no longer be able to sign in." : $"Activate {receptionist.FullName}?")"
+                                                        data-confirm-ok="@(receptionist.IsActive ? "Deactivate" : "Activate")"
+                                                        data-confirm-cancel="Cancel"
+                                                        data-confirm-icon="warning">
                                                     @(receptionist.IsActive ? "Deactivate" : "Activate")
                                                 </button>
                                             </form>

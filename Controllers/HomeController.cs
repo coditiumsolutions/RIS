@@ -28,16 +28,24 @@ public class HomeController : Controller
         _logger = logger;
     }
 
-    [Authorize(Policy = AuthPolicies.ResidentOnly)]
+    [AllowAnonymous]
     [HttpGet]
     [HttpHead]
-    public IActionResult Index()
+    public async Task<IActionResult> Index(string? returnUrl)
     {
         if (HttpMethods.IsHead(Request.Method))
             return Ok();
 
-        ViewData["Title"] = "Home";
-        return View();
+        // "/" shows Resident Portal login for anonymous users; signed-in residents keep the home grid.
+        if (await ResidentIsSignedInAsync())
+        {
+            ViewData["Title"] = "Home";
+            return View();
+        }
+
+        ViewData["ReturnUrl"] = returnUrl;
+        ViewData["Title"] = "Resident Login";
+        return View("Login", new LoginViewModel());
     }
 
     [AllowAnonymous]
@@ -52,6 +60,7 @@ public class HomeController : Controller
             return RedirectToAction(nameof(Index), new { area = "" });
 
         ViewData["ReturnUrl"] = returnUrl;
+        ViewData["Title"] = "Resident Login";
         return View(new LoginViewModel());
     }
 

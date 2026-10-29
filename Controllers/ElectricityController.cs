@@ -14,7 +14,7 @@ public class ElectricityController : Controller
         return View("~/Views/Shared/ModulePlaceholder.cshtml", new ModulePlaceholderViewModel
         {
             Title = "Electricity Management",
-            Description = "View electricity bills, payment details, meter information, and billing history. This module will be available in a later release.",
+            Description = "View electricity bills, payment details, meter information, and billing history. This module is coming soon.",
             IconClass = "bi-lightning-charge-fill"
         });
     }

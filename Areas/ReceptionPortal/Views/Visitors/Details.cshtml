@@ -131,7 +131,12 @@
                 @if (Model.CanCheckIn)
                 {
                     <form asp-area="ReceptionPortal" asp-controller="Visitors" asp-action="CheckIn" asp-route-id="@Model.Uid" method="post" class="mt-3">
-                        <button type="submit" class="btn btn-success">
+                        <button type="submit"
+                                class="btn btn-success"
+                                data-confirm-title="Check in visitor?"
+                                data-confirm-text="@Model.VisitorName · @Model.NumberOfGuests guest@(Model.NumberOfGuests == 1 ? "" : "s")"
+                                data-confirm-ok="Check In"
+                                data-confirm-cancel="Cancel">
                             <i class="bi bi-box-arrow-in-right me-1" aria-hidden="true"></i> Check In
                         </button>
                     </form>
@@ -139,7 +144,12 @@
                 else if (Model.Status == "CheckedIn")
                 {
                     <form asp-area="ReceptionPortal" asp-controller="Visitors" asp-action="CheckOut" asp-route-id="@Model.Uid" method="post" class="mt-3">
-                        <button type="submit" class="btn btn-secondary">
+                        <button type="submit"
+                                class="btn btn-secondary"
+                                data-confirm-title="Check out visitor?"
+                                data-confirm-text="@Model.VisitorName · @Model.NumberOfGuests guest@(Model.NumberOfGuests == 1 ? "" : "s")"
+                                data-confirm-ok="Check Out"
+                                data-confirm-cancel="Cancel">
                             <i class="bi bi-box-arrow-right me-1" aria-hidden="true"></i> Check Out
                         </button>
                     </form>

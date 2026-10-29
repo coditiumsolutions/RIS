@@ -143,7 +143,12 @@
                                     @if (visitor.Status == "Pending")
                                     {
                                         <form asp-area="AdminPortal" asp-controller="Visitors" asp-action="Approve" asp-route-id="@visitor.Uid" method="post" class="d-inline">
-                                            <button type="submit" class="btn btn-sm btn-success">Approve</button>
+                                            <button type="submit"
+                                                    class="btn btn-sm btn-success"
+                                                    data-confirm-title="Approve visitor?"
+                                                    data-confirm-text="Approve @visitor.VisitorName for arrival on @visitor.ArrivalDate.ToString("dd MMM yyyy", CultureInfo.InvariantCulture)?"
+                                                    data-confirm-ok="Approve"
+                                                    data-confirm-cancel="Cancel">Approve</button>
                                         </form>
                                         <a asp-area="AdminPortal" asp-controller="Visitors" asp-action="Decline" asp-route-id="@visitor.Uid" class="btn btn-sm btn-outline-danger">Decline</a>
                                     }

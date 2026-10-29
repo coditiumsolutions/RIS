@@ -14,7 +14,7 @@ public class UtilityController : Controller
         return View("~/Views/Shared/ModulePlaceholder.cshtml", new ModulePlaceholderViewModel
         {
             Title = "Utility Management",
-            Description = "Manage utility services, maintenance charges, bills, payments, and account details. This module will be available in a later release.",
+            Description = "Manage utility services, maintenance charges, bills, payments, and account details. This module is coming soon.",
             IconClass = "bi-building-gear"
         });
     }

@@ -111,7 +111,13 @@
                 @if (Model.Status == "Pending" || Model.Status == "Approved")
                 {
                     <form asp-area="" asp-controller="Visitors" asp-action="Cancel" asp-route-id="@Model.Uid" method="post" class="mt-3">
-                        <button type="submit" class="btn btn-outline-danger" data-confirm="Are you sure you want to cancel this visitor?">
+                        <button type="submit"
+                                class="btn btn-outline-danger"
+                                data-confirm-title="Cancel visitor?"
+                                data-confirm-text="Are you sure you want to cancel @Model.VisitorName?"
+                                data-confirm-ok="Cancel Visitor"
+                                data-confirm-cancel="Keep"
+                                data-confirm-icon="warning">
                             <i class="bi bi-x-circle me-1" aria-hidden="true"></i> Cancel Visitor
                         </button>
                     </form>

@@ -47,18 +47,33 @@
 
 <h2 class="h5 mb-3" style="color: var(--rp-primary); font-weight: 700;">Modules</h2>
 <div class="shortcut-grid mb-4">
-    <a class="shortcut-link" asp-area="AdminPortal" asp-controller="Residents" asp-action="Index">
-        <strong><i class="bi bi-houses me-1" aria-hidden="true"></i> Resident Management</strong>
-        <span class="d-block text-secondary mt-1">Create, edit, and search resident accounts.</span>
-    </a>
     <a class="shortcut-link" asp-area="AdminPortal" asp-controller="Visitors" asp-action="Index">
         <strong><i class="bi bi-person-badge me-1" aria-hidden="true"></i> Visitor Management</strong>
         <span class="d-block text-secondary mt-1">Review, approve, and decline visitor requests.</span>
+    </a>
+    <a class="shortcut-link" asp-area="AdminPortal" asp-controller="Residents" asp-action="Index">
+        <strong><i class="bi bi-houses me-1" aria-hidden="true"></i> Resident Management</strong>
+        <span class="d-block text-secondary mt-1">Create, edit, and search resident accounts.</span>
     </a>
     <a class="shortcut-link" asp-area="AdminPortal" asp-controller="Users" asp-action="Index">
         <strong><i class="bi bi-people me-1" aria-hidden="true"></i> User Management</strong>
         <span class="d-block text-secondary mt-1">Manage receptionist accounts and portal users.</span>
     </a>
+    <div class="shortcut-link shortcut-link-disabled" aria-disabled="true">
+        <span class="coming-soon-badge">Coming soon</span>
+        <strong><i class="bi bi-door-open me-1" aria-hidden="true"></i> Gate Pass</strong>
+        <span class="d-block text-secondary mt-1">Issue and track residential gate passes.</span>
+    </div>
+    <div class="shortcut-link shortcut-link-disabled" aria-disabled="true">
+        <span class="coming-soon-badge">Coming soon</span>
+        <strong><i class="bi bi-file-earmark-text me-1" aria-hidden="true"></i> Account Statement</strong>
+        <span class="d-block text-secondary mt-1">Review resident account statements.</span>
+    </div>
+    <div class="shortcut-link shortcut-link-disabled" aria-disabled="true">
+        <span class="coming-soon-badge">Coming soon</span>
+        <strong><i class="bi bi-receipt me-1" aria-hidden="true"></i> Bill Management</strong>
+        <span class="d-block text-secondary mt-1">Manage society billing and invoices.</span>
+    </div>
 </div>
 
 <section class="card portal-card">
