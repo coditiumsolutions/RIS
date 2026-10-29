@@ -10,9 +10,26 @@ public class ResidentProfileViewModel
 
     public string Mobile { get; set; } = string.Empty;
 
+    public string? UnitNo { get; set; }
+
+    public string? Street { get; set; }
+
+    public string? Tower { get; set; }
+
+    public string? Floor { get; set; }
+
+    public string? Block { get; set; }
+
     public bool IsActive { get; set; }
 
     public DateTime CreatedAt { get; set; }
+
+    public bool HasPropertyDetails =>
+        !string.IsNullOrWhiteSpace(UnitNo)
+        || !string.IsNullOrWhiteSpace(Street)
+        || !string.IsNullOrWhiteSpace(Tower)
+        || !string.IsNullOrWhiteSpace(Floor)
+        || !string.IsNullOrWhiteSpace(Block);
 }
 
 public class VisitorActivityItem
