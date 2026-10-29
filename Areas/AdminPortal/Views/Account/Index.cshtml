@@ -29,6 +29,13 @@
             <p class="login-kicker">Administration Portal</p>
             <h1>Administrator sign in</h1>
             <p class="login-lead">This entrance is reserved for authorized portal administrators.</p>
+            @if (Context.Request.Query.ContainsKey("sessionExpired"))
+            {
+                <div class="alert alert-warning" role="alert">
+                    <i class="bi bi-exclamation-triangle me-2" aria-hidden="true"></i>
+                    Your session expired, please try again.
+                </div>
+            }
             <form asp-area="AdminPortal" asp-controller="Account" asp-action="Index" method="post">
                 <div asp-validation-summary="ModelOnly" role="alert"></div>
                 <div class="mb-3">

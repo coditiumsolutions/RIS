@@ -1,11 +1,36 @@
+using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.EntityFrameworkCore;
 using ResidentPortal.Data;
 using ResidentPortal.Security;
 using ResidentPortal.Services;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Configure Data Protection to persist keys across app restarts
+var keysPath = builder.Configuration["DataProtection:KeysPath"];
+if (string.IsNullOrWhiteSpace(keysPath) && OperatingSystem.IsWindows())
+{
+    keysPath = @"C:\Data\RIS\keys";
+}
+
+if (!string.IsNullOrWhiteSpace(keysPath))
+{
+    var keysDir = new DirectoryInfo(keysPath);
+    if (!keysDir.Exists)
+        keysDir.Create();
+
+    builder.Services.AddDataProtection()
+        .SetApplicationName("RIS")
+        .PersistKeysToFileSystem(keysDir);
+}
+else
+{
+    builder.Services.AddDataProtection()
+        .SetApplicationName("RIS");
+}
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 if (string.IsNullOrWhiteSpace(connectionString))
@@ -167,6 +192,9 @@ else
     app.UseExceptionHandler("/Home/Error");
     app.UseHsts();
 }
+
+// Handle antiforgery failures on login forms with friendly redirect
+app.UseAntiforgeryExceptionHandler();
 
 app.UseHttpsRedirection();
 

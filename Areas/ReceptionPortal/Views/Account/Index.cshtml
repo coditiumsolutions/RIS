@@ -8,6 +8,13 @@
     <p class="login-kicker">Reception Desk</p>
     <h1>Sign in</h1>
     <p class="login-lead">Enter your credentials to access the reception portal.</p>
+    @if (Context.Request.Query.ContainsKey("sessionExpired"))
+    {
+        <div class="alert alert-warning" role="alert">
+            <i class="bi bi-exclamation-triangle me-2" aria-hidden="true"></i>
+            Your session expired, please try again.
+        </div>
+    }
     <form asp-area="ReceptionPortal" asp-controller="Account" asp-action="Index" asp-route-returnUrl="@ViewData["ReturnUrl"]" method="post" novalidate>
         <div asp-validation-summary="ModelOnly" class="validation-summary-errors" role="alert"></div>
         <div class="mb-3">
