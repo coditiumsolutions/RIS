@@ -37,6 +37,18 @@ public class ReceptionDeskDayDto
     public IReadOnlyList<ReceptionDeskVisitorDto> Visitors { get; set; } = [];
 }
 
+public class ReceptionDeskSearchDto
+{
+    public string? Query { get; set; }
+    public string? Date { get; set; }
+    public string Status { get; set; } = "all";
+    public int Offset { get; set; }
+    public int Limit { get; set; }
+    public int Total { get; set; }
+    public bool HasMore { get; set; }
+    public IReadOnlyList<ReceptionDeskVisitorDto> Visitors { get; set; } = [];
+}
+
 public class ReceptionDeskCalendarDayDto
 {
     public string Date { get; set; } = string.Empty;

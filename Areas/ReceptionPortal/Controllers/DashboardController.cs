@@ -65,23 +65,82 @@ public class DashboardController : Controller
     }
 
     [HttpGet]
-    public async Task<IActionResult> Search(string? q, CancellationToken cancellationToken)
+    public async Task<IActionResult> Search(
+        string? q,
+        string? date,
+        string? status,
+        int? offset,
+        int? limit,
+        CancellationToken cancellationToken)
     {
         if (!await IsActiveReceptionistAsync(cancellationToken))
             return Unauthorized();
 
+        var today = _timeZone.Today;
         var term = (q ?? string.Empty).Trim();
-        if (term.Length < 1)
+        var statusFilter = NormalizeStatusFilter(status);
+        DateOnly? arrivalDate = null;
+        if (!string.IsNullOrWhiteSpace(date) && DateOnly.TryParse(date, out var parsedDate))
+            arrivalDate = parsedDate;
+
+        var take = Math.Clamp(limit ?? 25, 1, 100);
+        var skip = Math.Max(offset ?? 0, 0);
+
+        // Dashboard typeahead: empty query with no other filters stays empty.
+        var browseList = arrivalDate.HasValue
+            || !string.Equals(statusFilter, "all", StringComparison.Ordinal)
+            || skip > 0
+            || limit.HasValue;
+
+        if (term.Length < 1 && !browseList)
         {
-            return Json(new ReceptionDeskDayDto
+            return Json(new ReceptionDeskSearchDto
             {
-                Date = _timeZone.Today.ToString("yyyy-MM-dd"),
-                Filter = "search",
+                Query = term,
+                Date = arrivalDate?.ToString("yyyy-MM-dd"),
+                Status = statusFilter,
+                Offset = skip,
+                Limit = take,
+                Total = 0,
+                HasMore = false,
                 Visitors = []
             });
         }
 
-        var today = _timeZone.Today;
+        var query = BuildDeskSearchQuery(term, arrivalDate, statusFilter, today);
+
+        var total = await query.CountAsync(cancellationToken);
+        var rows = await query
+            .OrderByDescending(v => v.ArrivalDate == today ? 1 : 0)
+            .ThenBy(v => v.Status == VisitorStatus.CheckedIn ? 0 : v.Status == VisitorStatus.Approved ? 1 : 2)
+            .ThenByDescending(v => v.UpdatedAt)
+            .Skip(skip)
+            .Take(take + 1)
+            .ToListAsync(cancellationToken);
+
+        var hasMore = rows.Count > take;
+        if (hasMore)
+            rows = rows.Take(take).ToList();
+
+        return Json(new ReceptionDeskSearchDto
+        {
+            Query = term,
+            Date = arrivalDate?.ToString("yyyy-MM-dd"),
+            Status = statusFilter,
+            Offset = skip,
+            Limit = take,
+            Total = total,
+            HasMore = hasMore,
+            Visitors = rows.Select(v => MapVisitor(v, today)).ToList()
+        });
+    }
+
+    private IQueryable<VisitorRequest> BuildDeskSearchQuery(
+        string term,
+        DateOnly? arrivalDate,
+        string statusFilter,
+        DateOnly today)
+    {
         var query = _db.VisitorRequests
             .AsNoTracking()
             .Include(v => v.Resident)
@@ -90,31 +149,48 @@ public class DashboardController : Controller
                         v.Status == VisitorStatus.CheckedOut ||
                         v.Status == VisitorStatus.Pending);
 
-        var lower = term.ToLowerInvariant();
-        var passCodeMatch = int.TryParse(term, out var passCode);
-
-        query = query.Where(v =>
-            v.VisitorName.ToLower().Contains(lower) ||
-            v.Phone.Contains(term) ||
-            (v.CNIC != null && v.CNIC.Contains(term)) ||
-            (v.VehicleRegistrationNo != null && v.VehicleRegistrationNo.ToLower().Contains(lower)) ||
-            v.Resident.ResidentName.ToLower().Contains(lower) ||
-            (v.Resident.UnitNo != null && v.Resident.UnitNo.ToLower().Contains(lower)) ||
-            (passCodeMatch && v.Uid == passCode));
-
-        var rows = await query
-            .OrderByDescending(v => v.ArrivalDate == today ? 1 : 0)
-            .ThenBy(v => v.Status == VisitorStatus.CheckedIn ? 0 : v.Status == VisitorStatus.Approved ? 1 : 2)
-            .ThenByDescending(v => v.UpdatedAt)
-            .Take(40)
-            .ToListAsync(cancellationToken);
-
-        return Json(new ReceptionDeskDayDto
+        if (!string.IsNullOrWhiteSpace(term))
         {
-            Date = today.ToString("yyyy-MM-dd"),
-            Filter = "search",
-            Visitors = rows.Select(v => MapVisitor(v, today)).ToList()
-        });
+            var lower = term.ToLowerInvariant();
+            var passCodeMatch = int.TryParse(term, out var passCode);
+
+            query = query.Where(v =>
+                v.VisitorName.ToLower().Contains(lower) ||
+                v.Phone.Contains(term) ||
+                (v.CNIC != null && v.CNIC.Contains(term)) ||
+                (v.VehicleRegistrationNo != null && v.VehicleRegistrationNo.ToLower().Contains(lower)) ||
+                v.Resident.ResidentName.ToLower().Contains(lower) ||
+                (v.Resident.UnitNo != null && v.Resident.UnitNo.ToLower().Contains(lower)) ||
+                (passCodeMatch && v.Uid == passCode));
+        }
+
+        if (arrivalDate.HasValue)
+            query = query.Where(v => v.ArrivalDate == arrivalDate.Value);
+
+        query = statusFilter switch
+        {
+            "expected" => query.Where(v =>
+                (v.Status == VisitorStatus.Approved || v.Status == VisitorStatus.Pending) &&
+                (arrivalDate.HasValue || v.ArrivalDate == today)),
+            "approved" => query.Where(v => v.Status == VisitorStatus.Approved),
+            "pending" => query.Where(v => v.Status == VisitorStatus.Pending),
+            "checkedin" or "inside" => query.Where(v => v.Status == VisitorStatus.CheckedIn),
+            "checkedout" => query.Where(v => v.Status == VisitorStatus.CheckedOut),
+            "walkins" => query.Where(v => v.IsWalkIn),
+            _ => query
+        };
+
+        return query;
+    }
+
+    private static string NormalizeStatusFilter(string? status)
+    {
+        var value = (status ?? "all").Trim().ToLowerInvariant();
+        return value switch
+        {
+            "expected" or "approved" or "pending" or "checkedin" or "inside" or "checkedout" or "walkins" => value,
+            _ => "all"
+        };
     }
 
     [HttpGet]
