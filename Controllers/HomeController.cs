@@ -140,10 +140,27 @@ public class HomeController : Controller
 
     [AllowAnonymous]
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-    public IActionResult NotFound(int? statusCode)
+    public async Task<IActionResult> NotFound(int? statusCode)
     {
         Response.StatusCode = statusCode ?? 404;
+        ViewData["Title"] = "Page Not Found";
+
+        if (await SchemeSignedInAsync(AuthSchemes.Admin, PortalRoles.Admin))
+            ViewData["LayoutOverride"] = "~/Areas/AdminPortal/Views/Shared/_AdminLayout.cshtml";
+        else if (await SchemeSignedInAsync(AuthSchemes.Receptionist, PortalRoles.Receptionist))
+            ViewData["LayoutOverride"] = "~/Areas/ReceptionPortal/Views/Shared/_ReceptionLayout.cshtml";
+        else if (await SchemeSignedInAsync(AuthSchemes.Resident, PortalRoles.Resident))
+            ViewData["LayoutOverride"] = "~/Views/Shared/_ResidentLayout.cshtml";
+        else
+            ViewData["LayoutOverride"] = "~/Views/Shared/_StatusLayout.cshtml";
+
         return View();
+    }
+
+    private async Task<bool> SchemeSignedInAsync(string scheme, string role)
+    {
+        var result = await HttpContext.AuthenticateAsync(scheme);
+        return result.Succeeded && result.Principal?.IsInRole(role) == true;
     }
 
     private async Task<bool> ResidentIsSignedInAsync()

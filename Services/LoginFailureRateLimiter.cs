@@ -25,7 +25,9 @@ public sealed class LoginFailureRateLimiter
     public bool IsLimited(string portal, string? ipAddress)
     {
         var key = BuildKey(portal, ipAddress);
-        return _cache.TryGetValue(key, out AttemptWindow window) && window.Count >= MaxFailedAttempts;
+        return _cache.TryGetValue(key, out AttemptWindow? window)
+            && window is not null
+            && window.Count >= MaxFailedAttempts;
     }
 
     public void RecordFailure(string portal, string? ipAddress)
@@ -35,7 +37,9 @@ public sealed class LoginFailureRateLimiter
         lock (gate)
         {
             var now = DateTimeOffset.UtcNow;
-            if (!_cache.TryGetValue(key, out AttemptWindow window) || window.WindowStart.AddMinutes(WindowMinutes) <= now)
+            if (!_cache.TryGetValue(key, out AttemptWindow? window)
+                || window is null
+                || window.WindowStart.AddMinutes(WindowMinutes) <= now)
             {
                 window = new AttemptWindow(now, 0);
             }

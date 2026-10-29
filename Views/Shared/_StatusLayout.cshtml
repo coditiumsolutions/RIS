@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Resident Portal</title>
+    @* Root-absolute asset URLs so icons/styles still load on deep unknown paths after status re-execute *@
+    <link rel="stylesheet" href="/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="/lib/bootstrap-icons/font/bootstrap-icons.min.css" />
+    <link rel="stylesheet" href="/css/site.css" asp-append-version="true" />
+</head>
+<body class="login-page">
+    <div class="public-shell">
+        <header class="py-3 border-bottom bg-white">
+            <div class="container d-flex align-items-center gap-2">
+                <div class="brand-mark" aria-hidden="true"><i class="bi bi-buildings"></i></div>
+                <div>
+                    <strong>Resident Portal Management System</strong>
+                    <div class="text-secondary small">RIS</div>
+                </div>
+            </div>
+        </header>
+        <main class="container py-4">
+            @RenderBody()
+        </main>
+        <footer class="app-footer">
+            &copy; 2026 Resident Portal Management System. All rights reserved.
+        </footer>
+    </div>
+    <script src="/lib/jquery/dist/jquery.min.js"></script>
+    <script src="/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>
