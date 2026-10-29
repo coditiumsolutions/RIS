@@ -135,21 +135,19 @@ app.Use(async (context, next) =>
     await next();
 });
 
+app.UseStaticFiles();
+
 app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.MapStaticAssets();
-
 app.MapControllerRoute(
         name: "areas",
-        pattern: "{area:exists}/{controller=Account}/{action=Index}/{id?}")
-    .WithStaticAssets();
+        pattern: "{area:exists}/{controller=Account}/{action=Index}/{id?}");
 
 app.MapControllerRoute(
         name: "default",
-        pattern: "{controller=Home}/{action=Index}/{id?}")
-    .WithStaticAssets();
+        pattern: "{controller=Home}/{action=Index}/{id?}");
 
 await VerifyDatabaseAsync(app);
 
