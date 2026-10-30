@@ -2,6 +2,13 @@
     var controller = ViewContext.RouteData.Values["controller"]?.ToString() ?? string.Empty;
     string Active(string name) =>
         string.Equals(controller, name, StringComparison.OrdinalIgnoreCase) ? "active" : string.Empty;
+    var otherLinkControllers = new[]
+    {
+        "GatePass", "AccountStatement", "BillManagement", "Electricity",
+        "Utility", "Complaints", "Notifications"
+    };
+    var otherLinksOpen = otherLinkControllers.Any(name =>
+        string.Equals(controller, name, StringComparison.OrdinalIgnoreCase));
     var displayName = User.Identity?.Name ?? "Resident";
     var initials = string.Concat(displayName
         .Split(' ', StringSplitOptions.RemoveEmptyEntries)
@@ -101,40 +108,53 @@
                         <i class="bi bi-people" aria-hidden="true"></i>
                         <span class="app-sidebar-label">Visitor Management</span>
                     </a>
-                    <span class="nav-item-disabled" aria-disabled="true">
-                        <i class="bi bi-door-open" aria-hidden="true"></i>
-                        <span class="app-sidebar-label">Gate Pass</span>
-                    </span>
-                    <span class="nav-item-disabled" aria-disabled="true">
-                        <i class="bi bi-file-earmark-text" aria-hidden="true"></i>
-                        <span class="app-sidebar-label">Account Statement</span>
-                    </span>
-                    <span class="nav-item-disabled" aria-disabled="true">
-                        <i class="bi bi-receipt" aria-hidden="true"></i>
-                        <span class="app-sidebar-label">Bill Management</span>
-                    </span>
-                    <span class="nav-item-disabled" aria-disabled="true">
-                        <i class="bi bi-lightning-charge" aria-hidden="true"></i>
-                        <span class="app-sidebar-label">Electricity</span>
-                    </span>
-                    <span class="nav-item-disabled" aria-disabled="true">
-                        <i class="bi bi-building-gear" aria-hidden="true"></i>
-                        <span class="app-sidebar-label">Utilities</span>
-                    </span>
-                    <span class="nav-item-disabled" aria-disabled="true">
-                        <i class="bi bi-headset" aria-hidden="true"></i>
-                        <span class="app-sidebar-label">Complaints</span>
-                    </span>
-                    <span class="nav-item-disabled" aria-disabled="true">
-                        <i class="bi bi-bell" aria-hidden="true"></i>
-                        <span class="app-sidebar-label">Notifications</span>
-                    </span>
-                    <a class="@Active("Password")" asp-area="" asp-controller="Password" asp-action="Index">
+                    <div class="nav-group@(otherLinksOpen ? " open" : null)">
+                        <button type="button"
+                                class="nav-link-btn nav-group-toggle@(otherLinksOpen ? " active" : null)"
+                                data-nav-group-toggle
+                                aria-expanded="@(otherLinksOpen ? "true" : "false")"
+                                aria-controls="resident-other-links">
+                            <i class="bi bi-collection" aria-hidden="true"></i>
+                            <span class="app-sidebar-label">Other Links</span>
+                            <i class="bi bi-chevron-down nav-group-caret" aria-hidden="true"></i>
+                        </button>
+                        <div id="resident-other-links" class="nav-group-items" @(otherLinksOpen ? null : "hidden")>
+                            <a class="@Active("GatePass")" asp-area="" asp-controller="GatePass" asp-action="Index">
+                                <i class="bi bi-door-open" aria-hidden="true"></i>
+                                <span class="app-sidebar-label">Gate Pass</span>
+                            </a>
+                            <a class="@Active("AccountStatement")" asp-area="" asp-controller="AccountStatement" asp-action="Index">
+                                <i class="bi bi-file-earmark-text" aria-hidden="true"></i>
+                                <span class="app-sidebar-label">Account Statement</span>
+                            </a>
+                            <a class="@Active("BillManagement")" asp-area="" asp-controller="BillManagement" asp-action="Index">
+                                <i class="bi bi-receipt" aria-hidden="true"></i>
+                                <span class="app-sidebar-label">Bill Management</span>
+                            </a>
+                            <a class="@Active("Electricity")" asp-area="" asp-controller="Electricity" asp-action="Index">
+                                <i class="bi bi-lightning-charge" aria-hidden="true"></i>
+                                <span class="app-sidebar-label">Electricity</span>
+                            </a>
+                            <a class="@Active("Utility")" asp-area="" asp-controller="Utility" asp-action="Index">
+                                <i class="bi bi-building-gear" aria-hidden="true"></i>
+                                <span class="app-sidebar-label">Utility</span>
+                            </a>
+                            <a class="@Active("Complaints")" asp-area="" asp-controller="Complaints" asp-action="Index">
+                                <i class="bi bi-headset" aria-hidden="true"></i>
+                                <span class="app-sidebar-label">Complaints</span>
+                            </a>
+                            <a class="@Active("Notifications")" asp-area="" asp-controller="Notifications" asp-action="Index">
+                                <i class="bi bi-bell" aria-hidden="true"></i>
+                                <span class="app-sidebar-label">Notifications</span>
+                            </a>
+                        </div>
+                    </div>
+                    <a class="nav-link-account @Active("Password")" asp-area="" asp-controller="Password" asp-action="Index">
                         <i class="bi bi-key" aria-hidden="true"></i>
                         <span class="app-sidebar-label">Change Password</span>
                     </a>
                     <form asp-area="" asp-controller="Home" asp-action="Logout" method="post">
-                        <button type="submit" class="nav-link-btn">
+                        <button type="submit" class="nav-link-btn nav-link-logout">
                             <i class="bi bi-box-arrow-right" aria-hidden="true"></i>
                             <span class="app-sidebar-label">Logout</span>
                         </button>

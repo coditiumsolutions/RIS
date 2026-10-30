@@ -1,21 +1,21 @@
 :root {
-  --rp-primary: #142B4A;
-  --rp-primary-deep: #0E1F36;
-  --rp-secondary: #2457A7;
-  --rp-accent: #C9A227;
-  --rp-accent-soft: #F7F0D8;
+  --rp-primary: #046169;
+  --rp-primary-deep: #1d1d1d;
+  --rp-secondary: #046169;
+  --rp-accent: #ffc900;
+  --rp-accent-soft: #fff6cc;
   --rp-header-2: #FFFFFF;
-  --rp-bg: #F4F6F9;
+  --rp-bg: #F4F4F5;
   --rp-card: #FFFFFF;
-  --rp-text: #263445;
-  --rp-muted: #718096;
-  --rp-border: #E2E8F0;
+  --rp-text: #3d3d3d;
+  --rp-muted: #7b7b7b;
+  --rp-border: #E0E0E0;
   --rp-success: #198754;
   --rp-danger: #DC3545;
   --rp-sidebar-width: 268px;
   --rp-radius: 0.85rem;
-  --rp-shadow: 0 10px 28px rgba(20, 43, 74, 0.08);
-  --rp-shadow-sm: 0 4px 14px rgba(20, 43, 74, 0.06);
+  --rp-shadow: 0 10px 28px rgba(29, 29, 29, 0.1);
+  --rp-shadow-sm: 0 4px 14px rgba(29, 29, 29, 0.08);
   --rp-font: "Segoe UI", system-ui, -apple-system, sans-serif;
 }
 
@@ -151,9 +151,9 @@ a:hover {
 
 .reception-login-page::before {
   background:
-    radial-gradient(circle at 85% 15%, rgba(201, 162, 39, 0.22), transparent 24rem),
-    radial-gradient(circle at 10% 80%, rgba(13, 110, 63, 0.2), transparent 24rem),
-    linear-gradient(160deg, #084428 0%, #0d6e3f 48%, #0a5a33 100%);
+    radial-gradient(circle at 85% 15%, rgba(255, 201, 0, 0.22), transparent 24rem),
+    radial-gradient(circle at 10% 80%, rgba(112, 128, 144, 0.22), transparent 24rem),
+    linear-gradient(160deg, #5a6876 0%, #708090 48%, #5f6d7a 100%);
 }
 
 .reception-login-page .login-stage {
@@ -163,8 +163,8 @@ a:hover {
 
 .reception-login-page .login-hero {
   background:
-    linear-gradient(165deg, #084428, #0d6e3f 55%, #0a5a33),
-    radial-gradient(circle at top right, rgba(201, 162, 39, 0.28), transparent 16rem);
+    linear-gradient(165deg, #5a6876, #708090 55%, #5f6d7a),
+    radial-gradient(circle at top right, rgba(255, 201, 0, 0.28), transparent 16rem);
 }
 
 .reception-login-page .login-kicker {
@@ -201,7 +201,7 @@ a:hover {
   border-radius: 0.85rem;
   display: grid;
   place-items: center;
-  background: linear-gradient(145deg, var(--rp-accent), #e0c15a);
+  background: linear-gradient(145deg, var(--rp-accent), #e6b400);
   color: var(--rp-primary-deep);
   font-size: 1.35rem;
   box-shadow: 0 8px 18px rgba(0, 0, 0, 0.18);
@@ -432,15 +432,15 @@ a:hover {
 }
 
 .btn-reception {
-  background: linear-gradient(135deg, #0d6e3f, #0a5a33);
+  background: linear-gradient(135deg, #708090, #5f6d7a);
   border: 0;
   color: #fff;
-  box-shadow: 0 10px 22px rgba(13, 110, 63, 0.28);
+  box-shadow: 0 10px 22px rgba(112, 128, 144, 0.28);
 }
 
 .btn-reception:hover,
 .btn-reception:focus {
-  background: linear-gradient(135deg, #0a5a33, #084428);
+  background: linear-gradient(135deg, #5f6d7a, #5a6876);
   color: #fff;
 }
 
@@ -475,7 +475,7 @@ a:hover {
   background: var(--rp-primary);
   color: #fff;
   padding: 0.45rem 1.15rem;
-  box-shadow: 0 2px 10px rgba(14, 31, 54, 0.16);
+  box-shadow: 0 2px 10px rgba(29, 29, 29, 0.22);
   position: relative;
   z-index: 1030;
 }
@@ -700,7 +700,7 @@ a:hover {
 .app-gold-rule {
   height: 2px;
   width: 100%;
-  background: linear-gradient(90deg, #a8861a, var(--rp-accent), #e6cc6d, var(--rp-accent), #a8861a);
+  background: linear-gradient(90deg, #e6b400, var(--rp-accent), #ffe566, var(--rp-accent), #e6b400);
 }
 
 .app-shell {
@@ -727,17 +727,52 @@ a:hover {
 }
 
 .portal-reception .app-sidebar {
-  background: linear-gradient(180deg, #0a4f2e 0%, #0d6e3f 100%);
+  background: linear-gradient(180deg, #5f6d7a 0%, #708090 100%);
   border-right-color: rgba(255, 255, 255, 0.06);
-  color: #d7f0e0;
+  color: #eef1f3;
+}
+
+.portal-resident .app-sidebar {
+  background: linear-gradient(180deg, #035057 0%, #046169 100%);
+  border-right-color: rgba(255, 255, 255, 0.06);
+  color: #e6f4f4;
 }
 
 .portal-reception .app-header-primary {
-  background: #0d6e3f;
+  background: #708090;
+  box-shadow: 0 2px 10px rgba(112, 128, 144, 0.28);
+}
+
+.portal-resident .app-header-primary {
+  background: #046169;
+  color: #fff;
+  box-shadow: 0 2px 10px rgba(4, 97, 105, 0.28);
 }
 
 .portal-reception .app-header-primary::after {
-  background: linear-gradient(90deg, transparent, rgba(201, 162, 39, 0.8), transparent);
+  background: linear-gradient(90deg, transparent, rgba(255, 201, 0, 0.85), transparent);
+}
+
+.portal-resident .app-header-primary::after {
+  background: linear-gradient(90deg, transparent, rgba(255, 201, 0, 0.85), transparent);
+}
+
+.portal-resident .app-user-menu .dropdown-toggle {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.16);
+  color: #fff;
+}
+
+.portal-resident .app-user-menu .dropdown-toggle:hover,
+.portal-resident .app-user-menu .dropdown-toggle:focus,
+.portal-resident .app-user-menu .dropdown-toggle.show {
+  background: rgba(255, 255, 255, 0.18);
+  color: #fff;
+}
+
+.portal-resident .app-avatar {
+  background: #ffc900;
+  color: #1d1d1d;
 }
 
 .app-sidebar-nav {
@@ -746,6 +781,35 @@ a:hover {
   gap: 0.25rem;
   padding: 1rem 0.85rem;
   overflow-y: auto;
+}
+
+.portal-resident .app-sidebar-nav,
+.portal-reception .app-sidebar-nav {
+  gap: 0;
+  padding: 0.65rem 0.7rem;
+  font-size: 0.88rem;
+}
+
+.portal-resident .app-sidebar-nav > a:first-child {
+  margin-top: 0.35rem;
+}
+
+.portal-reception .app-sidebar-nav > a:first-child {
+  margin-top: 0.65rem;
+}
+
+.portal-resident .app-sidebar-nav > a,
+.portal-resident .app-sidebar-nav > .nav-group,
+.portal-resident .app-sidebar-nav > form,
+.portal-reception .app-sidebar-nav > a,
+.portal-reception .app-sidebar-nav > .nav-group,
+.portal-reception .app-sidebar-nav > form {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.portal-resident .app-sidebar-nav > :last-child,
+.portal-reception .app-sidebar-nav > :last-child {
+  border-bottom: 0;
 }
 
 .app-sidebar-nav a,
@@ -765,6 +829,22 @@ a:hover {
   transition: background-color 0.15s ease, color 0.15s ease, transform 0.15s ease;
 }
 
+.portal-resident .app-sidebar-nav a,
+.portal-resident .app-sidebar-nav button.nav-link-btn,
+.portal-reception .app-sidebar-nav a,
+.portal-reception .app-sidebar-nav button.nav-link-btn {
+  border-radius: 0.45rem;
+  padding: 0.52rem 0.7rem;
+  font-size: inherit;
+}
+
+.portal-resident .app-sidebar-nav a i,
+.portal-resident .app-sidebar-nav button.nav-link-btn i,
+.portal-reception .app-sidebar-nav a i,
+.portal-reception .app-sidebar-nav button.nav-link-btn i {
+  font-size: 0.95rem;
+}
+
 .portal-admin .app-sidebar-nav a,
 .portal-admin .app-sidebar-nav button.nav-link-btn {
   color: #d7e0ec;
@@ -772,7 +852,12 @@ a:hover {
 
 .portal-reception .app-sidebar-nav a,
 .portal-reception .app-sidebar-nav button.nav-link-btn {
-  color: #d7f0e0;
+  color: #e6f4f4;
+}
+
+.portal-resident .app-sidebar-nav a,
+.portal-resident .app-sidebar-nav button.nav-link-btn {
+  color: #e6f4f4;
 }
 
 .app-sidebar-nav a i,
@@ -790,7 +875,12 @@ a:hover {
 
 .portal-reception .app-sidebar-nav a i,
 .portal-reception .app-sidebar-nav button.nav-link-btn i {
-  color: var(--rp-accent);
+  color: #ffc900;
+}
+
+.portal-resident .app-sidebar-nav a i,
+.portal-resident .app-sidebar-nav button.nav-link-btn i {
+  color: #ffc900;
 }
 
 .app-sidebar-nav a:hover,
@@ -811,8 +901,40 @@ a:hover {
   color: #fff;
 }
 
+.portal-resident .app-sidebar-nav a:hover,
+.portal-resident .app-sidebar-nav button.nav-link-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+}
+
+.portal-resident .app-sidebar-nav a.nav-link-account,
+.portal-resident .app-sidebar-nav a.nav-link-account:hover,
+.portal-resident .app-sidebar-nav a.nav-link-account.active,
+.portal-reception .app-sidebar-nav a.nav-link-account,
+.portal-reception .app-sidebar-nav a.nav-link-account:hover,
+.portal-reception .app-sidebar-nav a.nav-link-account.active {
+  color: #ffc900;
+}
+
+.portal-resident .app-sidebar-nav a.nav-link-account i,
+.portal-reception .app-sidebar-nav a.nav-link-account i {
+  color: #ffc900;
+}
+
+.portal-resident .app-sidebar-nav button.nav-link-logout,
+.portal-resident .app-sidebar-nav button.nav-link-logout:hover,
+.portal-reception .app-sidebar-nav button.nav-link-logout,
+.portal-reception .app-sidebar-nav button.nav-link-logout:hover {
+  color: #ff8f8f;
+}
+
+.portal-resident .app-sidebar-nav button.nav-link-logout i,
+.portal-reception .app-sidebar-nav button.nav-link-logout i {
+  color: #ff8f8f;
+}
+
 .app-sidebar-nav a.active {
-  background: linear-gradient(135deg, rgba(36, 87, 167, 0.12), rgba(201, 162, 39, 0.12));
+  background: linear-gradient(135deg, rgba(4, 97, 105, 0.12), rgba(255, 201, 0, 0.14));
   color: var(--rp-primary);
   box-shadow: inset 3px 0 0 var(--rp-accent);
 }
@@ -823,10 +945,55 @@ a:hover {
   box-shadow: inset 3px 0 0 var(--rp-accent);
 }
 
-.portal-reception .app-sidebar-nav a.active {
+.portal-reception .app-sidebar-nav a.active,
+.portal-resident .app-sidebar-nav a.active {
   background: rgba(255, 255, 255, 0.1);
   color: #fff;
-  box-shadow: inset 3px 0 0 var(--rp-accent);
+  box-shadow: inset 3px 0 0 #ffc900;
+}
+
+.portal-resident .app-sidebar-nav .nav-group-toggle.active {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  box-shadow: inset 3px 0 0 #ffc900;
+}
+
+.nav-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.nav-group-toggle {
+  position: relative;
+}
+
+.nav-group-toggle .nav-group-caret {
+  margin-left: auto;
+  width: auto;
+  font-size: 0.78rem;
+  opacity: 0.85;
+  transition: transform 0.2s ease;
+}
+
+.nav-group.open .nav-group-toggle .nav-group-caret {
+  transform: rotate(180deg);
+}
+
+.nav-group-items {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding: 0.15rem 0 0.35rem 0.55rem;
+}
+
+.portal-resident .nav-group-items > a {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: 0.92rem;
+  padding-left: 0.85rem;
+}
+
+.portal-resident .nav-group-items > a:last-child {
+  border-bottom: 0;
 }
 
 .app-sidebar-label {
@@ -869,6 +1036,15 @@ a:hover {
   justify-content: center;
   padding-left: 0.65rem;
   padding-right: 0.65rem;
+}
+
+.app-body.sidebar-collapsed .nav-group-items,
+.app-body.sidebar-collapsed .nav-group-caret {
+  display: none !important;
+}
+
+.app-body.sidebar-collapsed .nav-group-toggle .app-sidebar-label {
+  display: none;
 }
 
 .sidebar-backdrop {
@@ -1089,6 +1265,40 @@ a:hover {
   border-top: 3px solid var(--rp-accent);
 }
 
+.home-hero-copy {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.35rem 1rem;
+  min-width: 0;
+}
+
+.home-hero-copy .page-heading {
+  flex-shrink: 0;
+  margin: 0;
+}
+
+.home-hero-copy .page-subtitle {
+  margin: 0;
+  min-width: 0;
+  flex: 1 1 12rem;
+  line-height: 1.35;
+}
+
+@media (min-width: 768px) {
+  .home-hero-copy {
+    flex-wrap: nowrap;
+    gap: 0.75rem 1rem;
+  }
+
+  .home-hero-copy .page-subtitle {
+    flex: 1 1 auto;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
 .module-grid-heading {
   margin: 0 0 0.85rem;
   color: var(--rp-primary);
@@ -1098,8 +1308,14 @@ a:hover {
 
 .project-card-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: 1fr;
   gap: 0.75rem;
+}
+
+@media (min-width: 480px) {
+  .project-card-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 @media (min-width: 768px) {
@@ -1173,6 +1389,24 @@ a:hover {
   border-color: rgba(36, 87, 167, 0.5);
 }
 
+.portal-resident .project-card,
+.portal-resident .project-card-primary,
+.portal-resident .project-card-disabled {
+  background: #57d9c9;
+  color: #000;
+  border-color: rgba(4, 97, 105, 0.16);
+  box-shadow: 0 1px 2px rgba(87, 217, 201, 0.22), 0 4px 12px rgba(87, 217, 201, 0.18);
+}
+
+.portal-resident .project-card:hover,
+.portal-resident .project-card:focus,
+.portal-resident .project-card-primary:hover,
+.portal-resident .project-card-primary:focus {
+  color: #000;
+  border-color: rgba(4, 97, 105, 0.28);
+  box-shadow: 0 6px 18px rgba(87, 217, 201, 0.32);
+}
+
 .project-card-icon {
   flex-shrink: 0;
   width: 2.35rem;
@@ -1233,6 +1467,20 @@ a:hover {
   color: #8a5a3a;
 }
 
+.portal-resident .project-card-icon.electricity,
+.portal-resident .project-card-icon.utility,
+.portal-resident .project-card-icon.visitors,
+.portal-resident .project-card-icon.residents,
+.portal-resident .project-card-icon.users,
+.portal-resident .project-card-icon.complaints,
+.portal-resident .project-card-icon.notifications,
+.portal-resident .project-card-icon.gatepass,
+.portal-resident .project-card-icon.statement,
+.portal-resident .project-card-icon.bills {
+  background: rgba(0, 0, 0, 0.08);
+  color: #000;
+}
+
 .project-card-copy {
   min-width: 0;
   width: 100%;
@@ -1260,6 +1508,14 @@ a:hover {
   white-space: nowrap;
 }
 
+.portal-resident .project-card-title {
+  color: #000;
+}
+
+.portal-resident .project-card-subtitle {
+  color: rgba(0, 0, 0, 0.72);
+}
+
 .project-card-disabled {
   opacity: 0.62;
   pointer-events: none;
@@ -1281,6 +1537,26 @@ a:hover {
 
 .project-card-disabled .project-card-icon {
   filter: grayscale(0.4);
+}
+
+.portal-resident .project-card-disabled {
+  opacity: 0.78;
+  background: #57d9c9;
+  box-shadow: none;
+}
+
+.portal-resident .project-card-disabled:hover,
+.portal-resident .project-card-disabled:focus {
+  border-color: rgba(4, 97, 105, 0.16);
+}
+
+.portal-resident .project-card-disabled .project-card-title {
+  color: rgba(0, 0, 0, 0.7);
+}
+
+.portal-resident .project-card-disabled .project-card-icon {
+  filter: grayscale(0.15);
+  opacity: 0.85;
 }
 
 .coming-soon-badge {
@@ -1343,6 +1619,14 @@ a:hover {
 
 .portal-reception .app-sidebar-nav .nav-item-disabled i {
   color: rgba(201, 162, 39, 0.4);
+}
+
+.portal-resident .app-sidebar-nav .nav-item-disabled {
+  color: rgba(230, 244, 244, 0.45);
+}
+
+.portal-resident .app-sidebar-nav .nav-item-disabled i {
+  color: rgba(255, 201, 0, 0.4);
 }
 
 .table-responsive {
@@ -1471,13 +1755,17 @@ a:hover {
   }
 
   .home-hero {
-    padding: 1.1rem;
+    padding: 0.95rem 1rem;
+  }
+
+  .home-hero-copy .page-subtitle {
+    font-size: 0.9rem;
   }
 
   .project-card {
-    height: 7.75rem;
-    min-height: 7.25rem;
-    padding: 0.75rem 0.8rem;
+    height: auto;
+    min-height: 6.5rem;
+    padding: 0.8rem 0.85rem;
     border-radius: 0.7rem;
   }
 
@@ -1489,11 +1777,22 @@ a:hover {
   }
 
   .project-card-title {
-    font-size: 0.8rem;
+    font-size: 0.9rem;
+    white-space: normal;
   }
 
   .project-card-subtitle {
-    font-size: 0.68rem;
+    font-size: 0.74rem;
+    white-space: normal;
+  }
+
+  .coming-soon-badge {
+    font-size: 0.52rem;
+    padding: 0.1rem 0.32rem;
+  }
+
+  .app-content {
+    padding: 1rem 0.85rem 1.25rem;
   }
 
   .coming-soon-badge {

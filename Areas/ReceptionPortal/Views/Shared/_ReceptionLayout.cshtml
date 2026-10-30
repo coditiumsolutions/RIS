@@ -1,7 +1,13 @@
 @{
     var controller = ViewContext.RouteData.Values["controller"]?.ToString() ?? string.Empty;
+    var action = ViewContext.RouteData.Values["action"]?.ToString() ?? string.Empty;
     string Active(string name) =>
         string.Equals(controller, name, StringComparison.OrdinalIgnoreCase) ? "active" : string.Empty;
+    string ActiveAction(string controllerName, string actionName) =>
+        string.Equals(controller, controllerName, StringComparison.OrdinalIgnoreCase)
+        && string.Equals(action, actionName, StringComparison.OrdinalIgnoreCase)
+            ? "active"
+            : string.Empty;
     var displayName = User.Identity?.Name ?? "Receptionist";
     var initials = string.Concat(displayName
         .Split(' ', StringSplitOptions.RemoveEmptyEntries)
@@ -60,8 +66,8 @@
                 </button>
                 <nav class="header-quick-nav d-none d-md-flex" aria-label="Quick links">
                     <a asp-area="ReceptionPortal" asp-controller="Dashboard" asp-action="Index" class="@(Active("Dashboard") == "active" ? "active" : null)">Dashboard</a>
-                    <a asp-area="ReceptionPortal" asp-controller="Visitors" asp-action="Index" class="@(Active("Visitors") == "active" ? "active" : null)">Visitors</a>
-                    <a asp-area="ReceptionPortal" asp-controller="Visitors" asp-action="WalkIn" class="@(ViewContext.RouteData.Values["action"]?.ToString() == "WalkIn" ? "active" : null)">Walk-In</a>
+                    <a asp-area="ReceptionPortal" asp-controller="Visitors" asp-action="Index" class="@(ActiveAction("Visitors", "Index") == "active" ? "active" : null)">Visitors</a>
+                    <a asp-area="ReceptionPortal" asp-controller="Visitors" asp-action="WalkIn" class="@(ActiveAction("Visitors", "WalkIn") == "active" ? "active" : null)">Walk-In</a>
                 </nav>
                 <nav aria-label="Breadcrumb" class="ms-md-auto">
                     <ol class="app-breadcrumb">
@@ -83,20 +89,20 @@
                         <i class="bi bi-speedometer2" aria-hidden="true"></i>
                         <span class="app-sidebar-label">Dashboard</span>
                     </a>
-                    <a class="@Active("Visitors")" asp-area="ReceptionPortal" asp-controller="Visitors" asp-action="Index">
+                    <a class="@ActiveAction("Visitors", "Index")" asp-area="ReceptionPortal" asp-controller="Visitors" asp-action="Index">
                         <i class="bi bi-people" aria-hidden="true"></i>
                         <span class="app-sidebar-label">Visitor List</span>
                     </a>
-                    <a asp-area="ReceptionPortal" asp-controller="Visitors" asp-action="WalkIn">
+                    <a class="@ActiveAction("Visitors", "WalkIn")" asp-area="ReceptionPortal" asp-controller="Visitors" asp-action="WalkIn">
                         <i class="bi bi-person-plus" aria-hidden="true"></i>
                         <span class="app-sidebar-label">Walk-In Registration</span>
                     </a>
-                    <a class="@Active("Password")" asp-area="ReceptionPortal" asp-controller="Password" asp-action="Index">
+                    <a class="nav-link-account @Active("Password")" asp-area="ReceptionPortal" asp-controller="Password" asp-action="Index">
                         <i class="bi bi-key" aria-hidden="true"></i>
                         <span class="app-sidebar-label">Change Password</span>
                     </a>
                     <form asp-area="ReceptionPortal" asp-controller="Account" asp-action="Logout" method="post">
-                        <button type="submit" class="nav-link-btn">
+                        <button type="submit" class="nav-link-btn nav-link-logout">
                             <i class="bi bi-box-arrow-right" aria-hidden="true"></i>
                             <span class="app-sidebar-label">Logout</span>
                         </button>
