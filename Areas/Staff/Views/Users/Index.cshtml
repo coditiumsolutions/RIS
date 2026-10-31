@@ -1,0 +1,139 @@
+@model UserListViewModel
+@{
+    ViewData["Title"] = "User Management";
+}
+
+<div class="page-header">
+    <div>
+        <h1 class="page-heading">User Management</h1>
+        <p class="page-subtitle">Manage administrator and receptionist accounts.</p>
+    </div>
+    <a class="btn btn-portal btn-admin" asp-area="Staff" asp-controller="Users" asp-action="CreateReceptionist">
+        <i class="bi bi-person-plus me-1" aria-hidden="true"></i> Add Receptionist
+    </a>
+</div>
+
+@if (TempData["Success"] is string successMsg)
+{
+    <div class="alert alert-success" role="status">@successMsg</div>
+}
+
+<div class="row g-4">
+    <div class="col-12">
+        <section class="card portal-card">
+            <div class="card-body">
+                <h2 class="h5 mb-3">Administrators (@Model.TotalAdminCount)</h2>
+                @if (Model.Admins.Any())
+                {
+                    <div class="table-responsive">
+                        <table class="table align-middle mb-0">
+                            <thead>
+                                <tr>
+                                    <th scope="col">Name</th>
+                                    <th scope="col">Username</th>
+                                    <th scope="col">Email</th>
+                                    <th scope="col">Status</th>
+                                    <th scope="col">Created</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var admin in Model.Admins)
+                                {
+                                    <tr class="@(!admin.IsActive ? "table-secondary" : "")">
+                                        <td>@admin.FullName</td>
+                                        <td>@admin.Username</td>
+                                        <td>@(admin.Email ?? "-")</td>
+                                        <td>
+                                            @if (admin.IsActive)
+                                            {
+                                                <span class="badge text-bg-success">Active</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge text-bg-secondary">Inactive</span>
+                                            }
+                                        </td>
+                                        <td>@admin.CreatedAt.ToString("dd MMM yyyy", CultureInfo.InvariantCulture)</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                    <p class="text-secondary small mt-2 mb-0">
+                        <i class="bi bi-info-circle me-1" aria-hidden="true"></i>
+                        Administrator accounts are managed separately. Receptionist accounts can be created, edited, activated, deactivated, and reset from this page.
+                    </p>
+                }
+                else
+                {
+                    <p class="text-secondary mb-0">No administrator accounts found.</p>
+                }
+            </div>
+        </section>
+    </div>
+
+    <div class="col-12">
+        <section class="card portal-card">
+            <div class="card-body">
+                <h2 class="h5 mb-3">Receptionists (@Model.TotalReceptionistCount)</h2>
+                @if (Model.Receptionists.Any())
+                {
+                    <div class="table-responsive">
+                        <table class="table align-middle mb-0">
+                            <thead>
+                                <tr>
+                                    <th scope="col">Name</th>
+                                    <th scope="col">Username</th>
+                                    <th scope="col">Email</th>
+                                    <th scope="col">Status</th>
+                                    <th scope="col">Created</th>
+                                    <th scope="col">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var receptionist in Model.Receptionists)
+                                {
+                                    <tr class="@(!receptionist.IsActive ? "table-secondary" : "")">
+                                        <td>@receptionist.FullName</td>
+                                        <td>@receptionist.Username</td>
+                                        <td>@(receptionist.Email ?? "-")</td>
+                                        <td>
+                                            @if (receptionist.IsActive)
+                                            {
+                                                <span class="badge text-bg-success">Active</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge text-bg-secondary">Inactive</span>
+                                            }
+                                        </td>
+                                        <td>@receptionist.CreatedAt.ToString("dd MMM yyyy", CultureInfo.InvariantCulture)</td>
+                                        <td class="text-nowrap">
+                                            <a asp-area="Staff" asp-controller="Users" asp-action="EditReceptionist" asp-route-id="@receptionist.Uid" class="btn btn-sm btn-outline-primary">Edit</a>
+                                            <a asp-area="Staff" asp-controller="Users" asp-action="ResetReceptionistPassword" asp-route-id="@receptionist.Uid" class="btn btn-sm btn-outline-secondary">Reset Password</a>
+                                            <form asp-area="Staff" asp-controller="Users" asp-action="ToggleReceptionistStatus" asp-route-id="@receptionist.Uid" method="post" class="d-inline">
+                                                <button type="submit"
+                                                        class="btn btn-sm @(receptionist.IsActive ? "btn-outline-danger" : "btn-outline-success")"
+                                                        data-confirm-title="@(receptionist.IsActive ? "Deactivate receptionist?" : "Activate receptionist?")"
+                                                        data-confirm-text="@(receptionist.IsActive ? $"Deactivate {receptionist.FullName}? They will no longer be able to sign in." : $"Activate {receptionist.FullName}?")"
+                                                        data-confirm-ok="@(receptionist.IsActive ? "Deactivate" : "Activate")"
+                                                        data-confirm-cancel="Cancel"
+                                                        data-confirm-icon="warning">
+                                                    @(receptionist.IsActive ? "Deactivate" : "Activate")
+                                                </button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    <p class="text-secondary mb-0">No receptionist accounts found.</p>
+                }
+            </div>
+        </section>
+    </div>
+</div>

@@ -1,10 +1,14 @@
 (() => {
-  const button = document.getElementById("fill-demo-credentials");
-  if (!button) {
+  const buttons = [
+    ...document.querySelectorAll(".js-fill-demo-credentials"),
+    ...document.querySelectorAll("#fill-demo-credentials")
+  ].filter((el, index, list) => list.indexOf(el) === index);
+
+  if (buttons.length === 0) {
     return;
   }
 
-  button.addEventListener("click", () => {
+  const fill = (button) => {
     const username = button.getAttribute("data-demo-username") ?? "";
     const password = button.getAttribute("data-demo-password") ?? "";
     const userInput = document.getElementById("Username");
@@ -23,5 +27,9 @@
     }
 
     userInput?.focus();
-  });
+  };
+
+  for (const button of buttons) {
+    button.addEventListener("click", () => fill(button));
+  }
 })();

@@ -78,6 +78,8 @@ builder.WebHost.ConfigureKestrel(options =>
     options.Limits.MaxRequestBodySize = 3 * 1024 * 1024;
 });
 
+builder.Services.AddSingleton<Microsoft.AspNetCore.Authorization.IAuthorizationHandler, PermissionAuthorizationHandler>();
+
 builder.Services.AddAuthentication(options =>
     {
         options.DefaultScheme = "portal";
@@ -89,10 +91,10 @@ builder.Services.AddAuthentication(options =>
         options.ForwardDefaultSelector = context =>
         {
             var path = context.Request.Path.Value ?? string.Empty;
-            if (path.StartsWith("/AdminPortal", StringComparison.OrdinalIgnoreCase))
-                return AuthSchemes.Admin;
-            if (path.StartsWith("/ReceptionPortal", StringComparison.OrdinalIgnoreCase))
-                return AuthSchemes.Receptionist;
+            if (path.StartsWith("/Staff", StringComparison.OrdinalIgnoreCase)
+                || path.StartsWith("/AdminPortal", StringComparison.OrdinalIgnoreCase)
+                || path.StartsWith("/ReceptionPortal", StringComparison.OrdinalIgnoreCase))
+                return AuthSchemes.Staff;
             return AuthSchemes.Resident;
         };
     })
@@ -145,32 +147,32 @@ builder.Services.AddAuthentication(options =>
             }
         };
     })
-    .AddCookie(AuthSchemes.Admin, options =>
+    .AddCookie(AuthSchemes.Staff, options =>
     {
-        options.Cookie.Name = "__Host-ResidentPortal-Admin";
+        options.Cookie.Name = "__Host-ResidentPortal-Staff";
         options.Cookie.HttpOnly = true;
         options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
         options.Cookie.SameSite = SameSiteMode.Lax;
         options.Cookie.Path = "/";
-        options.LoginPath = "/AdminPortal";
-        options.AccessDeniedPath = "/AdminPortal";
+        options.LoginPath = "/Staff";
+        options.AccessDeniedPath = "/Staff/Account/Forbidden";
         options.SlidingExpiration = true;
         options.ExpireTimeSpan = TimeSpan.FromHours(8);
         options.Events = new CookieAuthenticationEvents
         {
             OnRedirectToLogin = context =>
             {
-                var path = context.Request.Path.Value ?? "/AdminPortal";
-                if (path.StartsWith("/adminportal", StringComparison.OrdinalIgnoreCase)
-                    && (path.Equals("/adminportal", StringComparison.OrdinalIgnoreCase)
-                        || path.Equals("/adminportal/", StringComparison.OrdinalIgnoreCase)
-                        || path.StartsWith("/adminportal/account", StringComparison.OrdinalIgnoreCase)))
+                var path = context.Request.Path.Value ?? "/Staff";
+                if (path.StartsWith("/staff", StringComparison.OrdinalIgnoreCase)
+                    && (path.Equals("/staff", StringComparison.OrdinalIgnoreCase)
+                        || path.Equals("/staff/", StringComparison.OrdinalIgnoreCase)
+                        || path.StartsWith("/staff/account", StringComparison.OrdinalIgnoreCase)))
                 {
-                    context.Response.Redirect("/AdminPortal");
+                    context.Response.Redirect("/Staff");
                     return Task.CompletedTask;
                 }
 
-                var target = "/AdminPortal?returnUrl=" + Uri.EscapeDataString(path + context.Request.QueryString);
+                var target = "/Staff?returnUrl=" + Uri.EscapeDataString(path + context.Request.QueryString);
                 context.Response.Redirect(target);
                 return Task.CompletedTask;
             },
@@ -178,73 +180,26 @@ builder.Services.AddAuthentication(options =>
             {
                 var userId = context.Principal?.FindFirstValue(ClaimTypes.NameIdentifier);
                 var stamp = context.Principal?.FindFirstValue("SecurityStamp");
+                var userType = context.Principal?.FindFirstValue(StaffPermissions.StaffUserTypeClaim);
 
-                if (string.IsNullOrWhiteSpace(userId) || !int.TryParse(userId, out var uid))
+                if (string.IsNullOrWhiteSpace(userId)
+                    || !int.TryParse(userId, out var uid)
+                    || string.IsNullOrWhiteSpace(userType)
+                    || (!string.Equals(userType, PortalRoles.Admin, StringComparison.OrdinalIgnoreCase)
+                        && !string.Equals(userType, PortalRoles.Receptionist, StringComparison.OrdinalIgnoreCase)))
                 {
                     context.RejectPrincipal();
-                    await context.HttpContext.SignOutAsync(AuthSchemes.Admin);
+                    await context.HttpContext.SignOutAsync(AuthSchemes.Staff);
                     return;
                 }
 
                 var stampService = context.HttpContext.RequestServices.GetRequiredService<SecurityStampService>();
-                var (isActive, currentStamp) = await stampService.GetUserStatusAsync("Admin", uid, context.HttpContext.RequestAborted);
+                var (isActive, currentStamp) = await stampService.GetUserStatusAsync(userType, uid, context.HttpContext.RequestAborted);
 
                 if (!isActive || !string.Equals(stamp, currentStamp, StringComparison.OrdinalIgnoreCase))
                 {
                     context.RejectPrincipal();
-                    await context.HttpContext.SignOutAsync(AuthSchemes.Admin);
-                }
-            }
-        };
-    })
-    .AddCookie(AuthSchemes.Receptionist, options =>
-    {
-        options.Cookie.Name = "__Host-ResidentPortal-Receptionist";
-        options.Cookie.HttpOnly = true;
-        options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
-        options.Cookie.SameSite = SameSiteMode.Lax;
-        options.Cookie.Path = "/";
-        options.LoginPath = "/ReceptionPortal";
-        options.AccessDeniedPath = "/ReceptionPortal";
-        options.SlidingExpiration = true;
-        options.ExpireTimeSpan = TimeSpan.FromHours(8);
-        options.Events = new CookieAuthenticationEvents
-        {
-            OnRedirectToLogin = context =>
-            {
-                var path = context.Request.Path.Value ?? "/ReceptionPortal";
-                if (path.StartsWith("/receptionportal", StringComparison.OrdinalIgnoreCase)
-                    && (path.Equals("/receptionportal", StringComparison.OrdinalIgnoreCase)
-                        || path.Equals("/receptionportal/", StringComparison.OrdinalIgnoreCase)
-                        || path.StartsWith("/receptionportal/account", StringComparison.OrdinalIgnoreCase)))
-                {
-                    context.Response.Redirect("/ReceptionPortal");
-                    return Task.CompletedTask;
-                }
-
-                var target = "/ReceptionPortal?returnUrl=" + Uri.EscapeDataString(path + context.Request.QueryString);
-                context.Response.Redirect(target);
-                return Task.CompletedTask;
-            },
-            OnValidatePrincipal = async context =>
-            {
-                var userId = context.Principal?.FindFirstValue(ClaimTypes.NameIdentifier);
-                var stamp = context.Principal?.FindFirstValue("SecurityStamp");
-
-                if (string.IsNullOrWhiteSpace(userId) || !int.TryParse(userId, out var uid))
-                {
-                    context.RejectPrincipal();
-                    await context.HttpContext.SignOutAsync(AuthSchemes.Receptionist);
-                    return;
-                }
-
-                var stampService = context.HttpContext.RequestServices.GetRequiredService<SecurityStampService>();
-                var (isActive, currentStamp) = await stampService.GetUserStatusAsync("Receptionist", uid, context.HttpContext.RequestAborted);
-
-                if (!isActive || !string.Equals(stamp, currentStamp, StringComparison.OrdinalIgnoreCase))
-                {
-                    context.RejectPrincipal();
-                    await context.HttpContext.SignOutAsync(AuthSchemes.Receptionist);
+                    await context.HttpContext.SignOutAsync(AuthSchemes.Staff);
                 }
             }
         };
@@ -259,27 +214,47 @@ builder.Services.AddAuthorization(options =>
         policy.RequireRole(PortalRoles.Resident);
     });
 
+    options.AddPolicy(AuthPolicies.StaffOnly, policy =>
+    {
+        policy.AddAuthenticationSchemes(AuthSchemes.Staff);
+        policy.RequireAuthenticatedUser();
+        policy.RequireAssertion(context =>
+            context.User.IsInRole(PortalRoles.Admin) || context.User.IsInRole(PortalRoles.Receptionist));
+    });
+
+    // Legacy aliases → Staff scheme + role (for any remaining references during migration).
     options.AddPolicy(AuthPolicies.AdminOnly, policy =>
     {
-        policy.AddAuthenticationSchemes(AuthSchemes.Admin);
+        policy.AddAuthenticationSchemes(AuthSchemes.Staff);
         policy.RequireAuthenticatedUser();
         policy.RequireRole(PortalRoles.Admin);
     });
 
     options.AddPolicy(AuthPolicies.ReceptionistOnly, policy =>
     {
-        policy.AddAuthenticationSchemes(AuthSchemes.Receptionist);
+        policy.AddAuthenticationSchemes(AuthSchemes.Staff);
         policy.RequireAuthenticatedUser();
         policy.RequireRole(PortalRoles.Receptionist);
     });
 
     options.AddPolicy(AuthPolicies.AdminOrReceptionist, policy =>
     {
-        policy.AddAuthenticationSchemes(AuthSchemes.Admin, AuthSchemes.Receptionist);
+        policy.AddAuthenticationSchemes(AuthSchemes.Staff);
         policy.RequireAuthenticatedUser();
         policy.RequireAssertion(context =>
             context.User.IsInRole(PortalRoles.Admin) || context.User.IsInRole(PortalRoles.Receptionist));
     });
+
+    foreach (var permission in StaffPermissions.All)
+    {
+        var perm = permission;
+        options.AddPolicy(StaffPermissions.PolicyName(perm), policy =>
+        {
+            policy.AddAuthenticationSchemes(AuthSchemes.Staff);
+            policy.RequireAuthenticatedUser();
+            policy.AddRequirements(new PermissionRequirement(perm));
+        });
+    }
 });
 
 builder.Services.AddAntiforgery(options =>
@@ -326,6 +301,9 @@ else
 
 // Friendly 404 page (QA-005)
 app.UseStatusCodePagesWithReExecute("/Home/NotFound", "?statusCode={0}");
+
+// Legacy /AdminPortal and /ReceptionPortal → /Staff
+app.UseLegacyStaffPortalRedirects();
 
 // Handle antiforgery failures on login forms with friendly redirect
 app.UseAntiforgeryExceptionHandler();

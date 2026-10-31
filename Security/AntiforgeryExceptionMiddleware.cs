@@ -10,12 +10,9 @@ public class AntiforgeryExceptionMiddleware
     private static readonly HashSet<string> LoginPaths = new(StringComparer.OrdinalIgnoreCase)
     {
         "/login",
-        "/adminportal",
-        "/adminportal/account",
-        "/adminportal/account/index",
-        "/receptionportal",
-        "/receptionportal/account",
-        "/receptionportal/account/index"
+        "/staff",
+        "/staff/account",
+        "/staff/account/index"
     };
 
     public AntiforgeryExceptionMiddleware(RequestDelegate next, ILogger<AntiforgeryExceptionMiddleware> logger)
@@ -56,11 +53,8 @@ public class AntiforgeryExceptionMiddleware
     {
         var trimmed = path.TrimEnd('/').ToLowerInvariant();
 
-        if (trimmed.StartsWith("/adminportal"))
-            return "/AdminPortal?sessionExpired=true";
-
-        if (trimmed.StartsWith("/receptionportal"))
-            return "/ReceptionPortal?sessionExpired=true";
+        if (trimmed.StartsWith("/staff"))
+            return "/Staff?sessionExpired=true";
 
         return "/login?sessionExpired=true";
     }

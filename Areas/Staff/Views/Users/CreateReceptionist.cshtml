@@ -1,0 +1,60 @@
+@model CreateReceptionistViewModel
+@{
+    ViewData["Title"] = "Add Receptionist";
+}
+
+<div class="page-header">
+    <div>
+        <h1 class="page-heading">Add Receptionist</h1>
+        <p class="page-subtitle">Create a new receptionist account.</p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-6">
+        <section class="card portal-card">
+            <div class="card-body">
+                <form asp-area="Staff" asp-controller="Users" asp-action="CreateReceptionist" method="post" novalidate>
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+                    <div class="mb-3">
+                        <label asp-for="FullName" class="form-label"></label>
+                        <input asp-for="FullName" class="form-control" autofocus />
+                        <span asp-validation-for="FullName" class="text-danger small"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="Username" class="form-label"></label>
+                        <input asp-for="Username" class="form-control" autocomplete="off" />
+                        <span asp-validation-for="Username" class="text-danger small"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="Email" class="form-label"></label>
+                        <input asp-for="Email" class="form-control" type="email" />
+                        <span asp-validation-for="Email" class="text-danger small"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="Password" class="form-label"></label>
+                        <input asp-for="Password" class="form-control" autocomplete="new-password" />
+                        <span asp-validation-for="Password" class="text-danger small"></span>
+                        <div class="form-text">Minimum 8 characters. User will be required to change this on first login.</div>
+                    </div>
+                    <div class="mb-4">
+                        <label asp-for="ConfirmPassword" class="form-label"></label>
+                        <input asp-for="ConfirmPassword" class="form-control" autocomplete="new-password" />
+                        <span asp-validation-for="ConfirmPassword" class="text-danger small"></span>
+                    </div>
+                    <div>
+                        <button type="submit" class="btn btn-portal btn-admin">
+                            <i class="bi bi-person-plus me-1" aria-hidden="true"></i> Create Receptionist
+                        </button>
+                        <a asp-area="Staff" asp-controller="Users" asp-action="Index" class="btn btn-outline-secondary ms-2">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </section>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -154,10 +154,9 @@ public class HomeController : Controller
         Response.StatusCode = statusCode ?? 404;
         ViewData["Title"] = "Page Not Found";
 
-        if (await SchemeSignedInAsync(AuthSchemes.Admin, PortalRoles.Admin))
-            ViewData["LayoutOverride"] = "~/Areas/AdminPortal/Views/Shared/_AdminLayout.cshtml";
-        else if (await SchemeSignedInAsync(AuthSchemes.Receptionist, PortalRoles.Receptionist))
-            ViewData["LayoutOverride"] = "~/Areas/ReceptionPortal/Views/Shared/_ReceptionLayout.cshtml";
+        if (await SchemeSignedInAsync(AuthSchemes.Staff, PortalRoles.Admin)
+            || await SchemeSignedInAsync(AuthSchemes.Staff, PortalRoles.Receptionist))
+            ViewData["LayoutOverride"] = "~/Areas/Staff/Views/Shared/_StaffLayout.cshtml";
         else if (await SchemeSignedInAsync(AuthSchemes.Resident, PortalRoles.Resident))
             ViewData["LayoutOverride"] = "~/Views/Shared/_ResidentLayout.cshtml";
         else

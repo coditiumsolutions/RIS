@@ -1,0 +1,114 @@
+@model CreateResidentViewModel
+@{
+    ViewData["Title"] = "Add Resident";
+}
+
+<div class="page-header">
+    <div>
+        <h1 class="page-heading">Add Resident</h1>
+        <p class="page-subtitle">Create a new resident account.</p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <section class="card portal-card">
+            <div class="card-body">
+                <form asp-area="Staff" asp-controller="Residents" asp-action="Create" method="post" novalidate>
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+                    <h2 class="h6 text-secondary mb-3">Account Information</h2>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label asp-for="ResidentName" class="form-label"></label>
+                            <input asp-for="ResidentName" class="form-control" autofocus />
+                            <span asp-validation-for="ResidentName" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="Username" class="form-label"></label>
+                            <input asp-for="Username" class="form-control" autocomplete="off" />
+                            <span asp-validation-for="Username" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="Password" class="form-label"></label>
+                            <input asp-for="Password" class="form-control" autocomplete="new-password" />
+                            <span asp-validation-for="Password" class="text-danger small"></span>
+                            <div class="form-text">Minimum 8 characters. User will be required to change this on first login.</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="ConfirmPassword" class="form-label"></label>
+                            <input asp-for="ConfirmPassword" class="form-control" autocomplete="new-password" />
+                            <span asp-validation-for="ConfirmPassword" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="Email" class="form-label"></label>
+                            <input asp-for="Email" class="form-control" type="email" />
+                            <span asp-validation-for="Email" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <h2 class="h6 text-secondary mb-3 mt-4">Contact Information</h2>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label asp-for="Mobile" class="form-label"></label>
+                            <input asp-for="Mobile" class="form-control" type="tel" placeholder="03XXXXXXXXX" />
+                            <div class="form-text">Required. Pakistani mobile format: 03XXXXXXXXX.</div>
+                            <span asp-validation-for="Mobile" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="Mobile2" class="form-label"></label>
+                            <input asp-for="Mobile2" class="form-control" type="tel" />
+                            <span asp-validation-for="Mobile2" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <h2 class="h6 text-secondary mb-3 mt-4">Residence Details</h2>
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label asp-for="UnitNo" class="form-label"></label>
+                            <input asp-for="UnitNo" class="form-control" />
+                            <span asp-validation-for="UnitNo" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-4">
+                            <label asp-for="Tower" class="form-label"></label>
+                            <input asp-for="Tower" class="form-control" />
+                            <span asp-validation-for="Tower" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-4">
+                            <label asp-for="Block" class="form-label"></label>
+                            <input asp-for="Block" class="form-control" />
+                            <span asp-validation-for="Block" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-4">
+                            <label asp-for="Floor" class="form-label"></label>
+                            <input asp-for="Floor" class="form-control" />
+                            <span asp-validation-for="Floor" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-8">
+                            <label asp-for="Street" class="form-label"></label>
+                            <input asp-for="Street" class="form-control" />
+                            <span asp-validation-for="Street" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-4">
+                            <label asp-for="Status" class="form-label"></label>
+                            <select asp-for="Status" class="form-select" asp-items="@(new SelectList(ResidentStatuses.All))">
+                            </select>
+                            <span asp-validation-for="Status" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <div class="mt-4">
+                        <button type="submit" class="btn btn-portal btn-admin">
+                            <i class="bi bi-person-plus me-1" aria-hidden="true"></i> Create Resident
+                        </button>
+                        <a asp-area="Staff" asp-controller="Residents" asp-action="Index" class="btn btn-outline-secondary ms-2">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </section>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

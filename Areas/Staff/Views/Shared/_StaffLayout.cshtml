@@ -1,0 +1,212 @@
+@{
+    var controller = ViewContext.RouteData.Values["controller"]?.ToString() ?? string.Empty;
+    var action = ViewContext.RouteData.Values["action"]?.ToString() ?? string.Empty;
+    string Active(string name) =>
+        string.Equals(controller, name, StringComparison.OrdinalIgnoreCase) ? "active" : string.Empty;
+    string ActiveAction(string controllerName, string actionName) =>
+        string.Equals(controller, controllerName, StringComparison.OrdinalIgnoreCase)
+        && string.Equals(action, actionName, StringComparison.OrdinalIgnoreCase)
+            ? "active"
+            : string.Empty;
+
+    var showDashboard = User.IsInRole(PortalRoles.Admin)
+        || User.HasPermission(StaffPermissions.ResidentsManage)
+        || User.HasPermission(StaffPermissions.StaffManage)
+        || User.HasPermission(StaffPermissions.SettingsManage);
+    var showDesk = User.HasPermission(StaffPermissions.DeskDashboard);
+    var showVisitors = User.HasPermission(StaffPermissions.VisitorsView);
+    var showWalkIn = User.HasPermission(StaffPermissions.VisitorsWalkIn);
+    var showComplaints = User.HasPermission(StaffPermissions.ComplaintsView);
+    var showResidents = User.HasPermission(StaffPermissions.ResidentsManage);
+    var showUsers = User.HasPermission(StaffPermissions.StaffManage);
+    var showConfig = User.HasPermission(StaffPermissions.SettingsManage);
+
+    var homeController = showDashboard ? "Dashboard" : showDesk ? "Desk" : "Password";
+    var displayName = User.Identity?.Name ?? "Staff";
+    var initials = string.Concat(displayName
+        .Split(' ', StringSplitOptions.RemoveEmptyEntries)
+        .Take(2)
+        .Select(part => char.ToUpperInvariant(part[0])));
+    if (string.IsNullOrWhiteSpace(initials))
+    {
+        initials = "S";
+    }
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <partial name="_HeadAssets" />
+    @await RenderSectionAsync("Styles", required: false)
+    <title>@ViewData["Title"] - Staff Portal</title>
+</head>
+<body class="app-body portal-admin">
+    <div class="app-frame">
+        <header class="app-header-primary">
+            <div class="app-header-primary-inner">
+                <a class="app-brand" asp-area="Staff" asp-controller="@homeController" asp-action="Index">
+                    <div class="brand-mark" aria-hidden="true"><i class="bi bi-shield-lock"></i></div>
+                    <div class="app-brand-copy">
+                        <strong>RIS</strong>
+                        <span>Staff Portal</span>
+                    </div>
+                </a>
+                <div class="dropdown app-user-menu">
+                    <button class="dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Account menu">
+                        <span class="app-avatar" aria-hidden="true">@initials</span>
+                        <span class="app-user-name">@displayName</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li>
+                            <a class="dropdown-item" asp-area="Staff" asp-controller="Password" asp-action="Index">
+                                <i class="bi bi-key" aria-hidden="true"></i> Change Password
+                            </a>
+                        </li>
+                        <li><hr class="dropdown-divider" /></li>
+                        <li>
+                            <form asp-area="Staff" asp-controller="Account" asp-action="Logout" method="post">
+                                <button type="submit" class="dropdown-item danger">
+                                    <i class="bi bi-box-arrow-right" aria-hidden="true"></i> Logout
+                                </button>
+                            </form>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </header>
+
+        <header class="app-header-secondary">
+            <div class="app-header-secondary-inner">
+                <button type="button" class="sidebar-toggle" data-sidebar-toggle aria-label="Toggle navigation">
+                    <i class="bi bi-list" aria-hidden="true"></i>
+                </button>
+                <nav class="header-quick-nav d-none d-md-flex" aria-label="Quick links">
+                    @if (showDashboard)
+                    {
+                        <a asp-area="Staff" asp-controller="Dashboard" asp-action="Index" class="@(Active("Dashboard") == "active" ? "active" : null)">Dashboard</a>
+                    }
+                    @if (showDesk)
+                    {
+                        <a asp-area="Staff" asp-controller="Desk" asp-action="Index" class="@(Active("Desk") == "active" ? "active" : null)">Desk</a>
+                    }
+                    @if (showVisitors)
+                    {
+                        <a asp-area="Staff" asp-controller="Visitors" asp-action="Index" class="@(Active("Visitors") == "active" && ActiveAction("Visitors", "WalkIn") != "active" ? "active" : null)">Visitors</a>
+                    }
+                    @if (showResidents)
+                    {
+                        <a asp-area="Staff" asp-controller="Residents" asp-action="Index" class="@(Active("Residents") == "active" ? "active" : null)">Residents</a>
+                    }
+                </nav>
+                <nav aria-label="Breadcrumb" class="ms-md-auto">
+                    <ol class="app-breadcrumb">
+                        <li><a asp-area="Staff" asp-controller="@homeController" asp-action="Index">Staff Portal</a></li>
+                        <li><i class="bi bi-chevron-right" aria-hidden="true"></i></li>
+                        <li class="current">@ViewData["Title"]</li>
+                    </ol>
+                </nav>
+            </div>
+        </header>
+
+        <div class="app-gold-rule" aria-hidden="true"></div>
+
+        <div class="app-shell">
+            <div class="sidebar-backdrop" data-sidebar-backdrop></div>
+            <aside class="app-sidebar" aria-label="Staff navigation">
+                <nav class="app-sidebar-nav">
+                    @if (showDashboard)
+                    {
+                        <a class="@Active("Dashboard")" asp-area="Staff" asp-controller="Dashboard" asp-action="Index">
+                            <i class="bi bi-speedometer2" aria-hidden="true"></i>
+                            <span class="app-sidebar-label">Dashboard</span>
+                        </a>
+                    }
+                    @if (showDesk)
+                    {
+                        <a class="@Active("Desk")" asp-area="Staff" asp-controller="Desk" asp-action="Index">
+                            <i class="bi bi-display" aria-hidden="true"></i>
+                            <span class="app-sidebar-label">Reception Desk</span>
+                        </a>
+                    }
+                    @if (showVisitors)
+                    {
+                        <a class="@(Active("Visitors") == "active" && ActiveAction("Visitors", "WalkIn") != "active" ? "active" : null)"
+                           asp-area="Staff" asp-controller="Visitors" asp-action="Index">
+                            <i class="bi bi-person-badge" aria-hidden="true"></i>
+                            <span class="app-sidebar-label">Visitors</span>
+                        </a>
+                    }
+                    @if (showWalkIn)
+                    {
+                        <a class="@ActiveAction("Visitors", "WalkIn")" asp-area="Staff" asp-controller="Visitors" asp-action="WalkIn">
+                            <i class="bi bi-person-plus" aria-hidden="true"></i>
+                            <span class="app-sidebar-label">Walk-In</span>
+                        </a>
+                    }
+                    @if (showComplaints)
+                    {
+                        <a class="@Active("Complaints")" asp-area="Staff" asp-controller="Complaints" asp-action="Index">
+                            <i class="bi bi-headset" aria-hidden="true"></i>
+                            <span class="app-sidebar-label">Complaints</span>
+                        </a>
+                    }
+                    @if (showResidents)
+                    {
+                        <a class="@Active("Residents")" asp-area="Staff" asp-controller="Residents" asp-action="Index">
+                            <i class="bi bi-houses" aria-hidden="true"></i>
+                            <span class="app-sidebar-label">Residents</span>
+                        </a>
+                    }
+                    @if (showUsers)
+                    {
+                        <a class="@Active("Users")" asp-area="Staff" asp-controller="Users" asp-action="Index">
+                            <i class="bi bi-people" aria-hidden="true"></i>
+                            <span class="app-sidebar-label">Users</span>
+                        </a>
+                    }
+                    @if (showConfig)
+                    {
+                        <a class="@Active("Configurations")" asp-area="Staff" asp-controller="Configurations" asp-action="Index">
+                            <i class="bi bi-sliders" aria-hidden="true"></i>
+                            <span class="app-sidebar-label">Configurations</span>
+                        </a>
+                    }
+                    <span class="nav-item-disabled" aria-disabled="true">
+                        <i class="bi bi-door-open" aria-hidden="true"></i>
+                        <span class="app-sidebar-label">Gate Pass</span>
+                    </span>
+                    <span class="nav-item-disabled" aria-disabled="true">
+                        <i class="bi bi-file-earmark-text" aria-hidden="true"></i>
+                        <span class="app-sidebar-label">Account Statement</span>
+                    </span>
+                    <span class="nav-item-disabled" aria-disabled="true">
+                        <i class="bi bi-receipt" aria-hidden="true"></i>
+                        <span class="app-sidebar-label">Bill Management</span>
+                    </span>
+                    <a class="@Active("Password")" asp-area="Staff" asp-controller="Password" asp-action="Index">
+                        <i class="bi bi-key" aria-hidden="true"></i>
+                        <span class="app-sidebar-label">Change Password</span>
+                    </a>
+                    <form asp-area="Staff" asp-controller="Account" asp-action="Logout" method="post">
+                        <button type="submit" class="nav-link-btn">
+                            <i class="bi bi-box-arrow-right" aria-hidden="true"></i>
+                            <span class="app-sidebar-label">Logout</span>
+                        </button>
+                    </form>
+                </nav>
+            </aside>
+
+            <div class="app-content-wrap">
+                <main class="app-content">
+                    @RenderBody()
+                </main>
+                <footer class="app-footer">
+                    &copy; 2026 Resident Portal Management System. All rights reserved.
+                </footer>
+            </div>
+        </div>
+    </div>
+
+    <partial name="_Scripts" />
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

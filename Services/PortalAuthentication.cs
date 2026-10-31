@@ -10,7 +10,26 @@ public enum LoginResult
     Success,
     InvalidCredentials,
     AccountLocked,
-    AccountInactive
+    AccountInactive,
+    AmbiguousUsername
+}
+
+/// <summary>Normalized staff account returned by <see cref="PortalAuthentication.ValidateStaffAsync"/>.</summary>
+public sealed class StaffAuthUser
+{
+    public required string UserType { get; init; }
+
+    public required int Uid { get; init; }
+
+    public required string FullName { get; init; }
+
+    public required string Username { get; init; }
+
+    public string? Email { get; init; }
+
+    public required string SecurityStamp { get; init; }
+
+    public bool MustChangePassword { get; init; }
 }
 
 public sealed class PortalAuthentication
@@ -52,6 +71,97 @@ public sealed class PortalAuthentication
             password,
             (name, token) => _db.Receptionists.SingleOrDefaultAsync(r => r.Username == name, token),
             cancellationToken);
+
+    /// <summary>
+    /// Unified Staff login: looks up AdminUsers then Receptionists.
+    /// If the same username exists in both tables, returns <see cref="LoginResult.AmbiguousUsername"/>.
+    /// </summary>
+    public async Task<(LoginResult Result, StaffAuthUser? User, TimeSpan? LockoutRemaining)> ValidateStaffAsync(
+        string username,
+        string password,
+        CancellationToken cancellationToken)
+    {
+        var normalized = username.Trim();
+        var admin = await _db.AdminUsers.SingleOrDefaultAsync(a => a.Username == normalized, cancellationToken);
+        var receptionist = await _db.Receptionists.SingleOrDefaultAsync(r => r.Username == normalized, cancellationToken);
+
+        if (admin is not null && receptionist is not null)
+        {
+            _passwords.VerifyDummy(password);
+            return (LoginResult.AmbiguousUsername, null, null);
+        }
+
+        if (admin is null && receptionist is null)
+        {
+            _passwords.VerifyDummy(password);
+            return (LoginResult.InvalidCredentials, null, null);
+        }
+
+        if (admin is not null)
+        {
+            var (result, user, lockout) = await ValidateFoundAccountAsync(admin, password, cancellationToken);
+            if (result != LoginResult.Success || user is null)
+                return (result, null, lockout);
+
+            return (LoginResult.Success, ToStaffAuthUser(user), null);
+        }
+
+        {
+            var (result, user, lockout) = await ValidateFoundAccountAsync(receptionist!, password, cancellationToken);
+            if (result != LoginResult.Success || user is null)
+                return (result, null, lockout);
+
+            return (LoginResult.Success, ToStaffAuthUser(user), null);
+        }
+    }
+
+    private static StaffAuthUser ToStaffAuthUser(AdminUser admin) => new()
+    {
+        UserType = PortalRoles.Admin,
+        Uid = admin.Uid,
+        FullName = admin.FullName,
+        Username = admin.Username,
+        Email = admin.Email,
+        SecurityStamp = admin.SecurityStamp ?? string.Empty,
+        MustChangePassword = admin.MustChangePassword
+    };
+
+    private static StaffAuthUser ToStaffAuthUser(Receptionist receptionist) => new()
+    {
+        UserType = PortalRoles.Receptionist,
+        Uid = receptionist.Uid,
+        FullName = receptionist.FullName,
+        Username = receptionist.Username,
+        Email = receptionist.Email,
+        SecurityStamp = receptionist.SecurityStamp ?? string.Empty,
+        MustChangePassword = receptionist.MustChangePassword
+    };
+
+    private async Task<(LoginResult Result, TUser? User, TimeSpan? LockoutRemaining)> ValidateFoundAccountAsync<TUser>(
+        TUser account,
+        string password,
+        CancellationToken cancellationToken)
+        where TUser : class
+    {
+        var passwordHash = GetPasswordHash(account);
+        if (!_passwords.Verify(passwordHash, password))
+        {
+            await RecordFailedAttemptAsync(account, cancellationToken);
+            return (LoginResult.InvalidCredentials, null, null);
+        }
+
+        var lockoutEnd = GetLockoutEnd(account);
+        if (lockoutEnd.HasValue && lockoutEnd.Value > DateTime.UtcNow)
+            return (LoginResult.AccountLocked, null, lockoutEnd.Value - DateTime.UtcNow);
+
+        if (!GetIsActive(account))
+            return (LoginResult.AccountInactive, null, null);
+
+        ResetLockout(account);
+        EnsureSecurityStamp(account);
+        await _db.SaveChangesAsync(cancellationToken);
+        return (LoginResult.Success, account, null);
+    }
 
     private async Task<(LoginResult Result, TUser? User, TimeSpan? LockoutRemaining)> ValidateAsync<TUser>(
         string username,

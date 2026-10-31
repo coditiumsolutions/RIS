@@ -1,0 +1,108 @@
+@model LoginViewModel
+@inject Microsoft.Extensions.Configuration.IConfiguration Configuration
+@{
+    ViewData["Title"] = "Staff Login";
+    Layout = "_StaffLoginLayout";
+    var demoEnabled = Configuration.GetValue("DemoLogin:Enabled", true);
+    var adminUser = demoEnabled ? Configuration["DemoLogin:Admin:Username"] : null;
+    var adminPass = demoEnabled ? Configuration["DemoLogin:Admin:Password"] : null;
+    var receptionUser = demoEnabled ? Configuration["DemoLogin:Receptionist:Username"] : null;
+    var receptionPass = demoEnabled ? Configuration["DemoLogin:Receptionist:Password"] : null;
+    var showAdminDemo = demoEnabled && !string.IsNullOrWhiteSpace(adminUser) && !string.IsNullOrWhiteSpace(adminPass);
+    var showReceptionDemo = demoEnabled && !string.IsNullOrWhiteSpace(receptionUser) && !string.IsNullOrWhiteSpace(receptionPass);
+}
+
+<div class="login-stage">
+    <aside class="login-hero" aria-label="Staff welcome">
+        <div>
+            <div class="login-hero-brand">
+                <div class="brand-mark" aria-hidden="true"><i class="bi bi-shield-lock"></i></div>
+                <div>
+                    <strong>Resident Portal Management System</strong>
+                    <span>Unified staff console</span>
+                </div>
+            </div>
+            <h2>One portal for administrators and reception</h2>
+            <p>Sign in with your staff credentials to manage residents, visitors, complaints, and the reception desk.</p>
+        </div>
+        <div class="login-hero-art" aria-hidden="true">
+            <div class="login-hero-tile"><i class="bi bi-people-fill"></i><span>Residents</span></div>
+            <div class="login-hero-tile"><i class="bi bi-person-badge"></i><span>Visitors</span></div>
+            <div class="login-hero-tile"><i class="bi bi-display"></i><span>Desk</span></div>
+        </div>
+    </aside>
+
+    <section class="login-panel">
+        <div class="login-card">
+            <p class="login-kicker">Staff Portal</p>
+            <h1>Staff sign in</h1>
+            <p class="login-lead">Administrators and receptionists use the same entrance.</p>
+            @if (Context.Request.Query.ContainsKey("sessionExpired"))
+            {
+                <div class="alert alert-warning" role="alert">
+                    <i class="bi bi-exclamation-triangle me-2" aria-hidden="true"></i>
+                    Your session expired, please try again.
+                </div>
+            }
+            @if (Context.Request.Query.ContainsKey("rateLimited"))
+            {
+                <div class="alert alert-warning" role="alert">
+                    <i class="bi bi-exclamation-triangle me-2" aria-hidden="true"></i>
+                    Too many login attempts. Please try again later.
+                </div>
+            }
+            <form asp-area="Staff" asp-controller="Account" asp-action="Index" method="post">
+                <div asp-validation-summary="ModelOnly" role="alert"></div>
+                <div class="mb-3">
+                    <label asp-for="Username" class="form-label"></label>
+                    <div class="input-icon-group">
+                        <i class="bi bi-person-gear" aria-hidden="true"></i>
+                        <input asp-for="Username" class="form-control" autocomplete="username" autofocus />
+                    </div>
+                    <span asp-validation-for="Username" class="text-danger"></span>
+                </div>
+                <div class="mb-4">
+                    <label asp-for="Password" class="form-label"></label>
+                    <div class="input-icon-group has-toggle">
+                        <i class="bi bi-lock-fill" aria-hidden="true"></i>
+                        <input asp-for="Password" class="form-control" autocomplete="current-password" />
+                        <button type="button" class="password-toggle" data-password-toggle="Password" aria-label="Show password" aria-pressed="false">
+                            <i class="bi bi-eye" aria-hidden="true"></i>
+                        </button>
+                    </div>
+                    <span asp-validation-for="Password" class="text-danger"></span>
+                </div>
+                <input type="hidden" name="returnUrl" value="@ViewData["ReturnUrl"]" />
+                <button type="submit" class="btn btn-portal btn-admin w-100">Login</button>
+            </form>
+            @if (showAdminDemo || showReceptionDemo)
+            {
+                <div class="d-grid gap-2 mt-3">
+                    @if (showAdminDemo)
+                    {
+                        <button type="button"
+                                class="btn btn-outline-secondary btn-sm js-fill-demo-credentials"
+                                data-demo-username="@adminUser"
+                                data-demo-password="@adminPass">
+                            Fill Admin test credentials
+                        </button>
+                    }
+                    @if (showReceptionDemo)
+                    {
+                        <button type="button"
+                                class="btn btn-outline-secondary btn-sm js-fill-demo-credentials"
+                                data-demo-username="@receptionUser"
+                                data-demo-password="@receptionPass">
+                            Fill Receptionist test credentials
+                        </button>
+                    }
+                </div>
+                <script src="~/js/demo-login.js" asp-append-version="true"></script>
+            }
+        </div>
+    </section>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

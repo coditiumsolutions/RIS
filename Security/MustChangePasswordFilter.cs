@@ -10,6 +10,7 @@ public class MustChangePasswordFilter : IAsyncActionFilter
     {
         "Password/Index",
         "Account/Logout",
+        "Account/Forbidden",
         "Home/Logout",
         "Home/Error",
         "Home/NotFound"
@@ -38,12 +39,10 @@ public class MustChangePasswordFilter : IAsyncActionFilter
         if (string.Equals(mustChange, "True", StringComparison.OrdinalIgnoreCase))
         {
             var area = context.RouteData.Values["area"]?.ToString();
-            var redirectUrl = area switch
-            {
-                "AdminPortal" => "/AdminPortal/Password?mustChange=true",
-                "ReceptionPortal" => "/ReceptionPortal/Password?mustChange=true",
-                _ => "/Password?mustChange=true"
-            };
+            var redirectUrl = string.Equals(area, "Staff", StringComparison.OrdinalIgnoreCase)
+                || !string.IsNullOrEmpty(user.GetStaffUserType())
+                ? "/Staff/Password?mustChange=true"
+                : "/Password?mustChange=true";
 
             context.Result = new RedirectResult(redirectUrl);
             return;
@@ -63,30 +62,28 @@ public class MustChangePasswordFilter : IAsyncActionFilter
                 }
             }
         }
-        else if (user.IsInRole(PortalRoles.Admin))
+        else if (!string.IsNullOrEmpty(user.GetStaffUserType()))
         {
             var db = context.HttpContext.RequestServices.GetRequiredService<ResidentPortal.Data.ApplicationDbContext>();
             var userIdStr = user.FindFirstValue(ClaimTypes.NameIdentifier);
             if (int.TryParse(userIdStr, out var userId))
             {
-                var admin = await db.AdminUsers.FindAsync(userId);
-                if (admin?.MustChangePassword == true)
+                var userType = user.GetStaffUserType();
+                var mustChangeDb = false;
+                if (string.Equals(userType, PortalRoles.Admin, StringComparison.OrdinalIgnoreCase))
                 {
-                    context.Result = new RedirectResult("/AdminPortal/Password?mustChange=true");
-                    return;
+                    var admin = await db.AdminUsers.FindAsync(userId);
+                    mustChangeDb = admin?.MustChangePassword == true;
                 }
-            }
-        }
-        else if (user.IsInRole(PortalRoles.Receptionist))
-        {
-            var db = context.HttpContext.RequestServices.GetRequiredService<ResidentPortal.Data.ApplicationDbContext>();
-            var userIdStr = user.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (int.TryParse(userIdStr, out var userId))
-            {
-                var receptionist = await db.Receptionists.FindAsync(userId);
-                if (receptionist?.MustChangePassword == true)
+                else if (string.Equals(userType, PortalRoles.Receptionist, StringComparison.OrdinalIgnoreCase))
                 {
-                    context.Result = new RedirectResult("/ReceptionPortal/Password?mustChange=true");
+                    var receptionist = await db.Receptionists.FindAsync(userId);
+                    mustChangeDb = receptionist?.MustChangePassword == true;
+                }
+
+                if (mustChangeDb)
+                {
+                    context.Result = new RedirectResult("/Staff/Password?mustChange=true");
                     return;
                 }
             }

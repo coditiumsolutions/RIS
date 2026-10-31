@@ -9,4 +9,13 @@ public static class ClaimsPrincipalExtensions
         var value = principal.FindFirstValue(ClaimTypes.NameIdentifier);
         return int.TryParse(value, out var id) ? id : null;
     }
+
+    public static string? GetStaffKey(this ClaimsPrincipal principal) =>
+        principal.FindFirstValue(StaffPermissions.StaffKeyClaim);
+
+    public static string? GetStaffUserType(this ClaimsPrincipal principal) =>
+        principal.FindFirstValue(StaffPermissions.StaffUserTypeClaim);
+
+    public static bool HasPermission(this ClaimsPrincipal principal, string permission) =>
+        principal.HasClaim(StaffPermissions.ClaimType, permission);
 }

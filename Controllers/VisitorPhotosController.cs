@@ -21,7 +21,7 @@ public class VisitorPhotosController : Controller
     }
 
     [HttpGet("/VisitorPhotos/{id:int}")]
-    [Authorize(AuthenticationSchemes = AuthSchemes.Admin + "," + AuthSchemes.Receptionist + "," + AuthSchemes.Resident)]
+    [Authorize(AuthenticationSchemes = AuthSchemes.Staff + "," + AuthSchemes.Resident)]
     public async Task<IActionResult> Get(int id, CancellationToken cancellationToken)
     {
         var photo = await _db.VisitorPhotos
