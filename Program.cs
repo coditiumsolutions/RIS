@@ -62,9 +62,16 @@ builder.Services.Configure<VisitorPhotoStorageOptions>(
     builder.Configuration.GetSection(VisitorPhotoStorageOptions.SectionName));
 builder.Services.AddSingleton<VisitorPhotoStorage>();
 builder.Services.AddScoped<VisitorPhotoService>();
+builder.Services.Configure<ComplaintPhotoStorageOptions>(
+    builder.Configuration.GetSection(ComplaintPhotoStorageOptions.SectionName));
+builder.Services.AddSingleton<ComplaintPhotoStorage>();
+builder.Services.AddScoped<SmtpSettingsService>();
+builder.Services.AddScoped<ComplaintEmailNotifier>();
+builder.Services.AddScoped<ComplaintWorkflow>();
+builder.Services.AddScoped<ComplaintQueryService>();
 builder.Services.Configure<FormOptions>(options =>
 {
-    options.MultipartBodyLengthLimit = 3 * 1024 * 1024;
+    options.MultipartBodyLengthLimit = Math.Max(options.MultipartBodyLengthLimit, 3 * 1024 * 1024);
 });
 builder.WebHost.ConfigureKestrel(options =>
 {

@@ -17,4 +17,7 @@ public static class AppSettingKeys
 {
     public const string VisitorApprovalRequired = "VisitorApprovalRequired";
     public const string MaxGuestsPerVisit = "MaxGuestsPerVisit";
+    public const string ComplaintSlaUrgentHours = "ComplaintSlaUrgentHours";
+    public const string ComplaintSlaNormalHours = "ComplaintSlaNormalHours";
+    public const string ComplaintSlaLowHours = "ComplaintSlaLowHours";
 }

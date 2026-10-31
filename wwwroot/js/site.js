@@ -198,5 +198,31 @@
       }
     });
   });
+
+  document.addEventListener("click", (event) => {
+    const trigger = event.target instanceof Element
+      ? event.target.closest("[data-visitor-photo-open]")
+      : null;
+    if (!(trigger instanceof HTMLElement)) {
+      return;
+    }
+    event.preventDefault();
+    const url = trigger.getAttribute("href") || trigger.getAttribute("data-visitor-photo-open");
+    if (!url) {
+      return;
+    }
+    const title = trigger.getAttribute("data-visitor-photo-title") || "Photo";
+    if (typeof Swal !== "undefined" && typeof Swal.fire === "function") {
+      Swal.fire({
+        title,
+        imageUrl: url,
+        imageAlt: title,
+        confirmButtonText: "Close",
+        width: "min(96vw, 720px)"
+      });
+      return;
+    }
+    window.open(url, "_blank", "noopener");
+  });
 })();
 

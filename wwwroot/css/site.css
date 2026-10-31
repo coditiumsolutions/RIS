@@ -2056,3 +2056,23 @@ a:hover {
   color: var(--rp-muted);
   text-align: center;
 }
+
+/* Complaint Management — scoped extras (does not override portal theme) */
+.complaint-timeline-item {
+  position: relative;
+  padding: 0.65rem 0 0.65rem 1rem;
+  border-left: 2px solid var(--rp-border);
+  margin-left: 0.35rem;
+}
+
+.complaint-timeline-item:last-child {
+  border-left-color: transparent;
+}
+
+.complaint-timeline-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.75rem;
+  align-items: baseline;
+  margin-bottom: 0.15rem;
+}

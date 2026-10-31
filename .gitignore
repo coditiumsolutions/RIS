@@ -493,5 +493,5 @@ appsettings.Development.json
 **/appsettings.*.local.json
 
 
-# Visitor camera captures (outside wwwroot)
+# Uploaded files outside wwwroot (visitor camera, complaint photos)
 App_Data/

@@ -68,6 +68,7 @@
                     <a asp-area="ReceptionPortal" asp-controller="Dashboard" asp-action="Index" class="@(Active("Dashboard") == "active" ? "active" : null)">Dashboard</a>
                     <a asp-area="ReceptionPortal" asp-controller="Visitors" asp-action="Index" class="@(ActiveAction("Visitors", "Index") == "active" ? "active" : null)">Visitors</a>
                     <a asp-area="ReceptionPortal" asp-controller="Visitors" asp-action="WalkIn" class="@(ActiveAction("Visitors", "WalkIn") == "active" ? "active" : null)">Walk-In</a>
+                    <a asp-area="ReceptionPortal" asp-controller="Complaints" asp-action="Index" class="@(Active("Complaints") == "active" ? "active" : null)">Complaints</a>
                 </nav>
                 <nav aria-label="Breadcrumb" class="ms-md-auto">
                     <ol class="app-breadcrumb">
@@ -96,6 +97,10 @@
                     <a class="@ActiveAction("Visitors", "WalkIn")" asp-area="ReceptionPortal" asp-controller="Visitors" asp-action="WalkIn">
                         <i class="bi bi-person-plus" aria-hidden="true"></i>
                         <span class="app-sidebar-label">Walk-In Registration</span>
+                    </a>
+                    <a class="@Active("Complaints")" asp-area="ReceptionPortal" asp-controller="Complaints" asp-action="Index">
+                        <i class="bi bi-headset" aria-hidden="true"></i>
+                        <span class="app-sidebar-label">Complaints</span>
                     </a>
                     <a class="nav-link-account @Active("Password")" asp-area="ReceptionPortal" asp-controller="Password" asp-action="Index">
                         <i class="bi bi-key" aria-hidden="true"></i>

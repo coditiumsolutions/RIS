@@ -1,0 +1,27 @@
+@model IReadOnlyList<ComplaintHistoryItemViewModel>
+@if (Model.Any())
+{
+    <h3 class="h6 mb-2">Status timeline</h3>
+    <ol class="complaint-timeline list-unstyled mb-0">
+        @foreach (var item in Model)
+        {
+            <li class="complaint-timeline-item">
+                <div class="complaint-timeline-meta">
+                    <strong>@(item.ToStatus is null ? "Note" : ComplaintStatus.Display(item.ToStatus))</strong>
+                    <span class="text-secondary">@TimeZone.FormatDateTime(item.CreatedAtUtc, "dd MMM yyyy, HH:mm")</span>
+                </div>
+                <div class="text-secondary small">
+                    @(item.ActorDisplayName ?? item.ActorUserType)
+                    @if (!string.IsNullOrWhiteSpace(item.FromStatus) && !string.IsNullOrWhiteSpace(item.ToStatus) && item.FromStatus != item.ToStatus)
+                    {
+                        <span>· @ComplaintStatus.Display(item.FromStatus) → @ComplaintStatus.Display(item.ToStatus)</span>
+                    }
+                </div>
+                @if (!string.IsNullOrWhiteSpace(item.Note))
+                {
+                    <p class="mb-0 mt-1">@item.Note</p>
+                }
+            </li>
+        }
+    </ol>
+}
