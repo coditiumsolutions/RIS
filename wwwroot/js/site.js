@@ -172,6 +172,24 @@
         return;
       }
 
+      const photoKind =
+        trigger.getAttribute("data-confirm-photo") ||
+        form.getAttribute("data-confirm-photo") ||
+        "";
+
+      if (photoKind && window.VisitorCamera && typeof window.VisitorCamera.captureOptional === "function") {
+        const label = photoKind.toLowerCase() === "checkout" ? "check-out" : "check-in";
+        const photoResult = await window.VisitorCamera.captureOptional(label);
+        if (photoResult && photoResult.cancelled) {
+          return;
+        }
+        if (photoResult && photoResult.blob) {
+          window.VisitorCamera.attachPhotoToForm(form, photoResult.blob);
+        } else {
+          window.VisitorCamera.attachPhotoToForm(form, null);
+        }
+      }
+
       form.dataset.swalConfirmed = "1";
       if (typeof form.requestSubmit === "function") {
         form.requestSubmit(trigger);
@@ -181,3 +199,4 @@
     });
   });
 })();
+

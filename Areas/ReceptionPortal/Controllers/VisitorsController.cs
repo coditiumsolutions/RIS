@@ -17,13 +17,20 @@ public class VisitorsController : Controller
     private readonly AuditLogger _audit;
     private readonly AppSettingsService _settings;
     private readonly BusinessTimeZone _timeZone;
+    private readonly VisitorPhotoService _photos;
 
-    public VisitorsController(ApplicationDbContext db, AuditLogger audit, AppSettingsService settings, BusinessTimeZone timeZone)
+    public VisitorsController(
+        ApplicationDbContext db,
+        AuditLogger audit,
+        AppSettingsService settings,
+        BusinessTimeZone timeZone,
+        VisitorPhotoService photos)
     {
         _db = db;
         _audit = audit;
         _settings = settings;
         _timeZone = timeZone;
+        _photos = photos;
     }
 
     [HttpGet]
@@ -114,6 +121,18 @@ public class VisitorsController : Controller
         if (visitor is null)
             return NotFound();
 
+        var photos = await _db.VisitorPhotos
+            .AsNoTracking()
+            .Where(p => p.VisitorRequestId == visitor.Uid)
+            .OrderBy(p => p.CapturedAtUtc)
+            .Select(p => new VisitorPhotoItemViewModel
+            {
+                Uid = p.Uid,
+                Kind = p.Kind,
+                CapturedAtUtc = p.CapturedAtUtc
+            })
+            .ToListAsync(cancellationToken);
+
         var model = new VisitorDetailsViewModel
         {
             Uid = visitor.Uid,
@@ -135,7 +154,8 @@ public class VisitorsController : Controller
             ResidentMobile = visitor.Resident.Mobile,
             DeclineReason = visitor.DeclineReason,
             CanCheckIn = visitor.Status == VisitorStatus.Approved
-                && VisitorDuration.IsWithinVisitWindow(visitor.ArrivalDate, visitor.Duration, _timeZone.Today)
+                && VisitorDuration.IsWithinVisitWindow(visitor.ArrivalDate, visitor.Duration, _timeZone.Today),
+            Photos = photos
         };
 
         return View(model);
@@ -143,7 +163,8 @@ public class VisitorsController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> CheckIn(int id, string? q, DateOnly? date, CancellationToken cancellationToken)
+    [RequestSizeLimit(3 * 1024 * 1024)]
+    public async Task<IActionResult> CheckIn(int id, string? q, DateOnly? date, IFormFile? photo, CancellationToken cancellationToken)
     {
         var visitor = await _db.VisitorRequests.FindAsync(new object[] { id }, cancellationToken);
         if (visitor is null)
@@ -172,13 +193,19 @@ public class VisitorsController : Controller
         await _db.SaveChangesAsync(cancellationToken);
         await _audit.WriteAsync("Receptionist", userId, $"Checked in visitor: {visitor.VisitorName} (ID: {visitor.Uid})", cancellationToken);
 
-        TempData["Success"] = $"{visitor.VisitorName} has been checked in.";
+        var (_, photoWarning) = await _photos.TryAttachAsync(
+            visitor.Uid, VisitorPhotoKind.CheckIn, photo, userId, null, cancellationToken);
+
+        TempData["Success"] = string.IsNullOrEmpty(photoWarning)
+            ? $"{visitor.VisitorName} has been checked in."
+            : $"{visitor.VisitorName} has been checked in. Photo was skipped: {photoWarning}";
         return RedirectToAction(nameof(Index), new { q, date });
     }
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> CheckOut(int id, string? q, DateOnly? date, CancellationToken cancellationToken)
+    [RequestSizeLimit(3 * 1024 * 1024)]
+    public async Task<IActionResult> CheckOut(int id, string? q, DateOnly? date, IFormFile? photo, CancellationToken cancellationToken)
     {
         var visitor = await _db.VisitorRequests.FindAsync(new object[] { id }, cancellationToken);
         if (visitor is null)
@@ -198,7 +225,12 @@ public class VisitorsController : Controller
         await _db.SaveChangesAsync(cancellationToken);
         await _audit.WriteAsync("Receptionist", userId, $"Checked out visitor: {visitor.VisitorName} (ID: {visitor.Uid})", cancellationToken);
 
-        TempData["Success"] = $"{visitor.VisitorName} has been checked out.";
+        var (_, photoWarning) = await _photos.TryAttachAsync(
+            visitor.Uid, VisitorPhotoKind.CheckOut, photo, userId, null, cancellationToken);
+
+        TempData["Success"] = string.IsNullOrEmpty(photoWarning)
+            ? $"{visitor.VisitorName} has been checked out."
+            : $"{visitor.VisitorName} has been checked out. Photo was skipped: {photoWarning}";
         return RedirectToAction(nameof(Index), new { q, date });
     }
 
@@ -227,7 +259,8 @@ public class VisitorsController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> WalkIn(WalkInVisitorViewModel model, CancellationToken cancellationToken)
+    [RequestSizeLimit(3 * 1024 * 1024)]
+    public async Task<IActionResult> WalkIn(WalkInVisitorViewModel model, IFormFile? photo, CancellationToken cancellationToken)
     {
         if (!ModelState.IsValid)
         {
@@ -286,7 +319,12 @@ public class VisitorsController : Controller
         await _db.SaveChangesAsync(cancellationToken);
         await _audit.WriteAsync("Receptionist", userId, $"Registered walk-in visitor: {visitor.VisitorName} for resident {resident.ResidentName}", cancellationToken);
 
-        TempData["Success"] = $"Walk-in visitor {visitor.VisitorName} has been registered and checked in.";
+        var (_, photoWarning) = await _photos.TryAttachAsync(
+            visitor.Uid, VisitorPhotoKind.CheckIn, photo, userId, null, cancellationToken);
+
+        TempData["Success"] = string.IsNullOrEmpty(photoWarning)
+            ? $"Walk-in visitor {visitor.VisitorName} has been registered and checked in."
+            : $"Walk-in visitor {visitor.VisitorName} has been registered and checked in. Photo was skipped: {photoWarning}";
         return RedirectToAction(nameof(Index));
     }
 

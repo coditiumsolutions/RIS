@@ -492,3 +492,6 @@ secrets.json
 appsettings.Development.json
 **/appsettings.*.local.json
 
+
+# Visitor camera captures (outside wwwroot)
+App_Data/
