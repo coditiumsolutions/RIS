@@ -22,7 +22,7 @@
 }
 
 <div class="row g-3 mb-4">
-    <div class="col-md-4">
+    <div class="@(User.HasPermission(StaffPermissions.ComplaintsView) ? "col-md-3" : "col-md-4")">
         <section class="card portal-card stat-card">
             <div class="card-body">
                 <div class="stat-icon" aria-hidden="true"><i class="bi bi-houses"></i></div>
@@ -31,7 +31,7 @@
             </div>
         </section>
     </div>
-    <div class="col-md-4">
+    <div class="@(User.HasPermission(StaffPermissions.ComplaintsView) ? "col-md-3" : "col-md-4")">
         <section class="card portal-card stat-card">
             <div class="card-body">
                 <div class="stat-icon" aria-hidden="true"><i class="bi bi-person-badge"></i></div>
@@ -40,7 +40,7 @@
             </div>
         </section>
     </div>
-    <div class="col-md-4">
+    <div class="@(User.HasPermission(StaffPermissions.ComplaintsView) ? "col-md-3" : "col-md-4")">
         <section class="card portal-card stat-card">
             <div class="card-body">
                 <div class="stat-icon" aria-hidden="true"><i class="bi bi-people"></i></div>
@@ -49,6 +49,20 @@
             </div>
         </section>
     </div>
+    @if (User.HasPermission(StaffPermissions.ComplaintsView))
+    {
+        <div class="col-md-3">
+            <a asp-area="Staff" asp-controller="Complaints" asp-action="Index" class="text-decoration-none text-reset d-block h-100">
+                <section class="card portal-card stat-card">
+                    <div class="card-body">
+                        <div class="stat-icon" aria-hidden="true"><i class="bi bi-headset"></i></div>
+                        <p class="stat-label">Complaints Today/Total</p>
+                        <p class="stat-value">@Model.ComplaintsTodayCount/@Model.ComplaintsTotalCount</p>
+                    </div>
+                </section>
+            </a>
+        </div>
+    }
 </div>
 
 <h2 class="module-grid-heading">Modules</h2>

@@ -1,5 +1,6 @@
 :root {
   --rp-primary: #046169;
+  --rp-primary-rgb: 4, 97, 105;
   --rp-primary-deep: #1d1d1d;
   --rp-secondary: #046169;
   --rp-accent: #ffc900;
@@ -2156,4 +2157,37 @@ a:hover {
   gap: 0.35rem 0.75rem;
   align-items: baseline;
   margin-bottom: 0.15rem;
+}
+
+/* Staff search inputs — visible on white cards (theme border + soft tint) */
+.portal-search-input,
+.portal-card .portal-search-input.form-control {
+  border: 1.75px solid rgba(var(--rp-primary-rgb), 0.45);
+  border-radius: 0.75rem;
+  background-color: rgba(var(--rp-primary-rgb), 0.06);
+  color: var(--rp-text);
+  min-height: 2.65rem;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+}
+
+.portal-search-input::placeholder,
+.portal-card .portal-search-input.form-control::placeholder {
+  color: var(--rp-muted);
+  opacity: 0.9;
+}
+
+.portal-search-input:focus,
+.portal-card .portal-search-input.form-control:focus {
+  border-color: var(--rp-primary);
+  background-color: #fff;
+  box-shadow: 0 0 0 0.25rem rgba(var(--rp-primary-rgb), 0.22);
+  outline: 0;
+}
+
+@media (max-width: 767.98px) {
+  .portal-search-input,
+  .portal-card .portal-search-input.form-control {
+    min-height: 2.85rem;
+    font-size: 1.02rem;
+  }
 }

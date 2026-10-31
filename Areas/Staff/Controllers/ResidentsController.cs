@@ -36,6 +36,7 @@ public class ResidentsController : Controller
             query = query.Where(r =>
                 r.ResidentName.ToLower().Contains(searchTerm) ||
                 r.Username.ToLower().Contains(searchTerm) ||
+                r.CustomerId.ToLower().Contains(searchTerm) ||
                 (r.UnitNo != null && r.UnitNo.ToLower().Contains(searchTerm)) ||
                 (r.Mobile != null && r.Mobile.Contains(searchTerm)));
         }
@@ -48,6 +49,7 @@ public class ResidentsController : Controller
                 Uid = r.Uid,
                 ResidentName = r.ResidentName,
                 Username = r.Username,
+                CustomerId = r.CustomerId,
                 Email = r.Email,
                 Mobile = r.Mobile,
                 UnitNo = r.UnitNo,
@@ -94,11 +96,21 @@ public class ResidentsController : Controller
             return View(model);
         }
 
+        var customerId = model.CustomerId.Trim();
+        var customerTaken = await _db.Residents.AnyAsync(
+            r => r.CustomerId.ToLower() == customerId.ToLower(), cancellationToken);
+        if (customerTaken)
+        {
+            ModelState.AddModelError(nameof(model.CustomerId), "This Customer ID is already assigned to another resident.");
+            return View(model);
+        }
+
         var userId = User.GetUserId();
         var resident = new Resident
         {
             ResidentName = model.ResidentName.Trim(),
             Username = model.Username.Trim(),
+            CustomerId = customerId,
             PasswordHash = _passwords.Hash(model.Password),
             Email = model.Email?.Trim(),
             Mobile = model.Mobile?.Trim(),
@@ -138,6 +150,7 @@ public class ResidentsController : Controller
             Uid = resident.Uid,
             ResidentName = resident.ResidentName,
             Username = resident.Username,
+            CustomerId = resident.CustomerId,
             Email = resident.Email,
             Mobile = resident.Mobile,
             Mobile2 = resident.Mobile2,
@@ -172,10 +185,20 @@ public class ResidentsController : Controller
             return View(model);
         }
 
+        var customerId = model.CustomerId.Trim();
+        var customerTaken = await _db.Residents.AnyAsync(
+            r => r.Uid != model.Uid && r.CustomerId.ToLower() == customerId.ToLower(), cancellationToken);
+        if (customerTaken)
+        {
+            ModelState.AddModelError(nameof(model.CustomerId), "This Customer ID is already assigned to another resident.");
+            return View(model);
+        }
+
         var userId = User.GetUserId();
         var wasActive = resident.IsActive;
         resident.ResidentName = model.ResidentName.Trim();
         resident.Username = model.Username.Trim();
+        resident.CustomerId = customerId;
         resident.Email = model.Email?.Trim();
         resident.Mobile = model.Mobile?.Trim();
         resident.Mobile2 = model.Mobile2?.Trim();

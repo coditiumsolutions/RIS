@@ -31,6 +31,12 @@
                             <span asp-validation-for="Username" class="text-danger small"></span>
                         </div>
                         <div class="col-md-6">
+                            <label asp-for="CustomerId" class="form-label"></label>
+                            <input asp-for="CustomerId" class="form-control" autocomplete="off" maxlength="50" />
+                            <div class="form-text">Required. Letters, numbers, hyphens, and underscores only.</div>
+                            <span asp-validation-for="CustomerId" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
                             <label asp-for="Email" class="form-label"></label>
                             <input asp-for="Email" class="form-control" type="email" />
                             <span asp-validation-for="Email" class="text-danger small"></span>

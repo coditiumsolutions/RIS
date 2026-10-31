@@ -46,10 +46,15 @@ public sealed class DevelopmentAccountSeeder
         if (await _db.Residents.AnyAsync(r => r.Username == safeUsername, cancellationToken))
             return;
 
+        var seedCustomerId = _configuration["Seed:ResidentCustomerId"]?.Trim();
+        if (string.IsNullOrWhiteSpace(seedCustomerId))
+            seedCustomerId = "SEED-" + (safeUsername.Length <= 40 ? safeUsername : safeUsername[..40]);
+
         _db.Residents.Add(new Resident
         {
             ResidentName = _configuration["Seed:ResidentName"]?.Trim() ?? "Resident",
             Username = safeUsername,
+            CustomerId = seedCustomerId,
             PasswordHash = _passwords.Hash(safePassword),
             Email = _configuration["Seed:ResidentEmail"]?.Trim(),
             Mobile = _configuration["Seed:ResidentMobile"]?.Trim(),

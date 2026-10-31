@@ -8,6 +8,9 @@ public class Resident
 
     public string Username { get; set; } = string.Empty;
 
+    /// <summary>External Property Management System customer key (staff-entered).</summary>
+    public string CustomerId { get; set; } = string.Empty;
+
     public string PasswordHash { get; set; } = string.Empty;
 
     public string? Email { get; set; }
