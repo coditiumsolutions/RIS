@@ -142,7 +142,8 @@ public class WalkInVisitorViewModel
     [Display(Name = "Vehicle Registration No (Optional)")]
     public string? VehicleRegistrationNo { get; set; }
 
-    public IReadOnlyList<ResidentSelectItem> AvailableResidents { get; set; } = [];
+    /// <summary>Populated on GET / validation postback for the typeahead selection card.</summary>
+    public ResidentLookupItem? SelectedResident { get; set; }
 }
 
 public class ResidentSelectItem

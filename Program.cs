@@ -71,6 +71,7 @@ builder.Services.AddScoped<ISmsSender, LoggingSmsSender>();
 builder.Services.AddScoped<ComplaintEmailNotifier>();
 builder.Services.AddScoped<ComplaintWorkflow>();
 builder.Services.AddScoped<ComplaintQueryService>();
+builder.Services.AddScoped<ResidentLookupService>();
 builder.Services.Configure<FormOptions>(options =>
 {
     options.MultipartBodyLengthLimit = Math.Max(options.MultipartBodyLengthLimit, 3 * 1024 * 1024);

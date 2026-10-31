@@ -10,22 +10,53 @@ namespace ResidentPortal.Areas.Staff.Controllers;
 
 [Area("Staff")]
 [Authorize(Policy = AuthPolicies.StaffOnly, AuthenticationSchemes = AuthSchemes.Staff)]
-[AuthorizePermission(StaffPermissions.ResidentsManage)]
 [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
 public class ResidentsController : Controller
 {
     private readonly ApplicationDbContext _db;
     private readonly PasswordService _passwords;
     private readonly AuditLogger _audit;
+    private readonly ResidentLookupService _lookup;
 
-    public ResidentsController(ApplicationDbContext db, PasswordService passwords, AuditLogger audit)
+    public ResidentsController(
+        ApplicationDbContext db,
+        PasswordService passwords,
+        AuditLogger audit,
+        ResidentLookupService lookup)
     {
         _db = db;
         _passwords = passwords;
         _audit = audit;
+        _lookup = lookup;
+    }
+
+    /// <summary>
+    /// Typeahead for Walk-in (and other Staff resident pickers). Authorized like WalkIn, not Residents.Manage,
+    /// so receptionists can search without resident-admin rights.
+    /// </summary>
+    [HttpGet]
+    [AuthorizePermission(StaffPermissions.VisitorsWalkIn)]
+    public async Task<IActionResult> Lookup(string? q, CancellationToken cancellationToken)
+    {
+        var items = await _lookup.SearchAsync(q, cancellationToken);
+        return Json(items.Select(r => new
+        {
+            id = r.Id,
+            name = r.Name,
+            customerId = r.CustomerId,
+            tower = r.Tower,
+            towerDisplay = r.TowerDisplay,
+            unitNo = r.UnitNo,
+            block = r.Block,
+            floor = r.Floor,
+            street = r.Street,
+            mobile = r.MobileMasked,
+            mobileMasked = r.MobileMasked
+        }));
     }
 
     [HttpGet]
+    [AuthorizePermission(StaffPermissions.ResidentsManage)]
     public async Task<IActionResult> Index(string? q, CancellationToken cancellationToken)
     {
         var query = _db.Residents.AsQueryable();
@@ -76,6 +107,7 @@ public class ResidentsController : Controller
     }
 
     [HttpGet]
+    [AuthorizePermission(StaffPermissions.ResidentsManage)]
     public IActionResult Create()
     {
         return View(new CreateResidentViewModel());
@@ -83,6 +115,7 @@ public class ResidentsController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [AuthorizePermission(StaffPermissions.ResidentsManage)]
     public async Task<IActionResult> Create(CreateResidentViewModel model, CancellationToken cancellationToken)
     {
         if (!ModelState.IsValid)
@@ -136,6 +169,7 @@ public class ResidentsController : Controller
     }
 
     [HttpGet]
+    [AuthorizePermission(StaffPermissions.ResidentsManage)]
     public async Task<IActionResult> Edit(int id, CancellationToken cancellationToken)
     {
         var resident = await _db.Residents
@@ -168,6 +202,7 @@ public class ResidentsController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [AuthorizePermission(StaffPermissions.ResidentsManage)]
     public async Task<IActionResult> Edit(EditResidentViewModel model, CancellationToken cancellationToken)
     {
         if (!ModelState.IsValid)
@@ -221,6 +256,7 @@ public class ResidentsController : Controller
     }
 
     [HttpGet]
+    [AuthorizePermission(StaffPermissions.ResidentsManage)]
     public async Task<IActionResult> ResetPassword(int id, CancellationToken cancellationToken)
     {
         var resident = await _db.Residents
@@ -241,6 +277,7 @@ public class ResidentsController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [AuthorizePermission(StaffPermissions.ResidentsManage)]
     public async Task<IActionResult> ResetPassword(ResetResidentPasswordViewModel model, CancellationToken cancellationToken)
     {
         if (!ModelState.IsValid)
