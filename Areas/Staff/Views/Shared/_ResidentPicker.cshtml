@@ -1,0 +1,82 @@
+@model ResidentLookupItem?
+@{
+    var inputName = ViewData["ResidentPickerInputName"] as string ?? "ResidentId";
+    var inputId = ViewData["ResidentPickerInputId"] as string ?? inputName;
+    var label = ViewData["ResidentPickerLabel"] as string ?? "Visiting Resident";
+    var lookupUrl = ViewData["ResidentPickerLookupUrl"] as string
+        ?? Url.Action("Lookup", "Residents", new { area = "Staff" });
+    var selected = Model;
+    var hasSelection = selected is not null;
+}
+<div class="resident-picker"
+     data-resident-picker
+     data-lookup-url="@lookupUrl"
+     data-input-name="@inputName">
+    <label class="form-label" for="@(inputId)-search">@label</label>
+    <input type="hidden"
+           id="@inputId"
+           name="@inputName"
+           value="@(selected?.Id.ToString() ?? "")"
+           data-rp-hidden />
+
+    <div class="resident-picker-search-wrap" data-rp-search-wrap @(hasSelection ? "hidden" : null)>
+        <div class="resident-picker-combobox">
+            <i class="bi bi-search resident-picker-search-icon" aria-hidden="true"></i>
+            <input type="search"
+                   id="@(inputId)-search"
+                   class="form-control portal-search-input resident-picker-search"
+                   placeholder="Search name, Customer ID, unit, tower, or mobile…"
+                   autocomplete="off"
+                   spellcheck="false"
+                   enterkeyhint="search"
+                   role="combobox"
+                   aria-autocomplete="list"
+                   aria-expanded="false"
+                   aria-controls="@(inputId)-list"
+                   data-rp-search />
+        </div>
+        <div class="resident-picker-status" data-rp-status hidden></div>
+        <div id="@(inputId)-list"
+             class="resident-picker-list"
+             role="listbox"
+             data-rp-list
+             hidden></div>
+    </div>
+
+    <div class="resident-picker-card" data-rp-card @(hasSelection ? null : "hidden")>
+        <div class="resident-picker-card-body" data-rp-card-body>
+            @if (selected is not null)
+            {
+                <div class="resident-picker-card-name">@selected.Name</div>
+                <div class="resident-picker-card-meta"><span>Customer ID</span><strong>@(string.IsNullOrWhiteSpace(selected.CustomerId) ? "—" : selected.CustomerId)</strong></div>
+                @if (!string.IsNullOrWhiteSpace(selected.TowerDisplay))
+                {
+                    <div class="resident-picker-card-meta"><span>Tower</span><strong>@selected.TowerDisplay</strong></div>
+                }
+                @if (!string.IsNullOrWhiteSpace(selected.UnitNo))
+                {
+                    <div class="resident-picker-card-meta"><span>Unit / plot</span><strong>@selected.UnitNo</strong></div>
+                }
+                @if (!string.IsNullOrWhiteSpace(selected.Block))
+                {
+                    <div class="resident-picker-card-meta"><span>Block</span><strong>@selected.Block</strong></div>
+                }
+                @if (!string.IsNullOrWhiteSpace(selected.Floor))
+                {
+                    <div class="resident-picker-card-meta"><span>Floor</span><strong>@selected.Floor</strong></div>
+                }
+                @if (!string.IsNullOrWhiteSpace(selected.Street))
+                {
+                    <div class="resident-picker-card-meta"><span>Street</span><strong>@selected.Street</strong></div>
+                }
+                @if (!string.IsNullOrWhiteSpace(selected.MobileMasked))
+                {
+                    <div class="resident-picker-card-meta"><span>Mobile</span><strong>@selected.MobileMasked</strong></div>
+                }
+            }
+        </div>
+        <button type="button" class="btn btn-sm btn-outline-secondary resident-picker-change" data-rp-change>
+            Change
+        </button>
+    </div>
+</div>

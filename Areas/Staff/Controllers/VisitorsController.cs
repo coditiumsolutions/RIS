@@ -18,19 +18,22 @@ public class VisitorsController : Controller
     private readonly AppSettingsService _settings;
     private readonly BusinessTimeZone _timeZone;
     private readonly VisitorPhotoService _photos;
+    private readonly ResidentLookupService _residentLookup;
 
     public VisitorsController(
         ApplicationDbContext db,
         AuditLogger audit,
         AppSettingsService settings,
         BusinessTimeZone timeZone,
-        VisitorPhotoService photos)
+        VisitorPhotoService photos,
+        ResidentLookupService residentLookup)
     {
         _db = db;
         _audit = audit;
         _settings = settings;
         _timeZone = timeZone;
         _photos = photos;
+        _residentLookup = residentLookup;
     }
 
     private string AuditUserType => User.GetStaffUserType() ?? "Staff";
@@ -305,26 +308,12 @@ public class VisitorsController : Controller
 
     [HttpGet]
     [AuthorizePermission(StaffPermissions.VisitorsWalkIn)]
-    public async Task<IActionResult> WalkIn(CancellationToken cancellationToken)
+    public IActionResult WalkIn()
     {
-        var residents = await _db.Residents
-            .Where(r => r.IsActive)
-            .OrderBy(r => r.ResidentName)
-            .Select(r => new ResidentSelectItem
-            {
-                Uid = r.Uid,
-                Name = r.ResidentName,
-                UnitNo = r.UnitNo
-            })
-            .ToListAsync(cancellationToken);
-
-        var model = new WalkInVisitorViewModel
+        return View(new WalkInVisitorViewModel
         {
-            AvailableResidents = residents,
             Duration = VisitorDuration.LessThan6Hours
-        };
-
-        return View(model);
+        });
     }
 
     [HttpPost]
@@ -335,14 +324,14 @@ public class VisitorsController : Controller
     {
         if (!ModelState.IsValid)
         {
-            model.AvailableResidents = await GetResidentSelectItemsAsync(cancellationToken);
+            await PopulateSelectedResidentAsync(model, cancellationToken);
             return View(model);
         }
 
         if (!VisitorDuration.IsAllowed(model.Duration))
         {
             ModelState.AddModelError(nameof(model.Duration), "Please select a valid visit duration.");
-            model.AvailableResidents = await GetResidentSelectItemsAsync(cancellationToken);
+            await PopulateSelectedResidentAsync(model, cancellationToken);
             return View(model);
         }
 
@@ -350,7 +339,7 @@ public class VisitorsController : Controller
         if (resident is null || !resident.IsActive)
         {
             ModelState.AddModelError(nameof(model.ResidentId), "Selected resident not found or is inactive.");
-            model.AvailableResidents = await GetResidentSelectItemsAsync(cancellationToken);
+            model.SelectedResident = null;
             return View(model);
         }
 
@@ -358,7 +347,7 @@ public class VisitorsController : Controller
         if (!model.NumberOfGuests.HasValue || model.NumberOfGuests.Value < 1 || model.NumberOfGuests.Value > maxGuests)
         {
             ModelState.AddModelError(nameof(model.NumberOfGuests), $"Number of guests must be between 1 and {maxGuests}.");
-            model.AvailableResidents = await GetResidentSelectItemsAsync(cancellationToken);
+            await PopulateSelectedResidentAsync(model, cancellationToken);
             return View(model);
         }
 
@@ -485,17 +474,11 @@ public class VisitorsController : Controller
         return RedirectToAction(nameof(Details), new { id = model.Uid });
     }
 
-    private async Task<IReadOnlyList<ResidentSelectItem>> GetResidentSelectItemsAsync(CancellationToken cancellationToken)
+    private async Task PopulateSelectedResidentAsync(WalkInVisitorViewModel model, CancellationToken cancellationToken)
     {
-        return await _db.Residents
-            .Where(r => r.IsActive)
-            .OrderBy(r => r.ResidentName)
-            .Select(r => new ResidentSelectItem
-            {
-                Uid = r.Uid,
-                Name = r.ResidentName,
-                UnitNo = r.UnitNo
-            })
-            .ToListAsync(cancellationToken);
+        if (model.ResidentId is int id && id > 0)
+            model.SelectedResident = await _residentLookup.GetActiveAsync(id, cancellationToken);
+        else
+            model.SelectedResident = null;
     }
 }
