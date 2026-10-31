@@ -141,9 +141,10 @@
 
     if (visitor.canCheckIn) {
       return `
-        <form method="post" action="${escapeHtml(cfg.checkInUrl)}/${visitor.id}" class="rd-action-form">
+        <form method="post" action="${escapeHtml(cfg.checkInUrl)}/${visitor.id}" enctype="multipart/form-data" class="rd-action-form">
           <input type="hidden" name="__RequestVerificationToken" value="${token}" />
           <input type="hidden" name="from" value="dashboard" />
+          <input type="file" name="photo" accept="image/jpeg,image/png" hidden />
           <button type="submit"
                   class="rd-action-btn rd-action-in"
                   data-confirm-title="Check in visitor?"
@@ -156,9 +157,10 @@
 
     if (visitor.canCheckOut) {
       return `
-        <form method="post" action="${escapeHtml(cfg.checkOutUrl)}/${visitor.id}" class="rd-action-form">
+        <form method="post" action="${escapeHtml(cfg.checkOutUrl)}/${visitor.id}" enctype="multipart/form-data" class="rd-action-form">
           <input type="hidden" name="__RequestVerificationToken" value="${token}" />
           <input type="hidden" name="from" value="dashboard" />
+          <input type="file" name="photo" accept="image/jpeg,image/png" hidden />
           <button type="submit"
                   class="rd-action-btn rd-action-out"
                   data-confirm-title="Check out visitor?"

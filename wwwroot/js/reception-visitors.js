@@ -149,8 +149,9 @@
     let primary = "";
     if (visitor.canCheckIn) {
       primary = `
-        <form method="post" action="${escapeHtml(cfg.checkInUrl)}/${visitor.id}" class="rd-action-form">
+        <form method="post" action="${escapeHtml(cfg.checkInUrl)}/${visitor.id}" enctype="multipart/form-data" class="rd-action-form">
           ${hidden}
+          <input type="file" name="photo" accept="image/jpeg,image/png" hidden />
           <button type="submit" class="rd-action-btn rd-action-in"
             data-confirm-title="Check in visitor?"
             data-confirm-text="${name} · ${guestLabel}"
@@ -159,8 +160,9 @@
         </form>`;
     } else if (visitor.canCheckOut) {
       primary = `
-        <form method="post" action="${escapeHtml(cfg.checkOutUrl)}/${visitor.id}" class="rd-action-form">
+        <form method="post" action="${escapeHtml(cfg.checkOutUrl)}/${visitor.id}" enctype="multipart/form-data" class="rd-action-form">
           ${hidden}
+          <input type="file" name="photo" accept="image/jpeg,image/png" hidden />
           <button type="submit" class="rd-action-btn rd-action-out"
             data-confirm-title="Check out visitor?"
             data-confirm-text="${name} · ${guestLabel}"
@@ -189,8 +191,9 @@
     let primary = "";
     if (visitor.canCheckIn) {
       primary = `
-        <form method="post" action="${escapeHtml(cfg.checkInUrl)}/${visitor.id}" class="d-inline">
+        <form method="post" action="${escapeHtml(cfg.checkInUrl)}/${visitor.id}" enctype="multipart/form-data" class="d-inline">
           ${hidden}
+          <input type="file" name="photo" accept="image/jpeg,image/png" hidden />
           <button type="submit" class="btn btn-sm btn-success"
             data-confirm-title="Check in visitor?"
             data-confirm-text="${name} · ${guestLabel}"
@@ -199,8 +202,9 @@
         </form>`;
     } else if (visitor.canCheckOut) {
       primary = `
-        <form method="post" action="${escapeHtml(cfg.checkOutUrl)}/${visitor.id}" class="d-inline">
+        <form method="post" action="${escapeHtml(cfg.checkOutUrl)}/${visitor.id}" enctype="multipart/form-data" class="d-inline">
           ${hidden}
+          <input type="file" name="photo" accept="image/jpeg,image/png" hidden />
           <button type="submit" class="btn btn-sm btn-secondary"
             data-confirm-title="Check out visitor?"
             data-confirm-text="${name} · ${guestLabel}"

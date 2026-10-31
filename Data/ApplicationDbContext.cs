@@ -22,6 +22,8 @@ public class ApplicationDbContext : DbContext
 
     public DbSet<VisitorRequest> VisitorRequests => Set<VisitorRequest>();
 
+    public DbSet<VisitorPhoto> VisitorPhotos => Set<VisitorPhoto>();
+
     public DbSet<AppSetting> AppSettings => Set<AppSetting>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -136,6 +138,20 @@ public class ApplicationDbContext : DbContext
             entity.HasIndex(e => e.ArrivalDate);
             entity.HasIndex(e => e.Status);
             entity.HasIndex(e => e.CreatedAt);
+            entity.HasMany<VisitorPhoto>().WithOne(p => p.VisitorRequest).HasForeignKey(p => p.VisitorRequestId);
+        });
+
+        modelBuilder.Entity<VisitorPhoto>(entity =>
+        {
+            entity.ToTable("VisitorPhotos", "dbo");
+            entity.HasKey(e => e.Uid);
+            entity.Property(e => e.Uid).HasColumnName("uid").UseIdentityColumn();
+            entity.Property(e => e.Kind).HasMaxLength(20).IsRequired();
+            entity.Property(e => e.FilePath).HasMaxLength(80).IsRequired();
+            entity.Property(e => e.ContentType).HasMaxLength(50).IsRequired();
+            entity.Property(e => e.CapturedAtUtc).HasColumnType("datetime2").HasDefaultValueSql("SYSUTCDATETIME()");
+            entity.HasIndex(e => e.VisitorRequestId);
+            entity.HasIndex(e => e.CapturedAtUtc);
         });
 
         modelBuilder.Entity<AppSetting>(entity =>

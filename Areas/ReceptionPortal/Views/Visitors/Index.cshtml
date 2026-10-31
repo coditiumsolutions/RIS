@@ -195,10 +195,11 @@
                             <div class="rd-card-actions">
                                 @if (visitor.Status == "Approved" && VisitorDuration.IsWithinVisitWindow(visitor.ArrivalDate, visitor.Duration, TimeZone.Today))
                                 {
-                                    <form asp-area="ReceptionPortal" asp-controller="Visitors" asp-action="CheckIn" asp-route-id="@visitor.Uid" method="post" class="rd-action-form">
+                                    <form asp-area="ReceptionPortal" asp-controller="Visitors" asp-action="CheckIn" asp-route-id="@visitor.Uid" method="post" enctype="multipart/form-data" class="rd-action-form">
                                         <input type="hidden" name="q" value="@Model.SearchQuery" />
                                         <input type="hidden" name="date" value="@Model.DateFilter?.ToString("yyyy-MM-dd")" />
                                         <input type="hidden" name="status" value="@status" />
+                                        <input type="file" name="photo" accept="image/jpeg,image/png" hidden />
                                         <button type="submit"
                                                 class="rd-action-btn rd-action-in"
                                                 data-confirm-title="Check in visitor?"
@@ -210,10 +211,11 @@
                                 }
                                 else if (visitor.Status == "CheckedIn")
                                 {
-                                    <form asp-area="ReceptionPortal" asp-controller="Visitors" asp-action="CheckOut" asp-route-id="@visitor.Uid" method="post" class="rd-action-form">
+                                    <form asp-area="ReceptionPortal" asp-controller="Visitors" asp-action="CheckOut" asp-route-id="@visitor.Uid" method="post" enctype="multipart/form-data" class="rd-action-form">
                                         <input type="hidden" name="q" value="@Model.SearchQuery" />
                                         <input type="hidden" name="date" value="@Model.DateFilter?.ToString("yyyy-MM-dd")" />
                                         <input type="hidden" name="status" value="@status" />
+                                        <input type="file" name="photo" accept="image/jpeg,image/png" hidden />
                                         <button type="submit"
                                                 class="rd-action-btn rd-action-out"
                                                 data-confirm-title="Check out visitor?"
@@ -267,10 +269,11 @@
                                     <td>
                                         @if (visitor.Status == "Approved" && VisitorDuration.IsWithinVisitWindow(visitor.ArrivalDate, visitor.Duration, TimeZone.Today))
                                         {
-                                            <form asp-area="ReceptionPortal" asp-controller="Visitors" asp-action="CheckIn" asp-route-id="@visitor.Uid" method="post" class="d-inline">
+                                            <form asp-area="ReceptionPortal" asp-controller="Visitors" asp-action="CheckIn" asp-route-id="@visitor.Uid" method="post" enctype="multipart/form-data" class="d-inline">
                                                 <input type="hidden" name="q" value="@Model.SearchQuery" />
                                                 <input type="hidden" name="date" value="@Model.DateFilter?.ToString("yyyy-MM-dd")" />
                                                 <input type="hidden" name="status" value="@status" />
+                                                <input type="file" name="photo" accept="image/jpeg,image/png" hidden />
                                                 <button type="submit"
                                                         class="btn btn-sm btn-success"
                                                         data-confirm-title="Check in visitor?"
@@ -282,10 +285,11 @@
                                         }
                                         else if (visitor.Status == "CheckedIn")
                                         {
-                                            <form asp-area="ReceptionPortal" asp-controller="Visitors" asp-action="CheckOut" asp-route-id="@visitor.Uid" method="post" class="d-inline">
+                                            <form asp-area="ReceptionPortal" asp-controller="Visitors" asp-action="CheckOut" asp-route-id="@visitor.Uid" method="post" enctype="multipart/form-data" class="d-inline">
                                                 <input type="hidden" name="q" value="@Model.SearchQuery" />
                                                 <input type="hidden" name="date" value="@Model.DateFilter?.ToString("yyyy-MM-dd")" />
                                                 <input type="hidden" name="status" value="@status" />
+                                                <input type="file" name="photo" accept="image/jpeg,image/png" hidden />
                                                 <button type="submit"
                                                         class="btn btn-sm btn-secondary"
                                                         data-confirm-title="Check out visitor?"

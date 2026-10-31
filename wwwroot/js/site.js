@@ -46,6 +46,25 @@
     sidebarBackdrop.addEventListener("click", closeMobileSidebar);
   }
 
+  document.querySelectorAll("[data-nav-group-toggle]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const group = button.closest(".nav-group");
+      if (!group) {
+        return;
+      }
+
+      const items = group.querySelector(".nav-group-items");
+      const expanded = button.getAttribute("aria-expanded") === "true";
+      const nextExpanded = !expanded;
+
+      button.setAttribute("aria-expanded", nextExpanded ? "true" : "false");
+      group.classList.toggle("open", nextExpanded);
+      if (items) {
+        items.hidden = !nextExpanded;
+      }
+    });
+  });
+
   window.addEventListener("resize", () => {
     if (isDesktop()) {
       closeMobileSidebar();
@@ -185,3 +204,4 @@
     }
   });
 })();
+

@@ -174,6 +174,14 @@ public class VisitorDetailsViewModel
     public string? ResidentMobile { get; set; }
     public string? DeclineReason { get; set; }
     public bool CanCheckIn { get; set; }
+    public IReadOnlyList<VisitorPhotoItemViewModel> Photos { get; set; } = [];
+}
+
+public class VisitorPhotoItemViewModel
+{
+    public int Uid { get; set; }
+    public string Kind { get; set; } = string.Empty;
+    public DateTime CapturedAtUtc { get; set; }
 }
 
 public class DeclineVisitorViewModel
