@@ -44,7 +44,7 @@
     <div class="alert alert-danger" role="alert">@errorMsg</div>
 }
 
-<div class="row g-4">
+<div class="row g-3 g-lg-4 details-layout">
     <div class="col-lg-6">
         <section class="card portal-card">
             <div class="card-body">
@@ -78,89 +78,95 @@
     </div>
 
     <div class="col-lg-6">
-        <section class="card portal-card">
-            <div class="card-body">
-                <h2 class="h5 mb-3">Resident Information</h2>
-                <dl class="profile-list">
-                    <dt>Resident</dt>
-                    <dd>@Model.ResidentName</dd>
-                    @if (!string.IsNullOrWhiteSpace(Model.ResidentUnit))
-                    {
-                        <dt>Unit</dt>
-                        <dd>@Model.ResidentUnit</dd>
-                    }
-                    @if (!string.IsNullOrWhiteSpace(Model.ResidentMobile))
-                    {
-                        <dt>Mobile</dt>
-                        <dd>@Model.ResidentMobile</dd>
-                    }
-                </dl>
-            </div>
-        </section>
+        <div class="details-stack">
+            <section class="card portal-card">
+                <div class="card-body">
+                    <h2 class="h5 mb-3">Resident Information</h2>
+                    <dl class="profile-list">
+                        <dt>Resident</dt>
+                        <dd>@Model.ResidentName</dd>
+                        @if (!string.IsNullOrWhiteSpace(Model.ResidentUnit))
+                        {
+                            <dt>Unit</dt>
+                            <dd>@Model.ResidentUnit</dd>
+                        }
+                        @if (!string.IsNullOrWhiteSpace(Model.ResidentMobile))
+                        {
+                            <dt>Mobile</dt>
+                            <dd>@Model.ResidentMobile</dd>
+                        }
+                    </dl>
+                </div>
+            </section>
 
-        <section class="card portal-card mt-4">
-            <div class="card-body">
-                <h2 class="h5 mb-3">Status</h2>
-                <p class="mb-3">
-                    <span class="badge @Badge(Model.Status) fs-6">@StatusLabel(Model.Status)</span>
-                    @if (Model.IsWalkIn)
-                    {
-                        <span class="badge text-bg-info ms-1">Walk-in Visitor</span>
-                    }
-                </p>
-                <dl class="profile-list">
-                    <dt>Registered</dt>
-                    <dd>@TimeZone.FormatDateTime(Model.CreatedAt)</dd>
-                    @if (Model.CheckedInAt.HasValue)
-                    {
-                        <dt>Checked In</dt>
-                        <dd>@TimeZone.FormatDateTime(Model.CheckedInAt)</dd>
-                    }
-                    @if (Model.CheckedOutAt.HasValue)
-                    {
-                        <dt>Checked Out</dt>
-                        <dd>@TimeZone.FormatDateTime(Model.CheckedOutAt)</dd>
-                    }
-                    @if (!string.IsNullOrWhiteSpace(Model.DeclineReason))
-                    {
-                        <dt>Decline Reason</dt>
-                        <dd>@Model.DeclineReason</dd>
-                    }
-                </dl>
+            <section class="card portal-card">
+                <div class="card-body">
+                    <h2 class="h5 mb-3">Status</h2>
+                    <p class="mb-3">
+                        <span class="badge @Badge(Model.Status) fs-6">@StatusLabel(Model.Status)</span>
+                        @if (Model.IsWalkIn)
+                        {
+                            <span class="badge text-bg-info ms-1">Walk-in Visitor</span>
+                        }
+                    </p>
+                    <dl class="profile-list">
+                        <dt>Registered</dt>
+                        <dd>@TimeZone.FormatDateTime(Model.CreatedAt)</dd>
+                        @if (Model.CheckedInAt.HasValue)
+                        {
+                            <dt>Checked In</dt>
+                            <dd>@TimeZone.FormatDateTime(Model.CheckedInAt)</dd>
+                        }
+                        @if (Model.CheckedOutAt.HasValue)
+                        {
+                            <dt>Checked Out</dt>
+                            <dd>@TimeZone.FormatDateTime(Model.CheckedOutAt)</dd>
+                        }
+                        @if (!string.IsNullOrWhiteSpace(Model.DeclineReason))
+                        {
+                            <dt>Decline Reason</dt>
+                            <dd>@Model.DeclineReason</dd>
+                        }
+                    </dl>
 
-                @if (Model.CanCheckIn)
-                {
-                    <form asp-area="ReceptionPortal" asp-controller="Visitors" asp-action="CheckIn" asp-route-id="@Model.Uid" method="post" enctype="multipart/form-data" class="mt-3">
-                        <input type="file" name="photo" accept="image/jpeg,image/png" hidden />
-                        <button type="submit"
-                                class="btn btn-success"
-                                data-confirm-title="Check in visitor?"
-                                data-confirm-text="@Model.VisitorName · @Model.NumberOfGuests guest@(Model.NumberOfGuests == 1 ? "" : "s")"
-                                data-confirm-ok="Check In"
-                                data-confirm-cancel="Cancel"
-                                data-confirm-photo="CheckIn">
-                            <i class="bi bi-box-arrow-in-right me-1" aria-hidden="true"></i> Check In
-                        </button>
-                    </form>
-                }
-                else if (Model.Status == "CheckedIn")
-                {
-                    <form asp-area="ReceptionPortal" asp-controller="Visitors" asp-action="CheckOut" asp-route-id="@Model.Uid" method="post" enctype="multipart/form-data" class="mt-3">
-                        <input type="file" name="photo" accept="image/jpeg,image/png" hidden />
-                        <button type="submit"
-                                class="btn btn-secondary"
-                                data-confirm-title="Check out visitor?"
-                                data-confirm-text="@Model.VisitorName · @Model.NumberOfGuests guest@(Model.NumberOfGuests == 1 ? "" : "s")"
-                                data-confirm-ok="Check Out"
-                                data-confirm-cancel="Cancel"
-                                data-confirm-photo="CheckOut">
-                            <i class="bi bi-box-arrow-right me-1" aria-hidden="true"></i> Check Out
-                        </button>
-                    </form>
-                }
+                    @if (Model.CanCheckIn)
+                    {
+                        <form asp-area="ReceptionPortal" asp-controller="Visitors" asp-action="CheckIn" asp-route-id="@Model.Uid" method="post" enctype="multipart/form-data" class="mt-3">
+                            <input type="file" name="photo" accept="image/jpeg,image/png" hidden />
+                            <button type="submit"
+                                    class="btn btn-success"
+                                    data-confirm-title="Check in visitor?"
+                                    data-confirm-text="@Model.VisitorName · @Model.NumberOfGuests guest@(Model.NumberOfGuests == 1 ? "" : "s")"
+                                    data-confirm-ok="Check In"
+                                    data-confirm-cancel="Cancel"
+                                    data-confirm-photo="CheckIn">
+                                <i class="bi bi-box-arrow-in-right me-1" aria-hidden="true"></i>
+                                Check In
+                                <i class="bi bi-camera" aria-hidden="true"></i>
+                            </button>
+                        </form>
+                    }
+                    else if (Model.Status == "CheckedIn")
+                    {
+                        <form asp-area="ReceptionPortal" asp-controller="Visitors" asp-action="CheckOut" asp-route-id="@Model.Uid" method="post" enctype="multipart/form-data" class="mt-3">
+                            <input type="file" name="photo" accept="image/jpeg,image/png" hidden />
+                            <button type="submit"
+                                    class="btn btn-secondary"
+                                    data-confirm-title="Check out visitor?"
+                                    data-confirm-text="@Model.VisitorName · @Model.NumberOfGuests guest@(Model.NumberOfGuests == 1 ? "" : "s")"
+                                    data-confirm-ok="Check Out"
+                                    data-confirm-cancel="Cancel"
+                                    data-confirm-photo="CheckOut">
+                                <i class="bi bi-box-arrow-right me-1" aria-hidden="true"></i>
+                                Check Out
+                                <i class="bi bi-camera" aria-hidden="true"></i>
+                            </button>
+                        </form>
+                    }
 
-                <partial name="_VisitorPhotoGallery" model="Model.Photos" />
-            </div>
-        </section>
+                    <partial name="_VisitorPhotoGallery" model="Model.Photos" />
+                </div>
+            </section>
+        </div>
     </div>
 </div>

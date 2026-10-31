@@ -36,39 +36,46 @@
       );
     });
 
-  const captureOptional = async (kindLabel) => {
+  const askContinueWithoutPhoto = async (title, text) => {
+    if (typeof Swal === "undefined" || typeof Swal.fire !== "function") {
+      return window.confirm([title, text].filter(Boolean).join("\n"))
+        ? { skipped: true }
+        : { cancelled: true };
+    }
+
+    const result = await Swal.fire({
+      icon: "info",
+      title: title || "Camera unavailable",
+      text: text || "Could not open the camera.",
+      showCancelButton: true,
+      focusCancel: true,
+      reverseButtons: true,
+      confirmButtonText: "Continue without photo",
+      cancelButtonText: "Cancel",
+      customClass: {
+        popup: "swal-photo-confirm",
+        actions: "swal-photo-actions"
+      }
+    });
+
+    if (result.isConfirmed) {
+      return { skipped: true };
+    }
+    return { cancelled: true };
+  };
+
+  // Opens the live camera after the user already chose "& Take Photo".
+  // Back/Cancel return { cancelled }; unavailable offers continue-without-photo.
+  const captureOptional = async (/* kindLabel */) => {
     if (typeof Swal === "undefined" || typeof Swal.fire !== "function") {
       return { skipped: true };
     }
 
     if (!navigator.mediaDevices || typeof navigator.mediaDevices.getUserMedia !== "function") {
-      await Swal.fire({
-        icon: "info",
-        title: "Camera unavailable",
-        text: "This device cannot open a camera. Continuing without a photo.",
-        confirmButtonText: "Continue"
-      });
-      return { skipped: true };
-    }
-
-    const intro = await Swal.fire({
-      title: "Take a photo?",
-      text: `Optionally capture a ${kindLabel || "visitor"} photo. You can skip this step.`,
-      icon: "question",
-      showDenyButton: true,
-      showCancelButton: true,
-      focusCancel: true,
-      reverseButtons: true,
-      confirmButtonText: "Take photo",
-      denyButtonText: "Skip",
-      cancelButtonText: "Cancel"
-    });
-
-    if (intro.isDenied) {
-      return { skipped: true };
-    }
-    if (!intro.isConfirmed) {
-      return { cancelled: true };
+      return askContinueWithoutPhoto(
+        "Camera unavailable",
+        "This device cannot open a camera."
+      );
     }
 
     let stream = null;
@@ -109,13 +116,10 @@
       }
     } catch {
       cleanup();
-      await Swal.fire({
-        icon: "info",
-        title: "Camera access denied",
-        text: "Could not open the camera. Continuing without a photo.",
-        confirmButtonText: "Continue"
-      });
-      return { skipped: true };
+      return askContinueWithoutPhoto(
+        "Camera access denied",
+        "Could not open the camera."
+      );
     }
 
     const result = await Swal.fire({
@@ -135,14 +139,19 @@
       showCancelButton: true,
       showDenyButton: true,
       confirmButtonText: "Use photo",
-      denyButtonText: "Skip",
+      denyButtonText: "Back",
       cancelButtonText: "Cancel",
       reverseButtons: true,
       focusConfirm: false,
       allowOutsideClick: false,
+      denyButtonColor: "#6c757d",
+      customClass: {
+        popup: "swal-photo-confirm swal-camera-popup",
+        actions: "swal-photo-actions"
+      },
       preConfirm: () => {
         if (!capturedBlob) {
-          Swal.showValidationMessage("Snap a photo first, or tap Skip.");
+          Swal.showValidationMessage("Snap a photo first, or tap Back.");
           return false;
         }
         return capturedBlob;
@@ -213,6 +222,9 @@
           if (confirmBtn) {
             confirmBtn.disabled = true;
           }
+          if (status) {
+            status.textContent = "";
+          }
         };
 
         snapBtn?.addEventListener("click", async () => {
@@ -244,11 +256,11 @@
               confirmBtn.disabled = false;
             }
             if (status) {
-              status.textContent = "Photo ready. Use photo, retake, or skip.";
+              status.textContent = "Photo ready. Use photo, retake, or go back.";
             }
           } catch {
             if (status) {
-              status.textContent = "Could not capture photo. Try again or skip.";
+              status.textContent = "Could not capture photo. Try again or go back.";
             }
           }
         });
@@ -260,14 +272,12 @@
 
     cleanup();
 
-    if (result.isDenied) {
-      return { skipped: true };
-    }
-    if (!result.isConfirmed) {
+    // Back (deny) and Cancel both abort — do not submit.
+    if (result.isDenied || !result.isConfirmed) {
       return { cancelled: true };
     }
     if (!(result.value instanceof Blob)) {
-      return { skipped: true };
+      return { cancelled: true };
     }
     return { blob: result.value };
   };
