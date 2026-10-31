@@ -15,6 +15,7 @@ public class ResidentListItem
     public int Uid { get; set; }
     public string ResidentName { get; set; } = string.Empty;
     public string Username { get; set; } = string.Empty;
+    public string CustomerId { get; set; } = string.Empty;
     public string? Email { get; set; }
     public string? Mobile { get; set; }
     public string? UnitNo { get; set; }
@@ -31,6 +32,12 @@ public class CreateResidentViewModel
     [StringLength(150, ErrorMessage = "Name cannot exceed 150 characters.")]
     [Display(Name = "Full Name")]
     public string ResidentName { get; set; } = string.Empty;
+
+    [Required(ErrorMessage = "Customer ID is required.")]
+    [StringLength(50, ErrorMessage = "Customer ID cannot exceed 50 characters.")]
+    [RegularExpression(@"^[A-Za-z0-9_-]+$", ErrorMessage = "Customer ID can only contain letters, numbers, hyphens, and underscores.")]
+    [Display(Name = "Customer ID")]
+    public string CustomerId { get; set; } = string.Empty;
 
     [Required(ErrorMessage = "Username is required.")]
     [StringLength(100, ErrorMessage = "Username cannot exceed 100 characters.")]
@@ -98,6 +105,12 @@ public class EditResidentViewModel
     [StringLength(150, ErrorMessage = "Name cannot exceed 150 characters.")]
     [Display(Name = "Full Name")]
     public string ResidentName { get; set; } = string.Empty;
+
+    [Required(ErrorMessage = "Customer ID is required.")]
+    [StringLength(50, ErrorMessage = "Customer ID cannot exceed 50 characters.")]
+    [RegularExpression(@"^[A-Za-z0-9_-]+$", ErrorMessage = "Customer ID can only contain letters, numbers, hyphens, and underscores.")]
+    [Display(Name = "Customer ID")]
+    public string CustomerId { get; set; } = string.Empty;
 
     [Required(ErrorMessage = "Username is required.")]
     [StringLength(100, ErrorMessage = "Username cannot exceed 100 characters.")]

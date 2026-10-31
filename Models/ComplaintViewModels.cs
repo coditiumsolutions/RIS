@@ -197,6 +197,33 @@ public class AdminConfigurationViewModel
     [Range(1, 8760)]
     public int SlaLowHours { get; set; } = 168;
 
+    [Display(Name = "Enable SMS notifications")]
+    public bool SmsNotificationsEnabled { get; set; }
+
+    [Display(Name = "Provider name")]
+    [StringLength(100)]
+    public string? SmsProviderName { get; set; }
+
+    [Display(Name = "API base URL")]
+    [StringLength(500)]
+    public string? SmsApiBaseUrl { get; set; }
+
+    [Display(Name = "API key / token")]
+    [DataType(DataType.Password)]
+    [StringLength(500)]
+    public string? SmsApiKey { get; set; }
+
+    public bool HasSmsApiKey { get; set; }
+
+    [Display(Name = "Sender ID / From number")]
+    [StringLength(50)]
+    public string? SmsSenderId { get; set; }
+
+    [Display(Name = "Extra settings (optional)")]
+    [StringLength(2000)]
+    [DataType(DataType.MultilineText)]
+    public string? SmsExtraSettings { get; set; }
+
     public IReadOnlyList<ComplaintCategory> Categories { get; set; } = [];
 }
 

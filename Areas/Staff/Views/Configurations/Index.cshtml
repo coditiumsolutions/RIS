@@ -6,7 +6,7 @@
 <div class="page-header">
     <div>
         <h1 class="page-heading">Configurations</h1>
-        <p class="page-subtitle">SMTP, email notifications, complaint SLA, and categories.</p>
+        <p class="page-subtitle">Notification settings, complaint SLA, and categories.</p>
     </div>
 </div>
 
@@ -23,9 +23,10 @@
     <div class="col-lg-7">
         <section class="card portal-card">
             <div class="card-body">
-                <h2 class="h5 mb-3">Email &amp; SMTP</h2>
                 <form asp-action="Index" method="post" novalidate>
                     <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+                    <h2 class="h5 mb-3">Email (SMTP)</h2>
                     <div class="form-check mb-3">
                         <input asp-for="EmailNotificationsEnabled" class="form-check-input" />
                         <label asp-for="EmailNotificationsEnabled" class="form-check-label"></label>
@@ -80,6 +81,41 @@
                         <div class="col-md-4">
                             <label asp-for="SlaLowHours" class="form-label"></label>
                             <input asp-for="SlaLowHours" class="form-control" />
+                        </div>
+                    </div>
+
+                    <h2 class="h5 mt-4 mb-2">SMS</h2>
+                    <p class="text-secondary small mb-3">
+                        SMS sending will be connected once a provider is chosen. Settings below are stored now so the gate can be wired later.
+                    </p>
+                    <div class="form-check mb-3">
+                        <input asp-for="SmsNotificationsEnabled" class="form-check-input" />
+                        <label asp-for="SmsNotificationsEnabled" class="form-check-label"></label>
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label asp-for="SmsProviderName" class="form-label"></label>
+                            <input asp-for="SmsProviderName" class="form-control" autocomplete="off" />
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="SmsSenderId" class="form-label"></label>
+                            <input asp-for="SmsSenderId" class="form-control" autocomplete="off" />
+                        </div>
+                        <div class="col-12">
+                            <label asp-for="SmsApiBaseUrl" class="form-label"></label>
+                            <input asp-for="SmsApiBaseUrl" class="form-control" autocomplete="off" placeholder="https://api.example.com/v1" />
+                        </div>
+                        <div class="col-12">
+                            <label asp-for="SmsApiKey" class="form-label"></label>
+                            <input asp-for="SmsApiKey" class="form-control" autocomplete="new-password" placeholder="@(Model.HasSmsApiKey ? "Leave blank to keep existing" : "")" />
+                            @if (Model.HasSmsApiKey)
+                            {
+                                <div class="form-text">An API key is already stored and is never shown here.</div>
+                            }
+                        </div>
+                        <div class="col-12">
+                            <label asp-for="SmsExtraSettings" class="form-label"></label>
+                            <textarea asp-for="SmsExtraSettings" class="form-control" rows="3" placeholder="Optional free-text notes or provider-specific options"></textarea>
                         </div>
                     </div>
 

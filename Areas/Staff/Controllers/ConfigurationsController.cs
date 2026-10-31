@@ -16,17 +16,20 @@ public class ConfigurationsController : Controller
 {
     private readonly ApplicationDbContext _db;
     private readonly SmtpSettingsService _smtp;
+    private readonly SmsSettingsService _sms;
     private readonly AppSettingsService _appSettings;
     private readonly ComplaintEmailNotifier _email;
 
     public ConfigurationsController(
         ApplicationDbContext db,
         SmtpSettingsService smtp,
+        SmsSettingsService sms,
         AppSettingsService appSettings,
         ComplaintEmailNotifier email)
     {
         _db = db;
         _smtp = smtp;
+        _sms = sms;
         _appSettings = appSettings;
         _email = email;
     }
@@ -46,6 +49,7 @@ public class ConfigurationsController : Controller
             return View(model);
 
         await _smtp.SaveAsync(model, cancellationToken);
+        await _sms.SaveAsync(model, cancellationToken);
         await _appSettings.SetSettingAsync(AppSettingKeys.ComplaintSlaUrgentHours, model.SlaUrgentHours.ToString(), cancellationToken);
         await _appSettings.SetSettingAsync(AppSettingKeys.ComplaintSlaNormalHours, model.SlaNormalHours.ToString(), cancellationToken);
         await _appSettings.SetSettingAsync(AppSettingKeys.ComplaintSlaLowHours, model.SlaLowHours.ToString(), cancellationToken);
@@ -119,6 +123,7 @@ public class ConfigurationsController : Controller
     private async Task<AdminConfigurationViewModel> BuildModelAsync(CancellationToken ct)
     {
         var smtp = await _smtp.GetOrCreateAsync(ct);
+        var sms = await _sms.GetAsync(ct);
         return new AdminConfigurationViewModel
         {
             SmtpHost = smtp.Host,
@@ -132,6 +137,12 @@ public class ConfigurationsController : Controller
             SlaUrgentHours = await ReadHoursAsync(AppSettingKeys.ComplaintSlaUrgentHours, 24, ct),
             SlaNormalHours = await ReadHoursAsync(AppSettingKeys.ComplaintSlaNormalHours, 72, ct),
             SlaLowHours = await ReadHoursAsync(AppSettingKeys.ComplaintSlaLowHours, 168, ct),
+            SmsNotificationsEnabled = sms.Enabled,
+            SmsProviderName = sms.ProviderName,
+            SmsApiBaseUrl = sms.ApiBaseUrl,
+            HasSmsApiKey = sms.HasApiKey,
+            SmsSenderId = sms.SenderId,
+            SmsExtraSettings = sms.ExtraSettings,
             Categories = await CategoriesAsync(ct)
         };
     }

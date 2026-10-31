@@ -66,6 +66,8 @@ builder.Services.Configure<ComplaintPhotoStorageOptions>(
     builder.Configuration.GetSection(ComplaintPhotoStorageOptions.SectionName));
 builder.Services.AddSingleton<ComplaintPhotoStorage>();
 builder.Services.AddScoped<SmtpSettingsService>();
+builder.Services.AddScoped<SmsSettingsService>();
+builder.Services.AddScoped<ISmsSender, LoggingSmsSender>();
 builder.Services.AddScoped<ComplaintEmailNotifier>();
 builder.Services.AddScoped<ComplaintWorkflow>();
 builder.Services.AddScoped<ComplaintQueryService>();

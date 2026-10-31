@@ -75,11 +75,24 @@ public class DashboardController : Controller
 
         var timeZone = HttpContext.RequestServices.GetRequiredService<BusinessTimeZone>();
         var today = timeZone.Today;
+        var todayStartUtc = timeZone.ConvertToUtc(today.ToDateTime(TimeOnly.MinValue));
+        var tomorrowStartUtc = timeZone.ConvertToUtc(today.AddDays(1).ToDateTime(TimeOnly.MinValue));
 
         var residentCount = await _db.Residents.CountAsync(cancellationToken);
         var visitorsToday = await _db.VisitorRequests.CountAsync(v => v.ArrivalDate == today, cancellationToken);
         var portalUserCount = await _db.AdminUsers.CountAsync(cancellationToken)
             + await _db.Receptionists.CountAsync(cancellationToken);
+
+        var showComplaints = User.HasPermission(StaffPermissions.ComplaintsView);
+        var complaintsToday = 0;
+        var complaintsTotal = 0;
+        if (showComplaints)
+        {
+            complaintsToday = await _db.Complaints.CountAsync(
+                c => c.CreatedAtUtc >= todayStartUtc && c.CreatedAtUtc < tomorrowStartUtc,
+                cancellationToken);
+            complaintsTotal = await _db.Complaints.CountAsync(cancellationToken);
+        }
 
         var recentActivity = await _db.AuditLogs
             .AsNoTracking()
@@ -100,6 +113,8 @@ public class DashboardController : Controller
             ResidentCount = residentCount,
             VisitorsTodayCount = visitorsToday,
             PortalUserCount = portalUserCount,
+            ComplaintsTodayCount = complaintsToday,
+            ComplaintsTotalCount = complaintsTotal,
             RecentActivity = recentActivity
         };
         return View(model);

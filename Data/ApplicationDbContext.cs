@@ -45,6 +45,7 @@ public class ApplicationDbContext : DbContext
             entity.Property(e => e.Uid).HasColumnName("uid").UseIdentityColumn();
             entity.Property(e => e.ResidentName).HasMaxLength(150).IsRequired();
             entity.Property(e => e.Username).HasMaxLength(100).IsRequired();
+            entity.Property(e => e.CustomerId).HasColumnName("CustomerID").HasMaxLength(50).IsRequired();
             entity.Property(e => e.PasswordHash).HasMaxLength(500).IsRequired();
             entity.Property(e => e.Email).HasMaxLength(256);
             entity.Property(e => e.Mobile).HasMaxLength(30);
@@ -62,6 +63,7 @@ public class ApplicationDbContext : DbContext
             entity.Property(e => e.LockoutEndUtc).HasColumnType("datetime2");
             entity.Property(e => e.CreatedAt).HasColumnType("datetime2").HasDefaultValueSql("SYSUTCDATETIME()");
             entity.HasIndex(e => e.Username).IsUnique();
+            entity.HasIndex(e => e.CustomerId).IsUnique().HasDatabaseName("IX_Residents_CustomerID");
             entity.HasMany(e => e.VisitorRequests).WithOne(v => v.Resident).HasForeignKey(v => v.ResidentId);
             entity.HasMany<Complaint>().WithOne(c => c.Resident).HasForeignKey(c => c.ResidentId);
         });

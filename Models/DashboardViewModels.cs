@@ -6,6 +6,8 @@ public class ResidentProfileViewModel
 
     public string Username { get; set; } = string.Empty;
 
+    public string CustomerId { get; set; } = string.Empty;
+
     public string Email { get; set; } = string.Empty;
 
     public string Mobile { get; set; } = string.Empty;
@@ -70,6 +72,10 @@ public class AdminDashboardViewModel
     public int VisitorsTodayCount { get; set; }
 
     public int PortalUserCount { get; set; }
+
+    public int ComplaintsTodayCount { get; set; }
+
+    public int ComplaintsTotalCount { get; set; }
 
     public IReadOnlyList<AdminActivityItem> RecentActivity { get; set; } = [];
 }

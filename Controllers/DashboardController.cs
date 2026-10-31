@@ -63,6 +63,7 @@ public class DashboardController : Controller
     {
         ResidentName = resident.ResidentName,
         Username = resident.Username,
+        CustomerId = resident.CustomerId,
         Email = resident.Email ?? "Not provided",
         Mobile = resident.Mobile ?? "Not provided",
         UnitNo = resident.UnitNo,
