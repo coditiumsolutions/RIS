@@ -1,0 +1,53 @@
+@model DeclineVisitorViewModel
+@{
+    ViewData["Title"] = "Decline Visitor";
+}
+
+<div class="page-header">
+    <div>
+        <h1 class="page-heading">Decline Visitor</h1>
+        <p class="page-subtitle">@Model.VisitorName</p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-6">
+        <section class="card portal-card">
+            <div class="card-body">
+                <div class="alert alert-warning mb-4">
+                    <i class="bi bi-exclamation-triangle me-1" aria-hidden="true"></i>
+                    You are about to decline visitor <strong>@Model.VisitorName</strong>. The resident will see the reason you provide.
+                </div>
+
+                <form asp-area="Staff" asp-controller="Visitors" asp-action="Decline" method="post" novalidate>
+                    <input type="hidden" asp-for="Uid" />
+                    <input type="hidden" asp-for="VisitorName" />
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+                    <div class="mb-4">
+                        <label asp-for="Reason" class="form-label"></label>
+                        <textarea asp-for="Reason" class="form-control" rows="4" autofocus placeholder="Please explain why this visitor request is being declined..."></textarea>
+                        <span asp-validation-for="Reason" class="text-danger small"></span>
+                    </div>
+
+                    <div>
+                        <button type="submit"
+                                class="btn btn-danger"
+                                data-confirm-title="Decline visitor?"
+                                data-confirm-text="Decline @Model.VisitorName? The resident will see the reason you provide."
+                                data-confirm-ok="Decline"
+                                data-confirm-cancel="Keep"
+                                data-confirm-icon="warning">
+                            <i class="bi bi-x-circle me-1" aria-hidden="true"></i> Decline Visitor
+                        </button>
+                        <a asp-area="Staff" asp-controller="Visitors" asp-action="Index" class="btn btn-outline-secondary ms-2">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </section>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

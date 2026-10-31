@@ -1,0 +1,94 @@
+@model WalkInVisitorViewModel
+@{
+    ViewData["Title"] = "Register Walk-In Visitor";
+}
+
+<div class="page-header">
+    <div>
+        <h1 class="page-heading">Register Walk-In Visitor</h1>
+        <p class="page-subtitle">Register a visitor who arrived without pre-registration.</p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <section class="card portal-card">
+            <div class="card-body">
+                <div class="alert alert-info mb-4">
+                    <i class="bi bi-info-circle me-1" aria-hidden="true"></i>
+                    Walk-in visitors will be automatically checked in upon registration.
+                </div>
+
+                <form asp-area="Staff" asp-controller="Visitors" asp-action="WalkIn" method="post" enctype="multipart/form-data" novalidate
+                      data-confirm-title="Register walk-in visitor?"
+                      data-confirm-text="They will be checked in immediately."
+                      data-confirm-ok="Check In"
+                      data-confirm-cancel="Cancel"
+                      data-confirm-photo="CheckIn">
+                    <input type="file" name="photo" accept="image/jpeg,image/png" hidden />
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label asp-for="VisitorName" class="form-label"></label>
+                            <input asp-for="VisitorName" class="form-control" autofocus />
+                            <span asp-validation-for="VisitorName" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="Phone" class="form-label"></label>
+                            <input asp-for="Phone" class="form-control" type="tel" />
+                            <span asp-validation-for="Phone" class="text-danger small"></span>
+                        </div>
+                        <div class="col-12">
+                            <label asp-for="ResidentId" class="form-label"></label>
+                            <select asp-for="ResidentId" class="form-select" asp-items="@(new SelectList(Model.AvailableResidents, "Uid", "DisplayName"))">
+                                <option value="">-- Select Resident --</option>
+                            </select>
+                            <span asp-validation-for="ResidentId" class="text-danger small"></span>
+                        </div>
+                        <div class="col-12">
+                            <label asp-for="Purpose" class="form-label"></label>
+                            <textarea asp-for="Purpose" class="form-control" rows="2"></textarea>
+                            <span asp-validation-for="Purpose" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="Duration" class="form-label"></label>
+                            <select asp-for="Duration" class="form-select" asp-items="@(new SelectList(VisitorDuration.All))">
+                            </select>
+                            <span asp-validation-for="Duration" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="NumberOfGuests" class="form-label"></label>
+                            <input asp-for="NumberOfGuests" class="form-control" type="number" min="1" />
+                            <span asp-validation-for="NumberOfGuests" class="text-danger small"></span>
+                            <div class="form-text">Including the named visitor.</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="CNIC" class="form-label"></label>
+                            <input asp-for="CNIC" class="form-control" />
+                            <span asp-validation-for="CNIC" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="VehicleRegistrationNo" class="form-label"></label>
+                            <input asp-for="VehicleRegistrationNo" class="form-control" />
+                            <span asp-validation-for="VehicleRegistrationNo" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <div class="mt-4">
+                        <button type="submit" class="btn btn-portal btn-reception">
+                            <i class="bi bi-person-plus me-1" aria-hidden="true"></i>
+                            Register &amp; Check In
+                            <i class="bi bi-camera" aria-hidden="true"></i>
+                        </button>
+                        <a asp-area="Staff" asp-controller="Visitors" asp-action="Index" class="btn btn-outline-secondary ms-2">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </section>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

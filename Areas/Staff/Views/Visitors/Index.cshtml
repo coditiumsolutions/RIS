@@ -1,0 +1,335 @@
+@model ReceptionistVisitorListViewModel
+@{
+    ViewData["Title"] = "Visitor List";
+    var status = string.IsNullOrWhiteSpace(Model.StatusFilter) ? "all" : Model.StatusFilter!;
+    var searchUrl = Url.Action("Search", "Desk", new { area = "Staff" })!;
+    var checkInUrl = Url.Action("CheckIn", "Visitors", new { area = "Staff" })!;
+    var checkOutUrl = Url.Action("CheckOut", "Visitors", new { area = "Staff" })!;
+    var detailsUrl = Url.Action("Details", "Visitors", new { area = "Staff" })!;
+    var walkInUrl = Url.Action("WalkIn", "Visitors", new { area = "Staff" })!;
+    string Badge(string s) => s switch
+    {
+        "CheckedIn" => "text-bg-success",
+        "CheckedOut" => "text-bg-secondary",
+        "Approved" => "text-bg-primary",
+        "Pending" => "text-bg-warning",
+        _ => "text-bg-light"
+    };
+    string StatusLabel(string s) => s switch
+    {
+        "CheckedIn" => "Checked In",
+        "CheckedOut" => "Checked Out",
+        _ => s
+    };
+    bool ChipActive(string value) => string.Equals(status, value, StringComparison.OrdinalIgnoreCase);
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/reception-dashboard.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/reception-visitors.css" asp-append-version="true" />
+}
+
+<div class="rv-list"
+     id="reception-visitors"
+     data-search-url="@searchUrl"
+     data-checkin-url="@checkInUrl"
+     data-checkout-url="@checkOutUrl"
+     data-details-url="@detailsUrl"
+     data-page-size="@Model.PageSize"
+     data-initial-q="@Model.SearchQuery"
+     data-initial-date="@(Model.DateFilter?.ToString("yyyy-MM-dd"))"
+     data-initial-status="@status"
+     data-initial-total="@Model.TotalCount"
+     data-initial-has-more="@(Model.HasMore ? "1" : "0")">
+
+    <form id="rv-antiforgery" class="d-none" method="post">@Html.AntiForgeryToken()</form>
+
+    <div class="page-header rv-header">
+        <div>
+            <h1 class="page-heading">Visitor List</h1>
+            <p class="page-subtitle">Live search · times in PKT</p>
+        </div>
+        <a class="rd-btn rd-btn-primary" href="@walkInUrl">
+            <i class="bi bi-person-plus" aria-hidden="true"></i>
+            New Walk-in
+        </a>
+    </div>
+
+    @if (TempData["Success"] is string successMsg)
+    {
+        <div class="alert alert-success" role="status">@successMsg</div>
+    }
+    @if (TempData["Error"] is string errorMsg)
+    {
+        <div class="alert alert-danger" role="alert">@errorMsg</div>
+    }
+
+    <div class="rd-chips rv-summary-chips" aria-label="Today summary">
+        <div class="rd-chip" aria-hidden="true">
+            <span class="rd-chip-label">Expected today</span>
+            <span class="rd-chip-value">@Model.ExpectedTodayCount</span>
+        </div>
+        <div class="rd-chip" aria-hidden="true">
+            <span class="rd-chip-label">Inside now</span>
+            <span class="rd-chip-value">@Model.CheckedInCount</span>
+        </div>
+        <div class="rd-chip" aria-hidden="true">
+            <span class="rd-chip-label">Checked out</span>
+            <span class="rd-chip-value">@Model.CheckedOutTodayCount</span>
+        </div>
+    </div>
+
+    <section class="rv-panel">
+        @* Server-rendered filters: work without JS; progressive enhancement replaces submit with AJAX. *@
+        <form method="get" class="rv-filters" id="rv-filter-form" data-rv-filter-form>
+            <label class="rd-search-label rv-search-wrap" for="q">
+                <span class="visually-hidden">Search visitors</span>
+                <i class="bi bi-search" aria-hidden="true"></i>
+                <input type="search"
+                       id="q"
+                       name="q"
+                       class="rd-search-input"
+                       value="@Model.SearchQuery"
+                       placeholder="Name, mobile, CNIC, vehicle, resident, unit, or pass code"
+                       autocomplete="off"
+                       enterkeyhint="search"
+                       data-rv-search />
+                <button type="button"
+                        class="rd-search-clear"
+                        data-rv-clear-search
+                        aria-label="Clear search"
+                        @(string.IsNullOrWhiteSpace(Model.SearchQuery) ? "hidden" : null)>
+                    <i class="bi bi-x-lg" aria-hidden="true"></i>
+                </button>
+            </label>
+
+            <div class="rv-filter-row">
+                <div class="rv-date-field">
+                    <label class="form-label" for="date">Arrival date</label>
+                    <input type="date"
+                           class="form-control rv-date-input"
+                           id="date"
+                           name="date"
+                           value="@Model.DateFilter?.ToString("yyyy-MM-dd")"
+                           data-rv-date />
+                </div>
+                <input type="hidden" value="@status" data-rv-status-input />
+                <noscript>
+                    <div class="rv-status-select">
+                        <label class="form-label" for="status-noscript">Status</label>
+                        <select class="form-select" id="status-noscript" name="status">
+                            @if (ChipActive("all")) { <option value="all" selected>All</option> } else { <option value="all">All</option> }
+                            @if (ChipActive("expected")) { <option value="expected" selected>Expected</option> } else { <option value="expected">Expected</option> }
+                            @if (ChipActive("checkedin")) { <option value="checkedin" selected>Inside</option> } else { <option value="checkedin">Inside</option> }
+                            @if (ChipActive("checkedout")) { <option value="checkedout" selected>Checked out</option> } else { <option value="checkedout">Checked out</option> }
+                            @if (ChipActive("pending")) { <option value="pending" selected>Pending</option> } else { <option value="pending">Pending</option> }
+                            @if (ChipActive("approved")) { <option value="approved" selected>Approved</option> } else { <option value="approved">Approved</option> }
+                        </select>
+                    </div>
+                </noscript>
+                <div class="rv-filter-actions">
+                    <button type="submit" class="rd-btn rd-btn-secondary" data-rv-noscript-submit>Search</button>
+                    <a class="rd-btn rd-btn-ghost" asp-area="Staff" asp-controller="Visitors" asp-action="Index" data-rv-clear-all>Clear filters</a>
+                </div>
+            </div>
+
+            <div class="rd-chips rv-status-chips" role="toolbar" aria-label="Status filters" data-rv-status-chips>
+                <button type="button" class="rd-chip @(ChipActive("all") ? "is-active" : null)" data-rv-status="all" aria-pressed="@ChipActive("all").ToString().ToLowerInvariant()">
+                    <span class="rd-chip-label">All</span>
+                </button>
+                <button type="button" class="rd-chip @(ChipActive("expected") ? "is-active" : null)" data-rv-status="expected" aria-pressed="@ChipActive("expected").ToString().ToLowerInvariant()">
+                    <span class="rd-chip-label">Expected</span>
+                </button>
+                <button type="button" class="rd-chip @(ChipActive("checkedin") ? "is-active" : null)" data-rv-status="checkedin" aria-pressed="@ChipActive("checkedin").ToString().ToLowerInvariant()">
+                    <span class="rd-chip-label">Inside</span>
+                </button>
+                <button type="button" class="rd-chip @(ChipActive("checkedout") ? "is-active" : null)" data-rv-status="checkedout" aria-pressed="@ChipActive("checkedout").ToString().ToLowerInvariant()">
+                    <span class="rd-chip-label">Checked out</span>
+                </button>
+                <button type="button" class="rd-chip @(ChipActive("pending") ? "is-active" : null)" data-rv-status="pending" aria-pressed="@ChipActive("pending").ToString().ToLowerInvariant()">
+                    <span class="rd-chip-label">Pending</span>
+                </button>
+                <button type="button" class="rd-chip @(ChipActive("approved") ? "is-active" : null)" data-rv-status="approved" aria-pressed="@ChipActive("approved").ToString().ToLowerInvariant()">
+                    <span class="rd-chip-label">Approved</span>
+                </button>
+            </div>
+        </form>
+
+        <div class="rv-list-meta">
+            <span data-rv-count>@Model.TotalCount visitor@(Model.TotalCount == 1 ? "" : "s")</span>
+            <span class="rv-list-status" data-rv-status-msg hidden></span>
+        </div>
+
+        <div class="rv-results" data-rv-results>
+            @if (Model.Visitors.Any())
+            {
+                <div class="rv-cards" data-rv-cards>
+                    @foreach (var visitor in Model.Visitors)
+                    {
+                        <article class="rd-card rv-card" data-visitor-id="@visitor.Uid">
+                            <div class="rd-card-main">
+                                <div class="rd-card-top">
+                                    <h3 class="rd-card-name">
+                                        <a asp-area="Staff" asp-controller="Visitors" asp-action="Details" asp-route-id="@visitor.Uid">@visitor.VisitorName</a>
+                                    </h3>
+                                    <span class="badge @Badge(visitor.Status)">@StatusLabel(visitor.Status)</span>
+                                </div>
+                                <p class="rd-card-host">
+                                    @visitor.ResidentName
+                                    @if (!string.IsNullOrWhiteSpace(visitor.ResidentUnit))
+                                    {
+                                        <span>· Unit @visitor.ResidentUnit</span>
+                                    }
+                                </p>
+                                <p class="rd-card-meta">
+                                    @visitor.Phone
+                                    · @visitor.ArrivalDate.ToString("dd MMM yyyy", CultureInfo.InvariantCulture)
+                                    · @visitor.NumberOfGuests guest@(visitor.NumberOfGuests == 1 ? "" : "s")
+                                    · Pass #@visitor.Uid
+                                    @if (visitor.IsWalkIn)
+                                    {
+                                        <span class="rd-walkin-tag">Walk-in</span>
+                                    }
+                                </p>
+                            </div>
+                            <div class="rd-card-actions">
+                                @if (User.HasPermission(StaffPermissions.VisitorsCheckInOut) && visitor.Status == "Approved" && VisitorDuration.IsWithinVisitWindow(visitor.ArrivalDate, visitor.Duration, TimeZone.Today))
+                                {
+                                    <form asp-area="Staff" asp-controller="Visitors" asp-action="CheckIn" asp-route-id="@visitor.Uid" method="post" enctype="multipart/form-data" class="rd-action-form">
+                                        <input type="hidden" name="q" value="@Model.SearchQuery" />
+                                        <input type="hidden" name="date" value="@Model.DateFilter?.ToString("yyyy-MM-dd")" />
+                                        <input type="hidden" name="status" value="@status" />
+                                        <input type="file" name="photo" accept="image/jpeg,image/png" hidden />
+                                        <button type="submit"
+                                                class="rd-action-btn rd-action-in"
+                                                data-confirm-title="Check in visitor?"
+                                                data-confirm-text="@visitor.VisitorName · @visitor.NumberOfGuests guest@(visitor.NumberOfGuests == 1 ? "" : "s")"
+                                                data-confirm-ok="Check In"
+                                                data-confirm-cancel="Cancel"
+                                                data-confirm-photo="CheckIn">
+                                            Check In <i class="bi bi-camera" aria-hidden="true"></i>
+                                        </button>
+                                    </form>
+                                }
+                                else if (User.HasPermission(StaffPermissions.VisitorsCheckInOut) && visitor.Status == "CheckedIn")
+                                {
+                                    <form asp-area="Staff" asp-controller="Visitors" asp-action="CheckOut" asp-route-id="@visitor.Uid" method="post" enctype="multipart/form-data" class="rd-action-form">
+                                        <input type="hidden" name="q" value="@Model.SearchQuery" />
+                                        <input type="hidden" name="date" value="@Model.DateFilter?.ToString("yyyy-MM-dd")" />
+                                        <input type="hidden" name="status" value="@status" />
+                                        <input type="file" name="photo" accept="image/jpeg,image/png" hidden />
+                                        <button type="submit"
+                                                class="rd-action-btn rd-action-out"
+                                                data-confirm-title="Check out visitor?"
+                                                data-confirm-text="@visitor.VisitorName · @visitor.NumberOfGuests guest@(visitor.NumberOfGuests == 1 ? "" : "s")"
+                                                data-confirm-ok="Check Out"
+                                                data-confirm-cancel="Cancel"
+                                                data-confirm-photo="CheckOut">
+                                            Check Out <i class="bi bi-camera" aria-hidden="true"></i>
+                                        </button>
+                                    </form>
+                                }
+                                <a asp-area="Staff" asp-controller="Visitors" asp-action="Details" asp-route-id="@visitor.Uid" class="rd-action-btn rd-action-link">Details</a>
+                            </div>
+                        </article>
+                    }
+                </div>
+
+                <div class="table-responsive rv-table-wrap" data-rv-table-wrap>
+                    <table class="table align-middle mb-0 rv-table">
+                        <thead>
+                            <tr>
+                                <th scope="col">Visitor</th>
+                                <th scope="col">Phone</th>
+                                <th scope="col">Resident</th>
+                                <th scope="col">Arrival</th>
+                                <th scope="col">Guests</th>
+                                <th scope="col">Status</th>
+                                <th scope="col">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody data-rv-table-body>
+                            @foreach (var visitor in Model.Visitors)
+                            {
+                                <tr data-visitor-id="@visitor.Uid">
+                                    <td class="visitor-name-cell" title="@visitor.VisitorName">
+                                        <a asp-area="Staff" asp-controller="Visitors" asp-action="Details" asp-route-id="@visitor.Uid">@visitor.VisitorName</a>
+                                        @if (visitor.IsWalkIn)
+                                        {
+                                            <span class="badge text-bg-info ms-1">Walk-in</span>
+                                        }
+                                    </td>
+                                    <td>@visitor.Phone</td>
+                                    <td>
+                                        @visitor.ResidentName
+                                        @if (!string.IsNullOrWhiteSpace(visitor.ResidentUnit))
+                                        {
+                                            <br /><small class="text-secondary">Unit @visitor.ResidentUnit</small>
+                                        }
+                                    </td>
+                                    <td>@visitor.ArrivalDate.ToString("dd MMM yyyy", CultureInfo.InvariantCulture)</td>
+                                    <td>@visitor.NumberOfGuests</td>
+                                    <td><span class="badge @Badge(visitor.Status)">@StatusLabel(visitor.Status)</span></td>
+                                    <td>
+                                        @if (User.HasPermission(StaffPermissions.VisitorsCheckInOut) && visitor.Status == "Approved" && VisitorDuration.IsWithinVisitWindow(visitor.ArrivalDate, visitor.Duration, TimeZone.Today))
+                                        {
+                                            <form asp-area="Staff" asp-controller="Visitors" asp-action="CheckIn" asp-route-id="@visitor.Uid" method="post" enctype="multipart/form-data" class="d-inline">
+                                                <input type="hidden" name="q" value="@Model.SearchQuery" />
+                                                <input type="hidden" name="date" value="@Model.DateFilter?.ToString("yyyy-MM-dd")" />
+                                                <input type="hidden" name="status" value="@status" />
+                                                <input type="file" name="photo" accept="image/jpeg,image/png" hidden />
+                                                <button type="submit"
+                                                        class="btn btn-sm btn-success"
+                                                        data-confirm-title="Check in visitor?"
+                                                        data-confirm-text="@visitor.VisitorName · @visitor.NumberOfGuests guest@(visitor.NumberOfGuests == 1 ? "" : "s")"
+                                                        data-confirm-ok="Check In"
+                                                        data-confirm-cancel="Cancel"
+                                                        data-confirm-photo="CheckIn">
+                                                    Check In <i class="bi bi-camera" aria-hidden="true"></i>
+                                                </button>
+                                            </form>
+                                        }
+                                        else if (User.HasPermission(StaffPermissions.VisitorsCheckInOut) && visitor.Status == "CheckedIn")
+                                        {
+                                            <form asp-area="Staff" asp-controller="Visitors" asp-action="CheckOut" asp-route-id="@visitor.Uid" method="post" enctype="multipart/form-data" class="d-inline">
+                                                <input type="hidden" name="q" value="@Model.SearchQuery" />
+                                                <input type="hidden" name="date" value="@Model.DateFilter?.ToString("yyyy-MM-dd")" />
+                                                <input type="hidden" name="status" value="@status" />
+                                                <input type="file" name="photo" accept="image/jpeg,image/png" hidden />
+                                                <button type="submit"
+                                                        class="btn btn-sm btn-secondary"
+                                                        data-confirm-title="Check out visitor?"
+                                                        data-confirm-text="@visitor.VisitorName · @visitor.NumberOfGuests guest@(visitor.NumberOfGuests == 1 ? "" : "s")"
+                                                        data-confirm-ok="Check Out"
+                                                        data-confirm-cancel="Cancel"
+                                                        data-confirm-photo="CheckOut">
+                                                    Check Out <i class="bi bi-camera" aria-hidden="true"></i>
+                                                </button>
+                                            </form>
+                                        }
+                                        <a asp-area="Staff" asp-controller="Visitors" asp-action="Details" asp-route-id="@visitor.Uid" class="btn btn-sm btn-outline-secondary">Details</a>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="rd-empty" data-rv-empty>
+                    <i class="bi bi-people" aria-hidden="true"></i>
+                    <p>No visitors found matching your criteria.</p>
+                </div>
+            }
+        </div>
+
+        <div class="rv-load-more-wrap" data-rv-load-more-wrap @(Model.HasMore ? null : "hidden")>
+            <button type="button" class="rd-btn rd-btn-secondary" data-rv-load-more>Load more</button>
+        </div>
+    </section>
+</div>
+
+@section Scripts {
+    <script src="~/js/reception-visitors.js" asp-append-version="true"></script>
+}

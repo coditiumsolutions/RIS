@@ -1,0 +1,17 @@
+@{
+    ViewData["Title"] = "Access denied";
+}
+
+<div class="page-header">
+    <div>
+        <h1 class="page-heading">Access denied</h1>
+        <p class="page-subtitle">You do not have permission to open this page.</p>
+    </div>
+</div>
+
+<section class="card portal-card">
+    <div class="card-body">
+        <p class="mb-3">If you believe this is a mistake, ask an administrator to review your staff role.</p>
+        <a class="btn btn-portal btn-admin" asp-area="Staff" asp-controller="Account" asp-action="Index">Back to Staff Portal</a>
+    </div>
+</section>

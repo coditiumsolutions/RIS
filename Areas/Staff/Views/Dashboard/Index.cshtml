@@ -1,0 +1,149 @@
+@model AdminDashboardViewModel
+@{
+    ViewData["Title"] = "Dashboard";
+}
+
+<div class="page-header">
+    <div>
+        <h1 class="page-heading">Welcome, @Model.AdminName</h1>
+        <p class="page-subtitle">Administration overview from live portal data.</p>
+    </div>
+    @if (User.HasPermission(StaffPermissions.DeskDashboard))
+    {
+        <a asp-area="Staff" asp-controller="Desk" asp-action="Index" class="btn btn-outline-secondary">
+            <i class="bi bi-display me-1" aria-hidden="true"></i> Reception Desk
+        </a>
+    }
+</div>
+
+@if (TempData[ChangePasswordViewModel.SuccessMessageKey] is string passwordChanged)
+{
+    <div class="alert alert-success" role="status">@passwordChanged</div>
+}
+
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <section class="card portal-card stat-card">
+            <div class="card-body">
+                <div class="stat-icon" aria-hidden="true"><i class="bi bi-houses"></i></div>
+                <p class="stat-label">Registered residents</p>
+                <p class="stat-value">@Model.ResidentCount</p>
+            </div>
+        </section>
+    </div>
+    <div class="col-md-4">
+        <section class="card portal-card stat-card">
+            <div class="card-body">
+                <div class="stat-icon" aria-hidden="true"><i class="bi bi-person-badge"></i></div>
+                <p class="stat-label">Visitors today</p>
+                <p class="stat-value">@Model.VisitorsTodayCount</p>
+            </div>
+        </section>
+    </div>
+    <div class="col-md-4">
+        <section class="card portal-card stat-card">
+            <div class="card-body">
+                <div class="stat-icon" aria-hidden="true"><i class="bi bi-people"></i></div>
+                <p class="stat-label">Portal users</p>
+                <p class="stat-value">@Model.PortalUserCount</p>
+            </div>
+        </section>
+    </div>
+</div>
+
+<h2 class="module-grid-heading">Modules</h2>
+<div class="project-card-grid mb-4">
+    <a class="project-card project-card-primary" asp-area="Staff" asp-controller="Visitors" asp-action="Index">
+        <div class="project-card-icon visitors" aria-hidden="true">
+            <i class="bi bi-person-badge-fill"></i>
+        </div>
+        <div class="project-card-copy">
+            <h3 class="project-card-title">Visitor Management</h3>
+            <p class="project-card-subtitle">Approve and decline requests</p>
+        </div>
+    </a>
+    <a class="project-card" asp-area="Staff" asp-controller="Complaints" asp-action="Index">
+        <div class="project-card-icon complaints" aria-hidden="true">
+            <i class="bi bi-headset"></i>
+        </div>
+        <div class="project-card-copy">
+            <h3 class="project-card-title">Complaints</h3>
+            <p class="project-card-subtitle">Triage and resolve issues</p>
+        </div>
+    </a>
+    <a class="project-card" asp-area="Staff" asp-controller="Residents" asp-action="Index">
+        <div class="project-card-icon residents" aria-hidden="true">
+            <i class="bi bi-houses-fill"></i>
+        </div>
+        <div class="project-card-copy">
+            <h3 class="project-card-title">Resident Management</h3>
+            <p class="project-card-subtitle">Create and search residents</p>
+        </div>
+    </a>
+    <a class="project-card" asp-area="Staff" asp-controller="Users" asp-action="Index">
+        <div class="project-card-icon users" aria-hidden="true">
+            <i class="bi bi-people-fill"></i>
+        </div>
+        <div class="project-card-copy">
+            <h3 class="project-card-title">User Management</h3>
+            <p class="project-card-subtitle">Receptionist accounts</p>
+        </div>
+    </a>
+    <div class="project-card project-card-disabled" aria-disabled="true">
+        <span class="coming-soon-badge">Coming soon</span>
+        <div class="project-card-icon gatepass" aria-hidden="true">
+            <i class="bi bi-door-open-fill"></i>
+        </div>
+        <div class="project-card-copy">
+            <h3 class="project-card-title">Gate Pass</h3>
+            <p class="project-card-subtitle">Issue residential gate passes</p>
+        </div>
+    </div>
+    <div class="project-card project-card-disabled" aria-disabled="true">
+        <span class="coming-soon-badge">Coming soon</span>
+        <div class="project-card-icon statement" aria-hidden="true">
+            <i class="bi bi-file-earmark-text-fill"></i>
+        </div>
+        <div class="project-card-copy">
+            <h3 class="project-card-title">Account Statement</h3>
+            <p class="project-card-subtitle">Resident account history</p>
+        </div>
+    </div>
+    <div class="project-card project-card-disabled" aria-disabled="true">
+        <span class="coming-soon-badge">Coming soon</span>
+        <div class="project-card-icon bills" aria-hidden="true">
+            <i class="bi bi-receipt"></i>
+        </div>
+        <div class="project-card-copy">
+            <h3 class="project-card-title">Bill Management</h3>
+            <p class="project-card-subtitle">Society billing and invoices</p>
+        </div>
+    </div>
+</div>
+
+<section class="card portal-card">
+    <div class="card-body">
+        <h2 class="h5">Recent activity</h2>
+        @if (Model.RecentActivity.Any())
+        {
+            <ul class="list-group list-group-flush mt-3">
+                @foreach (var item in Model.RecentActivity)
+                {
+                    <li class="list-group-item px-0">
+                        <div class="d-flex justify-content-between gap-3">
+                            <div>
+                                <strong>@item.Title</strong>
+                                <div class="text-secondary">@item.Detail</div>
+                            </div>
+                            <time class="text-secondary text-nowrap">@TimeZone.FormatDateTime(item.When, "dd MMM, HH:mm")</time>
+                        </div>
+                    </li>
+                }
+            </ul>
+        }
+        else
+        {
+            <p class="text-secondary mb-0 mt-3">No recent activity recorded.</p>
+        }
+    </div>
+</section>

@@ -4,7 +4,8 @@ public enum PortalType
 {
     Resident,
     Admin,
-    Receptionist
+    Receptionist,
+    Staff
 }
 
 public static class ReturnUrlGuard
@@ -25,12 +26,14 @@ public static class ReturnUrlGuard
 
         var isAdminPath = returnUrl.StartsWith("/adminportal", StringComparison.OrdinalIgnoreCase);
         var isReceptionPath = returnUrl.StartsWith("/receptionportal", StringComparison.OrdinalIgnoreCase);
+        var isStaffPath = returnUrl.StartsWith("/staff", StringComparison.OrdinalIgnoreCase);
 
         return portalType switch
         {
             PortalType.Admin => isAdminPath,
             PortalType.Receptionist => isReceptionPath,
-            PortalType.Resident => !isAdminPath && !isReceptionPath,
+            PortalType.Staff => isStaffPath || isAdminPath || isReceptionPath,
+            PortalType.Resident => !isAdminPath && !isReceptionPath && !isStaffPath,
             _ => false
         };
     }
