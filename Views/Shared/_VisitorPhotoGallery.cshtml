@@ -1,0 +1,20 @@
+@model IReadOnlyList<VisitorPhotoItemViewModel>
+@if (Model is { Count: > 0 })
+{
+    <div class="visitor-photo-gallery mt-3">
+        <h3 class="h6 mb-2">Visit photos</h3>
+        <div class="visitor-photo-thumbs">
+            @foreach (var photo in Model)
+            {
+                var label = photo.Kind == VisitorPhotoKind.CheckOut ? "Check-out photo" : "Check-in photo";
+                <a class="visitor-photo-thumb"
+                   href="/VisitorPhotos/@photo.Uid"
+                   data-visitor-photo-open
+                   data-visitor-photo-title="@label">
+                    <img src="/VisitorPhotos/@photo.Uid" alt="@label" loading="lazy" />
+                    <span class="visitor-photo-thumb-label">@label</span>
+                </a>
+            }
+        </div>
+    </div>
+}

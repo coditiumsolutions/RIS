@@ -45,6 +45,25 @@
     sidebarBackdrop.addEventListener("click", closeMobileSidebar);
   }
 
+  document.querySelectorAll("[data-nav-group-toggle]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const group = button.closest(".nav-group");
+      if (!group) {
+        return;
+      }
+
+      const items = group.querySelector(".nav-group-items");
+      const expanded = button.getAttribute("aria-expanded") === "true";
+      const nextExpanded = !expanded;
+
+      button.setAttribute("aria-expanded", nextExpanded ? "true" : "false");
+      group.classList.toggle("open", nextExpanded);
+      if (items) {
+        items.hidden = !nextExpanded;
+      }
+    });
+  });
+
   window.addEventListener("resize", () => {
     if (isDesktop()) {
       closeMobileSidebar();
@@ -151,6 +170,24 @@
       const confirmed = await askConfirm(attrs);
       if (!confirmed) {
         return;
+      }
+
+      const photoKind =
+        trigger.getAttribute("data-confirm-photo") ||
+        form.getAttribute("data-confirm-photo") ||
+        "";
+
+      if (photoKind && window.VisitorCamera && typeof window.VisitorCamera.captureOptional === "function") {
+        const label = photoKind.toLowerCase() === "checkout" ? "check-out" : "check-in";
+        const photoResult = await window.VisitorCamera.captureOptional(label);
+        if (photoResult && photoResult.cancelled) {
+          return;
+        }
+        if (photoResult && photoResult.blob) {
+          window.VisitorCamera.attachPhotoToForm(form, photoResult.blob);
+        } else {
+          window.VisitorCamera.attachPhotoToForm(form, null);
+        }
       }
 
       form.dataset.swalConfirmed = "1";

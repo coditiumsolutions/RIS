@@ -182,6 +182,18 @@ public class VisitorsController : Controller
         if (visitor is null)
             return NotFound();
 
+        var photos = await _db.VisitorPhotos
+            .AsNoTracking()
+            .Where(p => p.VisitorRequestId == visitor.Uid)
+            .OrderBy(p => p.CapturedAtUtc)
+            .Select(p => new VisitorPhotoItemViewModel
+            {
+                Uid = p.Uid,
+                Kind = p.Kind,
+                CapturedAtUtc = p.CapturedAtUtc
+            })
+            .ToListAsync(cancellationToken);
+
         var model = new VisitorDetailsViewModel
         {
             Uid = visitor.Uid,
@@ -198,7 +210,8 @@ public class VisitorsController : Controller
             CheckedInAt = visitor.CheckedInAt,
             CheckedOutAt = visitor.CheckedOutAt,
             CreatedAt = visitor.CreatedAt,
-            DeclineReason = visitor.DeclineReason
+            DeclineReason = visitor.DeclineReason,
+            Photos = photos
         };
 
         return View(model);
