@@ -5,7 +5,7 @@
     var otherLinkControllers = new[]
     {
         "GatePass", "AccountStatement", "BillManagement", "Electricity",
-        "Utility", "Complaints", "Notifications"
+        "Utility", "Notifications"
     };
     var otherLinksOpen = otherLinkControllers.Any(name =>
         string.Equals(controller, name, StringComparison.OrdinalIgnoreCase));
@@ -108,6 +108,10 @@
                         <i class="bi bi-people" aria-hidden="true"></i>
                         <span class="app-sidebar-label">Visitor Management</span>
                     </a>
+                    <a class="@Active("Complaints")" asp-area="" asp-controller="Complaints" asp-action="Index">
+                        <i class="bi bi-headset" aria-hidden="true"></i>
+                        <span class="app-sidebar-label">Complaints</span>
+                    </a>
                     <div class="nav-group@(otherLinksOpen ? " open" : null)">
                         <button type="button"
                                 class="nav-link-btn nav-group-toggle@(otherLinksOpen ? " active" : null)"
@@ -138,10 +142,6 @@
                             <a class="@Active("Utility")" asp-area="" asp-controller="Utility" asp-action="Index">
                                 <i class="bi bi-building-gear" aria-hidden="true"></i>
                                 <span class="app-sidebar-label">Utility</span>
-                            </a>
-                            <a class="@Active("Complaints")" asp-area="" asp-controller="Complaints" asp-action="Index">
-                                <i class="bi bi-headset" aria-hidden="true"></i>
-                                <span class="app-sidebar-label">Complaints</span>
                             </a>
                             <a class="@Active("Notifications")" asp-area="" asp-controller="Notifications" asp-action="Index">
                                 <i class="bi bi-bell" aria-hidden="true"></i>
