@@ -156,7 +156,7 @@
             data-confirm-title="Check in visitor?"
             data-confirm-text="${name} · ${guestLabel}"
             data-confirm-ok="Check In" data-confirm-cancel="Cancel"
-            data-confirm-photo="CheckIn">Check In</button>
+            data-confirm-photo="CheckIn">Check In <i class="bi bi-camera" aria-hidden="true"></i></button>
         </form>`;
     } else if (visitor.canCheckOut) {
       primary = `
@@ -167,7 +167,7 @@
             data-confirm-title="Check out visitor?"
             data-confirm-text="${name} · ${guestLabel}"
             data-confirm-ok="Check Out" data-confirm-cancel="Cancel"
-            data-confirm-photo="CheckOut">Check Out</button>
+            data-confirm-photo="CheckOut">Check Out <i class="bi bi-camera" aria-hidden="true"></i></button>
         </form>`;
     }
 
@@ -198,7 +198,7 @@
             data-confirm-title="Check in visitor?"
             data-confirm-text="${name} · ${guestLabel}"
             data-confirm-ok="Check In" data-confirm-cancel="Cancel"
-            data-confirm-photo="CheckIn">Check In</button>
+            data-confirm-photo="CheckIn">Check In <i class="bi bi-camera" aria-hidden="true"></i></button>
         </form>`;
     } else if (visitor.canCheckOut) {
       primary = `
@@ -209,7 +209,7 @@
             data-confirm-title="Check out visitor?"
             data-confirm-text="${name} · ${guestLabel}"
             data-confirm-ok="Check Out" data-confirm-cancel="Cancel"
-            data-confirm-photo="CheckOut">Check Out</button>
+            data-confirm-photo="CheckOut">Check Out <i class="bi bi-camera" aria-hidden="true"></i></button>
         </form>`;
     }
 

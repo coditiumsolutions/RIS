@@ -206,7 +206,9 @@
                                                 data-confirm-text="@visitor.VisitorName · @visitor.NumberOfGuests guest@(visitor.NumberOfGuests == 1 ? "" : "s")"
                                                 data-confirm-ok="Check In"
                                                 data-confirm-cancel="Cancel"
-                                                data-confirm-photo="CheckIn">Check In</button>
+                                                data-confirm-photo="CheckIn">
+                                            Check In <i class="bi bi-camera" aria-hidden="true"></i>
+                                        </button>
                                     </form>
                                 }
                                 else if (visitor.Status == "CheckedIn")
@@ -222,7 +224,9 @@
                                                 data-confirm-text="@visitor.VisitorName · @visitor.NumberOfGuests guest@(visitor.NumberOfGuests == 1 ? "" : "s")"
                                                 data-confirm-ok="Check Out"
                                                 data-confirm-cancel="Cancel"
-                                                data-confirm-photo="CheckOut">Check Out</button>
+                                                data-confirm-photo="CheckOut">
+                                            Check Out <i class="bi bi-camera" aria-hidden="true"></i>
+                                        </button>
                                     </form>
                                 }
                                 <a asp-area="ReceptionPortal" asp-controller="Visitors" asp-action="Details" asp-route-id="@visitor.Uid" class="rd-action-btn rd-action-link">Details</a>
@@ -280,7 +284,9 @@
                                                         data-confirm-text="@visitor.VisitorName · @visitor.NumberOfGuests guest@(visitor.NumberOfGuests == 1 ? "" : "s")"
                                                         data-confirm-ok="Check In"
                                                         data-confirm-cancel="Cancel"
-                                                        data-confirm-photo="CheckIn">Check In</button>
+                                                        data-confirm-photo="CheckIn">
+                                                    Check In <i class="bi bi-camera" aria-hidden="true"></i>
+                                                </button>
                                             </form>
                                         }
                                         else if (visitor.Status == "CheckedIn")
@@ -296,7 +302,9 @@
                                                         data-confirm-text="@visitor.VisitorName · @visitor.NumberOfGuests guest@(visitor.NumberOfGuests == 1 ? "" : "s")"
                                                         data-confirm-ok="Check Out"
                                                         data-confirm-cancel="Cancel"
-                                                        data-confirm-photo="CheckOut">Check Out</button>
+                                                        data-confirm-photo="CheckOut">
+                                                    Check Out <i class="bi bi-camera" aria-hidden="true"></i>
+                                                </button>
                                             </form>
                                         }
                                         <a asp-area="ReceptionPortal" asp-controller="Visitors" asp-action="Details" asp-route-id="@visitor.Uid" class="btn btn-sm btn-outline-secondary">Details</a>

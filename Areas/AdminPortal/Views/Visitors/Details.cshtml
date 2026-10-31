@@ -44,7 +44,7 @@
     <div class="alert alert-danger" role="alert">@errorMsg</div>
 }
 
-<div class="row g-4">
+<div class="row g-3 g-lg-4 details-layout">
     <div class="col-lg-6">
         <section class="card portal-card">
             <div class="card-body">
@@ -78,29 +78,30 @@
     </div>
 
     <div class="col-lg-6">
-        <section class="card portal-card">
-            <div class="card-body">
-                <h2 class="h5 mb-3">Resident Information</h2>
-                <dl class="profile-list">
-                    <dt>Resident</dt>
-                    <dd>@Model.ResidentName</dd>
-                    @if (!string.IsNullOrWhiteSpace(Model.ResidentUnit))
-                    {
-                        <dt>Unit</dt>
-                        <dd>@Model.ResidentUnit</dd>
-                    }
-                    @if (!string.IsNullOrWhiteSpace(Model.ResidentMobile))
-                    {
-                        <dt>Mobile</dt>
-                        <dd>@Model.ResidentMobile</dd>
-                    }
-                </dl>
-            </div>
-        </section>
+        <div class="details-stack">
+            <section class="card portal-card">
+                <div class="card-body">
+                    <h2 class="h5 mb-3">Resident Information</h2>
+                    <dl class="profile-list">
+                        <dt>Resident</dt>
+                        <dd>@Model.ResidentName</dd>
+                        @if (!string.IsNullOrWhiteSpace(Model.ResidentUnit))
+                        {
+                            <dt>Unit</dt>
+                            <dd>@Model.ResidentUnit</dd>
+                        }
+                        @if (!string.IsNullOrWhiteSpace(Model.ResidentMobile))
+                        {
+                            <dt>Mobile</dt>
+                            <dd>@Model.ResidentMobile</dd>
+                        }
+                    </dl>
+                </div>
+            </section>
 
-        <section class="card portal-card mt-4">
-            <div class="card-body">
-                <h2 class="h5 mb-3">Status</h2>
+            <section class="card portal-card">
+                <div class="card-body">
+                    <h2 class="h5 mb-3">Status</h2>
                 <p class="mb-3">
                     <span class="badge @Badge(Model.Status) fs-6">@StatusLabel(Model.Status)</span>
                     @if (Model.IsWalkIn)
@@ -150,5 +151,6 @@
                 <partial name="_VisitorPhotoGallery" model="Model.Photos" />
             </div>
         </section>
+        </div>
     </div>
 </div>

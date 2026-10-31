@@ -1079,7 +1079,85 @@ a:hover {
   border-radius: var(--rp-radius);
   background: var(--rp-card);
   box-shadow: var(--rp-shadow-sm);
+  /* Content-sized by default. Forced 100% height stretched cards past the footer
+     when Bootstrap rows align-items:stretch equalized columns. */
+  height: auto;
+}
+
+/* Dashboard/stat tiles may still fill their column for a tidy strip. */
+.row > [class*="col"] > .stat-card.portal-card {
   height: 100%;
+}
+
+/* Detail pages: never stretch cards to the taller column. */
+.details-layout {
+  align-items: flex-start !important;
+}
+
+.details-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  height: auto;
+}
+
+.details-stack > .portal-card {
+  height: auto;
+  flex: 0 0 auto;
+}
+
+.details-layout .portal-card .card-body {
+  padding: 0.95rem 1.05rem;
+}
+
+.details-layout .profile-list {
+  gap: 0.3rem 0.75rem;
+}
+
+.details-layout .profile-list dt,
+.details-layout .profile-list dd {
+  line-height: 1.35;
+  padding: 0;
+}
+
+.details-layout .portal-card h2,
+.details-layout .portal-card .h5 {
+  margin-bottom: 0.65rem !important;
+}
+
+/* Subtle camera cue on Check In/Out — photo choice lives in the confirm popup. */
+.btn .bi-camera,
+.rd-action-btn .bi-camera {
+  opacity: 0.45;
+  font-size: 0.85em;
+  margin-left: 0.2rem;
+}
+
+/* Photo confirm / camera fallback: stack full-width on phones & tablets. */
+.swal-photo-actions {
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.swal-photo-actions .swal2-styled {
+  margin: 0.2em;
+}
+
+@media (max-width: 767.98px) {
+  .swal-photo-confirm {
+    width: min(96vw, 28rem) !important;
+  }
+
+  .swal-photo-actions {
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+  }
+
+  .swal-photo-actions .swal2-styled {
+    width: 100%;
+    margin: 0 !important;
+  }
 }
 
 .portal-card .card-body {

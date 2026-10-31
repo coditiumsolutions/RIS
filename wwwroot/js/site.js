@@ -145,6 +145,64 @@
     return window.confirm([title, text].filter(Boolean).join("\n"));
   };
 
+  const photoActionLabel = (photoKind, confirmText) => {
+    const kind = (photoKind || "").toLowerCase();
+    if (kind === "checkout") {
+      return "Check Out";
+    }
+    if (kind === "checkin") {
+      return "Check In";
+    }
+    return confirmText || "Confirm";
+  };
+
+  // One popup for data-confirm-photo: action / action+photo / cancel.
+  const askPhotoConfirm = async ({ title, text, confirmText, cancelText, icon, photoKind }) => {
+    const action = photoActionLabel(photoKind, confirmText);
+    const photoAction = `${action} & Take Photo`;
+
+    if (typeof Swal === "undefined" || typeof Swal.fire !== "function") {
+      const takePhoto = window.confirm([title, text, "OK = with photo, Cancel = without photo (or abort)."].filter(Boolean).join("\n"));
+      if (takePhoto) {
+        return { takePhoto: true };
+      }
+      return window.confirm([title, text].filter(Boolean).join("\n"))
+        ? { withoutPhoto: true }
+        : { cancelled: true };
+    }
+
+    const result = await Swal.fire({
+      title: title || "Are you sure?",
+      text: text || undefined,
+      icon: icon || "question",
+      showDenyButton: true,
+      showCancelButton: true,
+      focusCancel: true,
+      reverseButtons: false,
+      confirmButtonText: action,
+      denyButtonText: photoAction,
+      cancelButtonText: cancelText || "Cancel",
+      // Deny is the photo path, not a destructive action — avoid Swal's default red.
+      denyButtonColor: "#2457a7",
+      customClass: {
+        popup: "swal-photo-confirm",
+        actions: "swal-photo-actions",
+        confirmButton: "swal-photo-confirm-btn",
+        denyButton: "swal-photo-deny-btn",
+        cancelButton: "swal-photo-cancel-btn"
+      },
+      buttonsStyling: true
+    });
+
+    if (result.isConfirmed) {
+      return { withoutPhoto: true };
+    }
+    if (result.isDenied) {
+      return { takePhoto: true };
+    }
+    return { cancelled: true };
+  };
+
   // Event delegation so dynamically rendered Check In/Out forms also get confirms.
   document.addEventListener("submit", async (event) => {
     const form = event.target;
@@ -173,26 +231,35 @@
     event.preventDefault();
     event.stopPropagation();
 
-    const confirmed = await askConfirm(attrs);
-    if (!confirmed) {
-      return;
-    }
-
     const photoKind =
       trigger.getAttribute("data-confirm-photo") ||
       form.getAttribute("data-confirm-photo") ||
       "";
 
-    if (photoKind && window.VisitorCamera && typeof window.VisitorCamera.captureOptional === "function") {
-      const label = photoKind.toLowerCase() === "checkout" ? "check-out" : "check-in";
-      const photoResult = await window.VisitorCamera.captureOptional(label);
-      if (photoResult && photoResult.cancelled) {
+    if (photoKind) {
+      const choice = await askPhotoConfirm({ ...attrs, photoKind });
+      if (choice.cancelled) {
         return;
       }
-      if (photoResult && photoResult.blob) {
-        window.VisitorCamera.attachPhotoToForm(form, photoResult.blob);
-      } else if (typeof window.VisitorCamera.attachPhotoToForm === "function") {
+
+      if (choice.takePhoto && window.VisitorCamera && typeof window.VisitorCamera.captureOptional === "function") {
+        const photoResult = await window.VisitorCamera.captureOptional(photoKind);
+        if (photoResult && photoResult.cancelled) {
+          return;
+        }
+        if (photoResult && photoResult.blob) {
+          window.VisitorCamera.attachPhotoToForm(form, photoResult.blob);
+        } else if (typeof window.VisitorCamera.attachPhotoToForm === "function") {
+          // Camera unavailable → user chose continue without photo.
+          window.VisitorCamera.attachPhotoToForm(form, null);
+        }
+      } else if (typeof window.VisitorCamera?.attachPhotoToForm === "function") {
         window.VisitorCamera.attachPhotoToForm(form, null);
+      }
+    } else {
+      const confirmed = await askConfirm(attrs);
+      if (!confirmed) {
+        return;
       }
     }
 

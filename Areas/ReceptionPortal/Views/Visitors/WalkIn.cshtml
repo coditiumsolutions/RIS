@@ -21,8 +21,8 @@
 
                 <form asp-area="ReceptionPortal" asp-controller="Visitors" asp-action="WalkIn" method="post" enctype="multipart/form-data" novalidate
                       data-confirm-title="Register walk-in visitor?"
-                      data-confirm-text="They will be checked in immediately. You can optionally take a photo next."
-                      data-confirm-ok="Continue"
+                      data-confirm-text="They will be checked in immediately."
+                      data-confirm-ok="Check In"
                       data-confirm-cancel="Cancel"
                       data-confirm-photo="CheckIn">
                     <input type="file" name="photo" accept="image/jpeg,image/png" hidden />
@@ -77,7 +77,9 @@
 
                     <div class="mt-4">
                         <button type="submit" class="btn btn-portal btn-reception">
-                            <i class="bi bi-person-plus me-1" aria-hidden="true"></i> Register & Check In
+                            <i class="bi bi-person-plus me-1" aria-hidden="true"></i>
+                            Register &amp; Check In
+                            <i class="bi bi-camera" aria-hidden="true"></i>
                         </button>
                         <a asp-area="ReceptionPortal" asp-controller="Visitors" asp-action="Index" class="btn btn-outline-secondary ms-2">Cancel</a>
                     </div>
