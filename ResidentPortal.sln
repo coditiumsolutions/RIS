@@ -5,6 +5,10 @@ VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ResidentPortal", "ResidentPortal.csproj", "{FD7F6B64-9103-4395-8B94-D637DA3326F3}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{AF607430-EAF0-4843-AB6C-0EBFF5E740B7}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ResidentPortal.Tests", "tests\ResidentPortal.Tests\ResidentPortal.Tests.csproj", "{2DCDD5E2-A914-49B3-B481-2684B1DF66BA}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,8 +31,23 @@ Global
 		{FD7F6B64-9103-4395-8B94-D637DA3326F3}.Release|x64.Build.0 = Release|Any CPU
 		{FD7F6B64-9103-4395-8B94-D637DA3326F3}.Release|x86.ActiveCfg = Release|Any CPU
 		{FD7F6B64-9103-4395-8B94-D637DA3326F3}.Release|x86.Build.0 = Release|Any CPU
+		{2DCDD5E2-A914-49B3-B481-2684B1DF66BA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2DCDD5E2-A914-49B3-B481-2684B1DF66BA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2DCDD5E2-A914-49B3-B481-2684B1DF66BA}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{2DCDD5E2-A914-49B3-B481-2684B1DF66BA}.Debug|x64.Build.0 = Debug|Any CPU
+		{2DCDD5E2-A914-49B3-B481-2684B1DF66BA}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{2DCDD5E2-A914-49B3-B481-2684B1DF66BA}.Debug|x86.Build.0 = Debug|Any CPU
+		{2DCDD5E2-A914-49B3-B481-2684B1DF66BA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2DCDD5E2-A914-49B3-B481-2684B1DF66BA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2DCDD5E2-A914-49B3-B481-2684B1DF66BA}.Release|x64.ActiveCfg = Release|Any CPU
+		{2DCDD5E2-A914-49B3-B481-2684B1DF66BA}.Release|x64.Build.0 = Release|Any CPU
+		{2DCDD5E2-A914-49B3-B481-2684B1DF66BA}.Release|x86.ActiveCfg = Release|Any CPU
+		{2DCDD5E2-A914-49B3-B481-2684B1DF66BA}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{2DCDD5E2-A914-49B3-B481-2684B1DF66BA} = {AF607430-EAF0-4843-AB6C-0EBFF5E740B7}
 	EndGlobalSection
 EndGlobal
