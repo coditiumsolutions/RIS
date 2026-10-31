@@ -34,37 +34,58 @@ public class VisitorsController : Controller
     }
 
     [HttpGet]
-    public async Task<IActionResult> Index(string? q, DateOnly? date, CancellationToken cancellationToken)
+    public async Task<IActionResult> Index(string? q, DateOnly? date, string? status, CancellationToken cancellationToken)
     {
-        var today = date ?? _timeZone.Today;
+        const int pageSize = 25;
+        var pktToday = _timeZone.Today;
+        var term = (q ?? string.Empty).Trim();
+        var statusFilter = NormalizeStatusFilter(status);
 
         var query = _db.VisitorRequests
+            .AsNoTracking()
             .Include(v => v.Resident)
             .Where(v => v.Status == VisitorStatus.Approved ||
                         v.Status == VisitorStatus.CheckedIn ||
                         v.Status == VisitorStatus.CheckedOut ||
-                        (v.ArrivalDate == today && v.Status == VisitorStatus.Pending));
+                        v.Status == VisitorStatus.Pending);
 
-        if (!string.IsNullOrWhiteSpace(q))
+        if (term.Length > 0)
         {
-            var searchTerm = q.Trim().ToLower();
+            var lower = term.ToLowerInvariant();
+            var passCodeMatch = int.TryParse(term, out var passCode);
             query = query.Where(v =>
-                v.VisitorName.ToLower().Contains(searchTerm) ||
-                v.Phone.Contains(searchTerm) ||
-                v.Resident.ResidentName.ToLower().Contains(searchTerm) ||
-                (v.Resident.UnitNo != null && v.Resident.UnitNo.ToLower().Contains(searchTerm)));
+                v.VisitorName.ToLower().Contains(lower) ||
+                v.Phone.Contains(term) ||
+                (v.CNIC != null && v.CNIC.Contains(term)) ||
+                (v.VehicleRegistrationNo != null && v.VehicleRegistrationNo.ToLower().Contains(lower)) ||
+                v.Resident.ResidentName.ToLower().Contains(lower) ||
+                (v.Resident.UnitNo != null && v.Resident.UnitNo.ToLower().Contains(lower)) ||
+                (passCodeMatch && v.Uid == passCode));
         }
 
         if (date.HasValue)
-        {
             query = query.Where(v => v.ArrivalDate == date.Value);
-        }
+
+        query = statusFilter switch
+        {
+            "expected" => query.Where(v =>
+                (v.Status == VisitorStatus.Approved || v.Status == VisitorStatus.Pending) &&
+                (date.HasValue || v.ArrivalDate == pktToday)),
+            "approved" => query.Where(v => v.Status == VisitorStatus.Approved),
+            "pending" => query.Where(v => v.Status == VisitorStatus.Pending),
+            "checkedin" or "inside" => query.Where(v => v.Status == VisitorStatus.CheckedIn),
+            "checkedout" => query.Where(v => v.Status == VisitorStatus.CheckedOut),
+            "walkins" => query.Where(v => v.IsWalkIn),
+            _ => query
+        };
+
+        var total = await query.CountAsync(cancellationToken);
 
         var visitors = await query
-            .OrderByDescending(v => v.ArrivalDate == today ? 1 : 0)
+            .OrderByDescending(v => v.ArrivalDate == pktToday ? 1 : 0)
             .ThenBy(v => v.Status == VisitorStatus.CheckedIn ? 0 : 1)
             .ThenByDescending(v => v.CreatedAt)
-            .Take(100)
+            .Take(pageSize + 1)
             .Select(v => new VisitorRequestListItem
             {
                 Uid = v.Uid,
@@ -84,15 +105,20 @@ public class VisitorsController : Controller
             })
             .ToListAsync(cancellationToken);
 
+        var hasMore = visitors.Count > pageSize;
+        if (hasMore)
+            visitors = visitors.Take(pageSize).ToList();
+
+        var todayStartUtc = _timeZone.ConvertToUtc(pktToday.ToDateTime(TimeOnly.MinValue));
+        var tomorrowStartUtc = _timeZone.ConvertToUtc(pktToday.AddDays(1).ToDateTime(TimeOnly.MinValue));
+
         var expectedTodayCount = await _db.VisitorRequests
-            .CountAsync(v => v.ArrivalDate == today &&
+            .CountAsync(v => v.ArrivalDate == pktToday &&
                 (v.Status == VisitorStatus.Approved || v.Status == VisitorStatus.Pending), cancellationToken);
 
         var checkedInCount = await _db.VisitorRequests
             .CountAsync(v => v.Status == VisitorStatus.CheckedIn, cancellationToken);
 
-        var todayStartUtc = _timeZone.ConvertToUtc(today.ToDateTime(TimeOnly.MinValue));
-        var tomorrowStartUtc = _timeZone.ConvertToUtc(today.AddDays(1).ToDateTime(TimeOnly.MinValue));
         var checkedOutTodayCount = await _db.VisitorRequests
             .CountAsync(v => v.CheckedOutAt != null &&
                              v.CheckedOutAt.Value >= todayStartUtc &&
@@ -104,11 +130,25 @@ public class VisitorsController : Controller
             ExpectedTodayCount = expectedTodayCount,
             CheckedInCount = checkedInCount,
             CheckedOutTodayCount = checkedOutTodayCount,
-            SearchQuery = q,
-            DateFilter = date
+            SearchQuery = string.IsNullOrWhiteSpace(term) ? null : term,
+            DateFilter = date,
+            StatusFilter = statusFilter,
+            TotalCount = total,
+            HasMore = hasMore,
+            PageSize = pageSize
         };
 
         return View(model);
+    }
+
+    private static string NormalizeStatusFilter(string? status)
+    {
+        var value = (status ?? "all").Trim().ToLowerInvariant();
+        return value switch
+        {
+            "expected" or "approved" or "pending" or "checkedin" or "inside" or "checkedout" or "walkins" => value,
+            _ => "all"
+        };
     }
 
     [HttpGet]
@@ -164,7 +204,14 @@ public class VisitorsController : Controller
     [HttpPost]
     [ValidateAntiForgeryToken]
     [RequestSizeLimit(3 * 1024 * 1024)]
-    public async Task<IActionResult> CheckIn(int id, string? q, DateOnly? date, IFormFile? photo, CancellationToken cancellationToken)
+    public async Task<IActionResult> CheckIn(
+        int id,
+        string? q,
+        DateOnly? date,
+        string? status,
+        string? from,
+        IFormFile? photo,
+        CancellationToken cancellationToken)
     {
         var visitor = await _db.VisitorRequests.FindAsync(new object[] { id }, cancellationToken);
         if (visitor is null)
@@ -173,14 +220,14 @@ public class VisitorsController : Controller
         if (visitor.Status != VisitorStatus.Approved)
         {
             TempData["Error"] = "Only approved visitors can be checked in.";
-            return RedirectToAction(nameof(Index), new { q, date });
+            return RedirectAfterDeskAction(from, q, date, status);
         }
 
         var today = _timeZone.Today;
         if (!VisitorDuration.IsWithinVisitWindow(visitor.ArrivalDate, visitor.Duration, today))
         {
             TempData["Error"] = "This visitor can only be checked in on the arrival date through the end of the visit duration.";
-            return RedirectToAction(nameof(Index), new { q, date });
+            return RedirectAfterDeskAction(from, q, date, status);
         }
 
         var userId = User.GetUserId();
@@ -199,13 +246,20 @@ public class VisitorsController : Controller
         TempData["Success"] = string.IsNullOrEmpty(photoWarning)
             ? $"{visitor.VisitorName} has been checked in."
             : $"{visitor.VisitorName} has been checked in. Photo was skipped: {photoWarning}";
-        return RedirectToAction(nameof(Index), new { q, date });
+        return RedirectAfterDeskAction(from, q, date, status);
     }
 
     [HttpPost]
     [ValidateAntiForgeryToken]
     [RequestSizeLimit(3 * 1024 * 1024)]
-    public async Task<IActionResult> CheckOut(int id, string? q, DateOnly? date, IFormFile? photo, CancellationToken cancellationToken)
+    public async Task<IActionResult> CheckOut(
+        int id,
+        string? q,
+        DateOnly? date,
+        string? status,
+        string? from,
+        IFormFile? photo,
+        CancellationToken cancellationToken)
     {
         var visitor = await _db.VisitorRequests.FindAsync(new object[] { id }, cancellationToken);
         if (visitor is null)
@@ -214,7 +268,7 @@ public class VisitorsController : Controller
         if (visitor.Status != VisitorStatus.CheckedIn)
         {
             TempData["Error"] = "Only checked-in visitors can be checked out.";
-            return RedirectToAction(nameof(Index), new { q, date });
+            return RedirectAfterDeskAction(from, q, date, status);
         }
 
         var userId = User.GetUserId();
@@ -231,7 +285,15 @@ public class VisitorsController : Controller
         TempData["Success"] = string.IsNullOrEmpty(photoWarning)
             ? $"{visitor.VisitorName} has been checked out."
             : $"{visitor.VisitorName} has been checked out. Photo was skipped: {photoWarning}";
-        return RedirectToAction(nameof(Index), new { q, date });
+        return RedirectAfterDeskAction(from, q, date, status);
+    }
+
+    private IActionResult RedirectAfterDeskAction(string? from, string? q, DateOnly? date, string? status)
+    {
+        if (string.Equals(from, "dashboard", StringComparison.OrdinalIgnoreCase))
+            return RedirectToAction("Index", "Dashboard", new { area = "ReceptionPortal" });
+
+        return RedirectToAction(nameof(Index), new { q, date, status });
     }
 
     [HttpGet]

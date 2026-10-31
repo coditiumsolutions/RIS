@@ -94,6 +94,10 @@ public class ReceptionistVisitorListViewModel
     public int CheckedOutTodayCount { get; set; }
     public string? SearchQuery { get; set; }
     public DateOnly? DateFilter { get; set; }
+    public string? StatusFilter { get; set; }
+    public int TotalCount { get; set; }
+    public bool HasMore { get; set; }
+    public int PageSize { get; set; } = 25;
 }
 
 public class WalkInVisitorViewModel

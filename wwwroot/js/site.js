@@ -8,7 +8,8 @@
   const sidebarBackdrop = document.querySelector("[data-sidebar-backdrop]");
   const storageKey = "rp.sidebar.collapsed";
 
-  const isDesktop = () => window.matchMedia("(min-width: 992px)").matches;
+  // Collapse/expand from tablet widths up; phones keep the off-canvas drawer.
+  const isDesktop = () => window.matchMedia("(min-width: 768px)").matches;
 
   const applyStoredCollapse = () => {
     if (!isDesktop()) {
@@ -144,59 +145,63 @@
     return window.confirm([title, text].filter(Boolean).join("\n"));
   };
 
-  document.querySelectorAll("form").forEach((form) => {
-    form.addEventListener("submit", async (event) => {
-      if (form.dataset.swalConfirmed === "1") {
-        delete form.dataset.swalConfirmed;
+  // Event delegation so dynamically rendered Check In/Out forms also get confirms.
+  document.addEventListener("submit", async (event) => {
+    const form = event.target;
+    if (!(form instanceof HTMLFormElement)) {
+      return;
+    }
+
+    if (form.dataset.swalConfirmed === "1") {
+      delete form.dataset.swalConfirmed;
+      return;
+    }
+
+    const trigger = event.submitter instanceof HTMLElement
+      ? event.submitter
+      : form.querySelector("[type='submit']");
+
+    if (!(trigger instanceof HTMLElement)) {
+      return;
+    }
+
+    const attrs = readConfirmAttrs(form, trigger);
+    if (!attrs.title && !attrs.text) {
+      return;
+    }
+
+    event.preventDefault();
+    event.stopPropagation();
+
+    const confirmed = await askConfirm(attrs);
+    if (!confirmed) {
+      return;
+    }
+
+    const photoKind =
+      trigger.getAttribute("data-confirm-photo") ||
+      form.getAttribute("data-confirm-photo") ||
+      "";
+
+    if (photoKind && window.VisitorCamera && typeof window.VisitorCamera.captureOptional === "function") {
+      const label = photoKind.toLowerCase() === "checkout" ? "check-out" : "check-in";
+      const photoResult = await window.VisitorCamera.captureOptional(label);
+      if (photoResult && photoResult.cancelled) {
         return;
       }
-
-      const trigger = event.submitter instanceof HTMLElement
-        ? event.submitter
-        : form.querySelector("[type='submit']");
-
-      if (!(trigger instanceof HTMLElement)) {
-        return;
+      if (photoResult && photoResult.blob) {
+        window.VisitorCamera.attachPhotoToForm(form, photoResult.blob);
+      } else if (typeof window.VisitorCamera.attachPhotoToForm === "function") {
+        window.VisitorCamera.attachPhotoToForm(form, null);
       }
+    }
 
-      const attrs = readConfirmAttrs(form, trigger);
-      if (!attrs.title && !attrs.text) {
-        return;
-      }
-
-      event.preventDefault();
-      event.stopPropagation();
-
-      const confirmed = await askConfirm(attrs);
-      if (!confirmed) {
-        return;
-      }
-
-      const photoKind =
-        trigger.getAttribute("data-confirm-photo") ||
-        form.getAttribute("data-confirm-photo") ||
-        "";
-
-      if (photoKind && window.VisitorCamera && typeof window.VisitorCamera.captureOptional === "function") {
-        const label = photoKind.toLowerCase() === "checkout" ? "check-out" : "check-in";
-        const photoResult = await window.VisitorCamera.captureOptional(label);
-        if (photoResult && photoResult.cancelled) {
-          return;
-        }
-        if (photoResult && photoResult.blob) {
-          window.VisitorCamera.attachPhotoToForm(form, photoResult.blob);
-        } else {
-          window.VisitorCamera.attachPhotoToForm(form, null);
-        }
-      }
-
-      form.dataset.swalConfirmed = "1";
-      if (typeof form.requestSubmit === "function") {
-        form.requestSubmit(trigger);
-      } else {
-        form.submit();
-      }
-    });
+    form.dataset.swalConfirmed = "1";
+    if (typeof form.requestSubmit === "function") {
+      form.requestSubmit(trigger);
+    } else {
+      form.submit();
+    }
   });
 
   document.addEventListener("click", (event) => {
