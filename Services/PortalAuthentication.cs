@@ -86,7 +86,10 @@ public sealed class PortalAuthentication
         var receptionist = await _db.Receptionists.SingleOrDefaultAsync(r => r.Username == normalized, cancellationToken);
 
         if (admin is not null && receptionist is not null)
+        {
+            _passwords.VerifyDummy(password);
             return (LoginResult.AmbiguousUsername, null, null);
+        }
 
         if (admin is null && receptionist is null)
         {

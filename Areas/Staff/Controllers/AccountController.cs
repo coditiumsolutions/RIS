@@ -117,10 +117,19 @@ public class AccountController : Controller
         if (staff.MustChangePassword)
             return RedirectToAction("Index", "Password", new { area = "Staff", mustChange = true });
 
-        if (ReturnUrlGuard.IsSafe(returnUrl, PortalType.Staff))
-            return Redirect(returnUrl!);
+        var safeReturn = MapSafeReturnUrl(returnUrl);
+        if (!string.IsNullOrEmpty(safeReturn))
+            return Redirect(safeReturn);
 
         return RedirectAfterLogin(staff.UserType);
+    }
+
+    [Authorize(Policy = AuthPolicies.StaffOnly, AuthenticationSchemes = AuthSchemes.Staff)]
+    [HttpGet]
+    public IActionResult Forbidden()
+    {
+        Response.StatusCode = StatusCodes.Status403Forbidden;
+        return View("~/Areas/Staff/Views/Shared/Forbidden.cshtml");
     }
 
     [Authorize(Policy = AuthPolicies.StaffOnly, AuthenticationSchemes = AuthSchemes.Staff)]
@@ -150,5 +159,14 @@ public class AccountController : Controller
             return RedirectToAction("Index", "Desk", new { area = "Staff" });
 
         return RedirectToAction("Index", "Dashboard", new { area = "Staff" });
+    }
+
+    private static string? MapSafeReturnUrl(string? returnUrl)
+    {
+        if (!ReturnUrlGuard.IsSafe(returnUrl, PortalType.Staff))
+            return null;
+
+        var mapped = StaffPortalRedirects.MapLegacyPath(returnUrl!);
+        return mapped ?? returnUrl;
     }
 }

@@ -53,42 +53,78 @@
 
 <h2 class="module-grid-heading">Modules</h2>
 <div class="project-card-grid mb-4">
-    <a class="project-card project-card-primary" asp-area="Staff" asp-controller="Visitors" asp-action="Index">
-        <div class="project-card-icon visitors" aria-hidden="true">
-            <i class="bi bi-person-badge-fill"></i>
-        </div>
-        <div class="project-card-copy">
-            <h3 class="project-card-title">Visitor Management</h3>
-            <p class="project-card-subtitle">Approve and decline requests</p>
-        </div>
-    </a>
-    <a class="project-card" asp-area="Staff" asp-controller="Complaints" asp-action="Index">
-        <div class="project-card-icon complaints" aria-hidden="true">
-            <i class="bi bi-headset"></i>
-        </div>
-        <div class="project-card-copy">
-            <h3 class="project-card-title">Complaints</h3>
-            <p class="project-card-subtitle">Triage and resolve issues</p>
-        </div>
-    </a>
-    <a class="project-card" asp-area="Staff" asp-controller="Residents" asp-action="Index">
-        <div class="project-card-icon residents" aria-hidden="true">
-            <i class="bi bi-houses-fill"></i>
-        </div>
-        <div class="project-card-copy">
-            <h3 class="project-card-title">Resident Management</h3>
-            <p class="project-card-subtitle">Create and search residents</p>
-        </div>
-    </a>
-    <a class="project-card" asp-area="Staff" asp-controller="Users" asp-action="Index">
-        <div class="project-card-icon users" aria-hidden="true">
-            <i class="bi bi-people-fill"></i>
-        </div>
-        <div class="project-card-copy">
-            <h3 class="project-card-title">User Management</h3>
-            <p class="project-card-subtitle">Receptionist accounts</p>
-        </div>
-    </a>
+    @if (User.HasPermission(StaffPermissions.VisitorsView))
+    {
+        <a class="project-card project-card-primary" asp-area="Staff" asp-controller="Visitors" asp-action="Index">
+            <div class="project-card-icon visitors" aria-hidden="true">
+                <i class="bi bi-person-badge-fill"></i>
+            </div>
+            <div class="project-card-copy">
+                <h3 class="project-card-title">Visitor Management</h3>
+                <p class="project-card-subtitle">Approve, check in, and track visitors</p>
+            </div>
+        </a>
+    }
+    @if (User.HasPermission(StaffPermissions.DeskDashboard))
+    {
+        <a class="project-card" asp-area="Staff" asp-controller="Desk" asp-action="Index">
+            <div class="project-card-icon visitors" aria-hidden="true">
+                <i class="bi bi-display"></i>
+            </div>
+            <div class="project-card-copy">
+                <h3 class="project-card-title">Reception Desk</h3>
+                <p class="project-card-subtitle">Calendar and today board</p>
+            </div>
+        </a>
+    }
+    @if (User.HasPermission(StaffPermissions.ComplaintsView))
+    {
+        <a class="project-card" asp-area="Staff" asp-controller="Complaints" asp-action="Index">
+            <div class="project-card-icon complaints" aria-hidden="true">
+                <i class="bi bi-headset"></i>
+            </div>
+            <div class="project-card-copy">
+                <h3 class="project-card-title">Complaints</h3>
+                <p class="project-card-subtitle">Triage and resolve issues</p>
+            </div>
+        </a>
+    }
+    @if (User.HasPermission(StaffPermissions.ResidentsManage))
+    {
+        <a class="project-card" asp-area="Staff" asp-controller="Residents" asp-action="Index">
+            <div class="project-card-icon residents" aria-hidden="true">
+                <i class="bi bi-houses-fill"></i>
+            </div>
+            <div class="project-card-copy">
+                <h3 class="project-card-title">Resident Management</h3>
+                <p class="project-card-subtitle">Create and search residents</p>
+            </div>
+        </a>
+    }
+    @if (User.HasPermission(StaffPermissions.StaffManage))
+    {
+        <a class="project-card" asp-area="Staff" asp-controller="Users" asp-action="Index">
+            <div class="project-card-icon users" aria-hidden="true">
+                <i class="bi bi-people-fill"></i>
+            </div>
+            <div class="project-card-copy">
+                <h3 class="project-card-title">User Management</h3>
+                <p class="project-card-subtitle">Receptionist accounts</p>
+            </div>
+        </a>
+    }
+    @if (User.HasPermission(StaffPermissions.SettingsManage))
+    {
+        <a class="project-card" asp-area="Staff" asp-controller="Configurations" asp-action="Index">
+            <div class="project-card-icon utility" aria-hidden="true">
+                <i class="bi bi-sliders"></i>
+            </div>
+            <div class="project-card-copy">
+                <h3 class="project-card-title">Configurations</h3>
+                <p class="project-card-subtitle">SMTP, SLA, and app settings</p>
+            </div>
+        </a>
+    }
     <div class="project-card project-card-disabled" aria-disabled="true">
         <span class="coming-soon-badge">Coming soon</span>
         <div class="project-card-icon gatepass" aria-hidden="true">
