@@ -3,6 +3,15 @@
 .rv-list {
   max-width: 1400px;
   margin: 0 auto;
+  min-width: 0;
+}
+
+.rv-card .rd-card-name,
+.rv-card .rd-card-name a {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  white-space: normal;
 }
 
 .rv-header {

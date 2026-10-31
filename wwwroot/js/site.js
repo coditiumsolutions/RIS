@@ -10,6 +10,8 @@
 
   // Collapse/expand from tablet widths up; phones keep the off-canvas drawer.
   const isDesktop = () => window.matchMedia("(min-width: 768px)").matches;
+  // Prefer collapsed nav on tablet widths so desk/list content has room.
+  const isTabletWidth = () => window.matchMedia("(min-width: 768px) and (max-width: 1024px)").matches;
 
   const applyStoredCollapse = () => {
     if (!isDesktop()) {
@@ -17,7 +19,8 @@
       return;
     }
 
-    if (localStorage.getItem(storageKey) === "1") {
+    const stored = localStorage.getItem(storageKey);
+    if (stored === "1" || (stored === null && isTabletWidth())) {
       body.classList.add("sidebar-collapsed");
     } else {
       body.classList.remove("sidebar-collapsed");

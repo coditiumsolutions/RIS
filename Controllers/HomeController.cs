@@ -156,11 +156,20 @@ public class HomeController : Controller
 
         if (await SchemeSignedInAsync(AuthSchemes.Staff, PortalRoles.Admin)
             || await SchemeSignedInAsync(AuthSchemes.Staff, PortalRoles.Receptionist))
+        {
             ViewData["LayoutOverride"] = "~/Areas/Staff/Views/Shared/_StaffLayout.cshtml";
+            ViewData["HomeUrl"] = Url.Action("Index", "Dashboard", new { area = "Staff" }) ?? "/Staff/Dashboard";
+        }
         else if (await SchemeSignedInAsync(AuthSchemes.Resident, PortalRoles.Resident))
+        {
             ViewData["LayoutOverride"] = "~/Views/Shared/_ResidentLayout.cshtml";
+            ViewData["HomeUrl"] = Url.Action("Index", "Home", new { area = "" }) ?? "/";
+        }
         else
+        {
             ViewData["LayoutOverride"] = "~/Views/Shared/_StatusLayout.cshtml";
+            ViewData["HomeUrl"] = "/";
+        }
 
         return View();
     }
