@@ -1,6 +1,6 @@
 /* Reception desk — tablet-first, touch-friendly */
 
-.rd-desk {
+:root {
   --rd-green: #0d6e3f;
   --rd-green-dark: #0a4f2e;
   --rd-green-soft: #e8f6ee;
@@ -14,8 +14,12 @@
   --rd-radius: 1rem;
   --rd-touch: 2.75rem; /* 44px */
   --rd-shadow: 0 8px 24px rgba(20, 48, 74, 0.08);
+}
+
+.rd-desk {
   max-width: 1400px;
   margin: 0 auto;
+  min-width: 0;
 }
 
 .rd-sticky-top {
@@ -236,7 +240,8 @@
 .rd-layout {
   display: grid;
   gap: 1rem;
-  grid-template-columns: 1fr;
+  grid-template-columns: minmax(0, 1fr);
+  min-width: 0;
 }
 
 .rd-calendar-panel,
@@ -246,6 +251,8 @@
   border-radius: var(--rd-radius);
   padding: 0.95rem;
   box-shadow: var(--rd-shadow);
+  min-width: 0;
+  max-width: 100%;
 }
 
 .rd-cal-toolbar {
@@ -367,8 +374,12 @@
   display: flex;
   gap: 0.45rem;
   overflow-x: auto;
+  overflow-y: hidden;
+  max-width: 100%;
+  width: 100%;
   padding: 0.15rem 0.1rem 0.35rem;
   -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
 }
 
 .rd-strip-day {
@@ -471,6 +482,12 @@
   align-items: flex-start;
   justify-content: space-between;
   gap: 0.65rem;
+  min-width: 0;
+}
+
+.rd-card-top > div:first-child {
+  min-width: 0;
+  flex: 1 1 auto;
 }
 
 .rd-card-name {
@@ -479,6 +496,9 @@
   font-weight: 750;
   color: var(--rd-ink);
   line-height: 1.25;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .rd-card-host,
@@ -639,10 +659,47 @@
   }
 }
 
-/* Tablets & up: side-by-side calendar + list */
-@media (min-width: 768px) {
+/* Mid tablet: keep columns stacked so Today list is not squeezed (~820px) */
+@media (min-width: 768px) and (max-width: 1099.98px) {
   .rd-layout {
-    grid-template-columns: minmax(280px, 360px) minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .rd-calendar-panel {
+    position: static;
+  }
+
+  .rd-cal-strip {
+    display: none !important;
+  }
+
+  .rd-card {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .rd-card-main {
+    min-width: 0;
+    flex: 1;
+  }
+
+  .rd-card-actions {
+    flex-direction: column;
+    align-items: stretch;
+    min-width: 8.5rem;
+    flex: 0 0 auto;
+  }
+
+  .rd-action-btn {
+    width: 100%;
+  }
+}
+
+/* Wide desktop: side-by-side calendar + list */
+@media (min-width: 1100px) {
+  .rd-layout {
+    grid-template-columns: minmax(320px, 400px) minmax(0, 1fr);
     align-items: start;
   }
 
@@ -674,12 +731,6 @@
 
   .rd-action-btn {
     width: 100%;
-  }
-}
-
-@media (min-width: 1100px) {
-  .rd-layout {
-    grid-template-columns: minmax(320px, 400px) minmax(0, 1fr);
   }
 
   .rd-cal-cell {

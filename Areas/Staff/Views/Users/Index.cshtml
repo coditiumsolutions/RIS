@@ -84,10 +84,10 @@
                                 <tr>
                                     <th scope="col">Name</th>
                                     <th scope="col">Username</th>
-                                    <th scope="col">Email</th>
+                                    <th scope="col" class="col-optional-tablet">Email</th>
                                     <th scope="col">Status</th>
-                                    <th scope="col">Created</th>
-                                    <th scope="col">Actions</th>
+                                    <th scope="col" class="col-optional-tablet">Created</th>
+                                    <th scope="col" class="table-actions">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -96,7 +96,7 @@
                                     <tr class="@(!receptionist.IsActive ? "table-secondary" : "")">
                                         <td>@receptionist.FullName</td>
                                         <td>@receptionist.Username</td>
-                                        <td>@(receptionist.Email ?? "-")</td>
+                                        <td class="col-optional-tablet">@(receptionist.Email ?? "-")</td>
                                         <td>
                                             @if (receptionist.IsActive)
                                             {
@@ -107,21 +107,34 @@
                                                 <span class="badge text-bg-secondary">Inactive</span>
                                             }
                                         </td>
-                                        <td>@receptionist.CreatedAt.ToString("dd MMM yyyy", CultureInfo.InvariantCulture)</td>
-                                        <td class="text-nowrap">
-                                            <a asp-area="Staff" asp-controller="Users" asp-action="EditReceptionist" asp-route-id="@receptionist.Uid" class="btn btn-sm btn-outline-primary">Edit</a>
-                                            <a asp-area="Staff" asp-controller="Users" asp-action="ResetReceptionistPassword" asp-route-id="@receptionist.Uid" class="btn btn-sm btn-outline-secondary">Reset Password</a>
-                                            <form asp-area="Staff" asp-controller="Users" asp-action="ToggleReceptionistStatus" asp-route-id="@receptionist.Uid" method="post" class="d-inline">
-                                                <button type="submit"
-                                                        class="btn btn-sm @(receptionist.IsActive ? "btn-outline-danger" : "btn-outline-success")"
-                                                        data-confirm-title="@(receptionist.IsActive ? "Deactivate receptionist?" : "Activate receptionist?")"
-                                                        data-confirm-text="@(receptionist.IsActive ? $"Deactivate {receptionist.FullName}? They will no longer be able to sign in." : $"Activate {receptionist.FullName}?")"
-                                                        data-confirm-ok="@(receptionist.IsActive ? "Deactivate" : "Activate")"
-                                                        data-confirm-cancel="Cancel"
-                                                        data-confirm-icon="warning">
-                                                    @(receptionist.IsActive ? "Deactivate" : "Activate")
-                                                </button>
-                                            </form>
+                                        <td class="col-optional-tablet">@receptionist.CreatedAt.ToString("dd MMM yyyy", CultureInfo.InvariantCulture)</td>
+                                        <td class="table-actions">
+                                            <div class="table-actions-inner">
+                                                <a asp-area="Staff" asp-controller="Users" asp-action="EditReceptionist" asp-route-id="@receptionist.Uid"
+                                                   class="btn btn-sm btn-outline-primary table-action-btn" title="Edit" aria-label="Edit">
+                                                    <i class="bi bi-pencil" aria-hidden="true"></i>
+                                                    <span class="table-action-label">Edit</span>
+                                                </a>
+                                                <a asp-area="Staff" asp-controller="Users" asp-action="ResetReceptionistPassword" asp-route-id="@receptionist.Uid"
+                                                   class="btn btn-sm btn-outline-secondary table-action-btn" title="Reset Password" aria-label="Reset Password">
+                                                    <i class="bi bi-key" aria-hidden="true"></i>
+                                                    <span class="table-action-label">Reset Password</span>
+                                                </a>
+                                                <form asp-area="Staff" asp-controller="Users" asp-action="ToggleReceptionistStatus" asp-route-id="@receptionist.Uid" method="post" class="d-inline">
+                                                    <button type="submit"
+                                                            class="btn btn-sm table-action-btn @(receptionist.IsActive ? "btn-outline-danger" : "btn-outline-success")"
+                                                            title="@(receptionist.IsActive ? "Deactivate" : "Activate")"
+                                                            aria-label="@(receptionist.IsActive ? "Deactivate" : "Activate")"
+                                                            data-confirm-title="@(receptionist.IsActive ? "Deactivate receptionist?" : "Activate receptionist?")"
+                                                            data-confirm-text="@(receptionist.IsActive ? $"Deactivate {receptionist.FullName}? They will no longer be able to sign in." : $"Activate {receptionist.FullName}?")"
+                                                            data-confirm-ok="@(receptionist.IsActive ? "Deactivate" : "Activate")"
+                                                            data-confirm-cancel="Cancel"
+                                                            data-confirm-icon="warning">
+                                                        <i class="bi @(receptionist.IsActive ? "bi-person-x" : "bi-person-check")" aria-hidden="true"></i>
+                                                        <span class="table-action-label">@(receptionist.IsActive ? "Deactivate" : "Activate")</span>
+                                                    </button>
+                                                </form>
+                                            </div>
                                         </td>
                                     </tr>
                                 }

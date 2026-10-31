@@ -62,15 +62,15 @@
             </div>
             <div class="col-md-2">
                 <label class="form-label" for="UnitFilter">Unit</label>
-                <input class="form-control portal-search-input" id="UnitFilter" name="UnitFilter" value="@Model.UnitFilter" />
+                <input class="form-control complaint-filter-input" id="UnitFilter" name="UnitFilter" value="@Model.UnitFilter" />
             </div>
             <div class="col-md-2">
                 <label class="form-label" for="ResidentFilter">Resident</label>
-                <input class="form-control portal-search-input" id="ResidentFilter" name="ResidentFilter" value="@Model.ResidentFilter" />
+                <input class="form-control complaint-filter-input" id="ResidentFilter" name="ResidentFilter" value="@Model.ResidentFilter" />
             </div>
             <div class="col-md-2">
                 <label class="form-label" for="WorkerFilter">Worker</label>
-                <input class="form-control portal-search-input" id="WorkerFilter" name="WorkerFilter" value="@Model.WorkerFilter" />
+                <input class="form-control complaint-filter-input" id="WorkerFilter" name="WorkerFilter" value="@Model.WorkerFilter" />
             </div>
             <div class="col-md-2">
                 <label class="form-label" for="FromDate">From</label>
@@ -81,7 +81,7 @@
                 <input class="form-control" type="date" id="ToDate" name="ToDate" value="@Model.ToDate?.ToString("yyyy-MM-dd")" />
             </div>
             <div class="col-md-2">
-                <button type="submit" class="btn btn-portal w-100">Filter</button>
+                <button type="submit" class="btn btn-portal btn-admin w-100">Filter</button>
             </div>
         </form>
     </div>

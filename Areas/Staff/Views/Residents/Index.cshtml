@@ -62,12 +62,12 @@
                     <thead>
                         <tr>
                             <th scope="col">Name</th>
-                            <th scope="col">Customer ID</th>
-                            <th scope="col">Username</th>
+                            <th scope="col" class="col-optional-tablet">Customer ID</th>
+                            <th scope="col" class="col-optional-tablet">Username</th>
                             <th scope="col">Unit</th>
-                            <th scope="col">Mobile</th>
+                            <th scope="col" class="col-optional-tablet">Mobile</th>
                             <th scope="col">Status</th>
-                            <th scope="col">Actions</th>
+                            <th scope="col" class="table-actions">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -75,16 +75,16 @@
                         {
                             <tr class="@(!resident.IsActive ? "table-secondary" : "")">
                                 <td>@resident.ResidentName</td>
-                                <td>@resident.CustomerId</td>
-                                <td>@resident.Username</td>
+                                <td class="col-optional-tablet">@resident.CustomerId</td>
+                                <td class="col-optional-tablet">@resident.Username</td>
                                 <td>
                                     @(resident.UnitNo ?? "-")
                                     @if (!string.IsNullOrWhiteSpace(resident.Tower))
                                     {
-                                        <br /><small class="text-secondary">Tower @resident.Tower</small>
+                                        <br /><small class="text-secondary">@TowerDisplay.Format(resident.Tower)</small>
                                     }
                                 </td>
-                                <td>@(resident.Mobile ?? "-")</td>
+                                <td class="col-optional-tablet">@(resident.Mobile ?? "-")</td>
                                 <td>
                                     @if (resident.IsActive)
                                     {
@@ -95,9 +95,19 @@
                                         <span class="badge text-bg-secondary">Inactive</span>
                                     }
                                 </td>
-                                <td>
-                                    <a asp-area="Staff" asp-controller="Residents" asp-action="Edit" asp-route-id="@resident.Uid" class="btn btn-sm btn-outline-primary">Edit</a>
-                                    <a asp-area="Staff" asp-controller="Residents" asp-action="ResetPassword" asp-route-id="@resident.Uid" class="btn btn-sm btn-outline-secondary">Reset Password</a>
+                                <td class="table-actions">
+                                    <div class="table-actions-inner">
+                                        <a asp-area="Staff" asp-controller="Residents" asp-action="Edit" asp-route-id="@resident.Uid"
+                                           class="btn btn-sm btn-outline-primary table-action-btn" title="Edit" aria-label="Edit">
+                                            <i class="bi bi-pencil" aria-hidden="true"></i>
+                                            <span class="table-action-label">Edit</span>
+                                        </a>
+                                        <a asp-area="Staff" asp-controller="Residents" asp-action="ResetPassword" asp-route-id="@resident.Uid"
+                                           class="btn btn-sm btn-outline-secondary table-action-btn" title="Reset Password" aria-label="Reset Password">
+                                            <i class="bi bi-key" aria-hidden="true"></i>
+                                            <span class="table-action-label">Reset Password</span>
+                                        </a>
+                                    </div>
                                 </td>
                             </tr>
                         }

@@ -1,6 +1,10 @@
 @{
     ViewData["Title"] = "Page Not Found";
     Layout = ViewData["LayoutOverride"] as string ?? "~/Views/Shared/_StatusLayout.cshtml";
+    var homeUrl = ViewData["HomeUrl"] as string ?? "/";
+    var homeButtonClass = homeUrl.StartsWith("/Staff", StringComparison.OrdinalIgnoreCase)
+        ? "btn btn-portal btn-admin"
+        : "btn btn-portal btn-resident";
 }
 
 <div class="text-center py-5">
@@ -12,7 +16,7 @@
         The page you're looking for doesn't exist or has been moved.
     </p>
     <div class="d-flex justify-content-center gap-3 flex-wrap">
-        <a href="/" class="btn btn-portal btn-resident">
+        <a href="@homeUrl" class="@homeButtonClass">
             <i class="bi bi-house me-1" aria-hidden="true"></i> Go Home
         </a>
         <button type="button" class="btn btn-outline-secondary" data-history-back>
