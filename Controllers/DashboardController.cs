@@ -14,10 +14,12 @@ namespace ResidentPortal.Controllers;
 public class DashboardController : Controller
 {
     private readonly ApplicationDbContext _db;
+    private readonly BusinessTimeZone _timeZone;
 
-    public DashboardController(ApplicationDbContext db)
+    public DashboardController(ApplicationDbContext db, BusinessTimeZone timeZone)
     {
         _db = db;
+        _timeZone = timeZone;
     }
 
     public async Task<IActionResult> Index(CancellationToken cancellationToken)
@@ -26,19 +28,29 @@ public class DashboardController : Controller
         if (resident is null)
             return await SignOutInactiveAsync();
 
-        var recentVisitors = await _db.VisitorRequests
+        var today = _timeZone.Today;
+        var recentVisitors = (await _db.VisitorRequests
             .AsNoTracking()
             .Where(v => v.ResidentId == resident.Uid)
             .OrderByDescending(v => v.CreatedAt)
             .Take(5)
+            .Select(v => new
+            {
+                v.VisitorName,
+                v.Purpose,
+                v.Status,
+                v.CreatedAt,
+                v.ArrivalDate
+            })
+            .ToListAsync(cancellationToken))
             .Select(v => new VisitorActivityItem
             {
                 VisitorName = v.VisitorName,
                 Purpose = v.Purpose,
-                Status = v.Status,
+                Status = VisitorStatus.Effective(v.Status, v.ArrivalDate, today),
                 When = v.CreatedAt
             })
-            .ToListAsync(cancellationToken);
+            .ToList();
 
         var model = new ResidentDashboardViewModel
         {

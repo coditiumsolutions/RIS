@@ -111,6 +111,9 @@ public class VisitorsController : Controller
             })
             .ToListAsync(cancellationToken);
 
+        foreach (var visitor in visitors)
+            visitor.Status = VisitorStatus.Effective(visitor.Status, visitor.ArrivalDate, pktToday);
+
         var hasMore = visitors.Count > pageSize;
         if (hasMore)
             visitors = visitors.Take(pageSize).ToList();
@@ -191,7 +194,7 @@ public class VisitorsController : Controller
             NumberOfGuests = visitor.NumberOfGuests,
             CNIC = visitor.CNIC,
             VehicleRegistrationNo = visitor.VehicleRegistrationNo,
-            Status = visitor.Status,
+            Status = VisitorStatus.Effective(visitor.Status, visitor.ArrivalDate, _timeZone.Today),
             IsWalkIn = visitor.IsWalkIn,
             CheckedInAt = visitor.CheckedInAt,
             CheckedOutAt = visitor.CheckedOutAt,
@@ -201,6 +204,7 @@ public class VisitorsController : Controller
             ResidentMobile = visitor.Resident.Mobile,
             DeclineReason = visitor.DeclineReason,
             CanCheckIn = visitor.Status == VisitorStatus.Approved
+                && !VisitorStatus.IsExpired(visitor.Status, visitor.ArrivalDate, _timeZone.Today)
                 && VisitorDuration.IsWithinVisitWindow(visitor.ArrivalDate, visitor.Duration, _timeZone.Today),
             Photos = photos
         };
@@ -232,6 +236,12 @@ public class VisitorsController : Controller
         }
 
         var today = _timeZone.Today;
+        if (VisitorStatus.IsExpired(visitor.Status, visitor.ArrivalDate, today))
+        {
+            TempData["Error"] = "This visitor request has expired because it was not checked in within 2 days of the expected arrival date.";
+            return RedirectAfterDeskAction(from, q, date, status);
+        }
+
         if (!VisitorDuration.IsWithinVisitWindow(visitor.ArrivalDate, visitor.Duration, today))
         {
             TempData["Error"] = "This visitor can only be checked in on the arrival date through the end of the visit duration.";

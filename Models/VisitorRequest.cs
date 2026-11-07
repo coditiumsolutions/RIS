@@ -59,6 +59,18 @@ public static class VisitorStatus
     public const string CheckedIn = "CheckedIn";
     public const string CheckedOut = "CheckedOut";
     public const string Cancelled = "Cancelled";
+    public const string Expired = "Expired";
+
+    public const int UncheckedExpiryDays = 2;
+
+    public static bool IsAwaitingCheckIn(string status) =>
+        status == Pending || status == Approved;
+
+    public static bool IsExpired(string status, DateOnly arrivalDate, DateOnly today) =>
+        IsAwaitingCheckIn(status) && today >= arrivalDate.AddDays(UncheckedExpiryDays);
+
+    public static string Effective(string status, DateOnly arrivalDate, DateOnly today) =>
+        IsExpired(status, arrivalDate, today) ? Expired : status;
 }
 
 public static class VisitorDuration
