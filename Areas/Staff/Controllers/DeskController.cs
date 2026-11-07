@@ -363,7 +363,9 @@ public class DeskController : Controller
 
     private ReceptionDeskVisitorDto MapVisitor(VisitorRequest v, DateOnly today)
     {
+        var status = VisitorStatus.Effective(v.Status, v.ArrivalDate, today);
         var canCheckIn = v.Status == VisitorStatus.Approved
+            && !VisitorStatus.IsExpired(v.Status, v.ArrivalDate, today)
             && VisitorDuration.IsWithinVisitWindow(v.ArrivalDate, v.Duration, today);
 
         return new ReceptionDeskVisitorDto
@@ -375,8 +377,8 @@ public class DeskController : Controller
             Vehicle = v.VehicleRegistrationNo,
             Purpose = v.Purpose,
             Guests = v.NumberOfGuests,
-            Status = v.Status,
-            StatusLabel = StatusLabel(v.Status),
+            Status = status,
+            StatusLabel = StatusLabel(status),
             ArrivalDate = v.ArrivalDate.ToString("yyyy-MM-dd"),
             ResidentName = v.Resident.ResidentName,
             ResidentUnit = v.Resident.UnitNo,

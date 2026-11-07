@@ -36,10 +36,11 @@ public class VisitorsController : Controller
         if (!await ResidentIsActiveAsync(userId.Value, cancellationToken))
             return await SignOutInactiveAsync();
 
+        var today = _timeZone.Today;
         var visitors = await _db.VisitorRequests
             .Where(v => v.ResidentId == userId.Value)
-            .OrderByDescending(v => v.ArrivalDate)
-            .ThenByDescending(v => v.CreatedAt)
+            .OrderByDescending(v => v.CreatedAt)
+            .ThenByDescending(v => v.Uid)
             .Take(50)
             .Select(v => new VisitorRequestListItem
             {
@@ -57,6 +58,9 @@ public class VisitorsController : Controller
                 CreatedAt = v.CreatedAt
             })
             .ToListAsync(cancellationToken);
+
+        foreach (var visitor in visitors)
+            visitor.Status = VisitorStatus.Effective(visitor.Status, visitor.ArrivalDate, today);
 
         var totalCount = await _db.VisitorRequests.CountAsync(v => v.ResidentId == userId.Value, cancellationToken);
         var pendingCount = await _db.VisitorRequests.CountAsync(v => v.ResidentId == userId.Value && v.Status == VisitorStatus.Pending, cancellationToken);
@@ -205,7 +209,7 @@ public class VisitorsController : Controller
             NumberOfGuests = visitor.NumberOfGuests,
             CNIC = visitor.CNIC,
             VehicleRegistrationNo = visitor.VehicleRegistrationNo,
-            Status = visitor.Status,
+            Status = VisitorStatus.Effective(visitor.Status, visitor.ArrivalDate, _timeZone.Today),
             IsWalkIn = visitor.IsWalkIn,
             CheckedInAt = visitor.CheckedInAt,
             CheckedOutAt = visitor.CheckedOutAt,
